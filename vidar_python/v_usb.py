@@ -3,6 +3,7 @@
 Keep clean from SCSI stuff.
 """
 import struct
+from vidar_python import LUN
 
 # Constants
 CBW_SIGNATURE = 0x43425355  # 'USBC' in little-endian
@@ -10,7 +11,7 @@ CBW_TAG = 0x00000001        # Arbitrary tag, incremented with each command
 CBW_DATA_TRANSFER_LENGTH = 52  # Data transfer length (as in the dump)
 # Direction IN (0x80 means data from device to host)
 CBW_FLAGS = 0x80
-CBW_LUN = 0x00              # Logical Unit Number (0x00 in the dump)
+CBW_LUN = LUN
 # Command Descriptor Block length (SCSI command length)
 CBW_CDB_LENGTH = 0x06
 
