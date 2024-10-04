@@ -1,0 +1,6 @@
+{
+    "C_Cpp.default.includePath": [
+        "/opt/homebrew/Cellar/libusb/1.0.27/include/libusb-1.0"
+    ],
+    "makefile.makefilePath": "vidar_c/Makefile"
+}
