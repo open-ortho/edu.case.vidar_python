@@ -1,3 +1,8 @@
+""" Script to inspect Wireshark dumps. 
+
+I thought i needed this, but i think i don't: Wireshark does a prett good job, although it does not merge split packets back into one. However the python usb libraries do.
+
+"""
 import pyshark
 
 # Path to the pcapng file
