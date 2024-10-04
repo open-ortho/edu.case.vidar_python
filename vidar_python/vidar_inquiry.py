@@ -1,6 +1,6 @@
 import usb.core
 import usb.util
-from vidar_python.scsi import build_inquiry_cbd
+from vidar_python.v_scsi import build_inquiry_cbd
 
 from vidar_python import VENDOR_ID, PRODUCT_ID
 
