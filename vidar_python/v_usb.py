@@ -3,6 +3,8 @@
 Keep clean from SCSI stuff.
 """
 import struct
+
+import usb
 from vidar_python import LUN
 
 # Constants
@@ -27,3 +29,26 @@ def build_cbw():
         CBW_LUN,
         CBW_CDB_LENGTH,
     )
+
+"""
+Given a pyusb device, return the IN and OUT endpoints.
+"""
+def find_usb_endpoints(device):
+    in_endpoint, out_endpoint = None, None
+
+    # check every endpoint in the devices interface to find IN and OUT
+    for cfg in device:
+        for intf in cfg:
+            for ep in intf:
+                if usb.util.endpoint_direction(ep.bEndpointAddress) == usb.util.ENDPOINT_IN:
+                    in_endpoint = ep
+                elif usb.util.endpoint_direction(ep.bEndpointAddress) == usb.util.ENDPOINT_OUT:
+                    out_endpoint = ep
+
+    if (in_endpoint is None) or (out_endpoint is None):
+        print("One or both of the USB endpoints could not be found")
+        print(f"IN: {in_endpoint}")
+        print(f"OUT: {out_endpoint}")
+
+
+    return (in_endpoint, out_endpoint)
