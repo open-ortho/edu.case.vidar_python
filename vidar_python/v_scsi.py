@@ -35,8 +35,8 @@ def parse_scsi_inquiry_response(response):
         "Version": response[2],  # Version of the standard
         "Response Data Format": response[3] & 0x0f,
         "Additional Length": response[4],
-        "Vendor ID": response[8:16].decode().strip(),
-        "Product ID": response[16:32].decode().strip(),
-        "Product Revision Level": response[32:36].decode().strip()
+        "Vendor ID": response[8:16].strip(),
+        "Product ID": response[16:32].strip(),
+        "Product Revision Level": response[32:36].strip(),
     }
     return inquiry_data
