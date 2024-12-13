@@ -45,6 +45,7 @@ def find_usb_endpoints(device):
                 elif usb.util.endpoint_direction(ep.bEndpointAddress) == usb.util.ENDPOINT_OUT:
                     out_endpoint = ep
 
+
     if (in_endpoint is None) or (out_endpoint is None):
         print("One or both of the USB endpoints could not be found")
         print(f"IN: {in_endpoint}")

@@ -31,7 +31,7 @@ try:
 except usb.core.USBError as e:
     print("Error reading from device:", e)
 
-# Optionally, clear the halt condition on the xIN endpoint (if required)
+# Optionally, clear the halt condition on the IN endpoint (if required)
 dev.clear_halt(endpoint_in)
 # when using libusbK backend, you cannot close the device, you release the interface.
 #dev.close()
