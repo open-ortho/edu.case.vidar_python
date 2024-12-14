@@ -1,34 +1,33 @@
-""" USB related stuff.
+"""
+USB related stuff.
 
 Keep clean from SCSI stuff.
 """
 import struct
-
 import usb
-from vidar_python import LUN
-
-# Constants
-CBW_SIGNATURE = 0x43425355  # 'USBC' in little-endian
-CBW_TAG = 0x00000001        # Arbitrary tag, incremented with each command
-CBW_DATA_TRANSFER_LENGTH = 52  # Data transfer length (as in the dump)
-# Direction IN (0x80 means data from device to host)
-CBW_FLAGS = 0x80
-CBW_LUN = LUN
-# Command Descriptor Block length (SCSI command length)
-CBW_CDB_LENGTH = 0x06
+from vidar_python import LUN, USB_CBW_FLAGS, USB_CBW_SIGNATURE, USB_CBW_TAG
 
 
-def build_cbw():
-    return struct.pack(
+"""
+Package the USB CBW and the SCSI CDB into the CBD
+"""
+def create_package_cbd(scsi_command_bytes, data_transfer_length):
+    cdb_len = len(scsi_command_bytes)
+    
+    cbw = struct.pack(
         # Little-endian: 4-byte signature, 4-byte tag, 4-byte transfer length, 1-byte flags, etc.
         '<IIIBBB',
-        CBW_SIGNATURE,
-        CBW_TAG,
-        CBW_DATA_TRANSFER_LENGTH,
-        CBW_FLAGS,
-        CBW_LUN,
-        CBW_CDB_LENGTH,
+        USB_CBW_SIGNATURE,
+        USB_CBW_TAG,
+        data_transfer_length,
+        USB_CBW_FLAGS,
+        LUN,
+        cdb_len,
     )
+
+    padded_cdb = (scsi_command_bytes + b'\x00' * (16 - cdb_len))
+
+    return cbw + padded_cdb
 
 """
 Given a pyusb device, return the IN and OUT endpoints.
