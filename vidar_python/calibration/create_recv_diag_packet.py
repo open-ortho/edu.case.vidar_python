@@ -1,5 +1,5 @@
 from vidar_python import *
-from vidar_python.v_usb import create_package_cbd
+from vidar_python.v_usb import CBD_packager
 from vidar_python.calibration import *
 
 """
@@ -22,6 +22,6 @@ Creates the CBD RECIEVE_DIAGNOSTIC packet for the calibration sequence.
 def build_calibration_recv_diag_cbd():
     scsi_cdb = build_scsi_command_bytes()
 
-    cbd = create_package_cbd(scsi_cdb, data_transfer_length=52)
+    cbd = CBD_packager.create_package_cbd(scsi_cdb, data_transfer_length=52)
 
     return cbd
