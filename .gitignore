@@ -2,3 +2,9 @@ Pipfile.lock
 __pycache__
 *.o
 test.py
+
+bin/
+obj/
+.vs/
+*.user
+*.suo
