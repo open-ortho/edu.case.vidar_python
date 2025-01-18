@@ -15,7 +15,7 @@ namespace vidar_app
 {
     internal class Startup
     {
-        public static unsafe void InitializeDigitizer()
+        public static unsafe int InitializeDigitizer()
         {
             DigitizeEngine digitizeEngine = null;
             DigitizeEngine digitizeEngine2 = new DigitizeEngine();
@@ -49,6 +49,10 @@ namespace vidar_app
                 if (num4 == 0)
                 {
                     Console.WriteLine("Hardware Located");
+                } else
+                {
+                    Console.WriteLine("Hardware Not Found");
+                    return 1;
                 }
 
                 Console.WriteLine("Reading Digitizer Capabilities...");
@@ -57,11 +61,15 @@ namespace vidar_app
                 if (status == 0)
                 {
                     Console.WriteLine("Digitizer Info Retrieved");
+                    parseScannerInfo(ref dIGITIZERINFO);
+                } else
+                {
+                    Console.WriteLine("Digitizer Info could not be Retrieved");
+                    return 1;
                 }
 
-                parseScannerInfo(ref dIGITIZERINFO);
 
-
+                return 0;
             }
             catch (Exception ex)
             {
