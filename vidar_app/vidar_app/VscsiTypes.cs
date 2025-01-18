@@ -29,7 +29,7 @@ namespace vidar_app
 
         // Method to convert _GETDIGINFO to _DIGITIZERINFO
         // a _GETDIGINFO is  a _DIGITIZERINFO but with a integer prepended
-        public int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
+        public static int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
         {
             // Extract the 4-byte integer from the _GETDIGINFO struct (Status)
             int status = getDigInfo.Status;

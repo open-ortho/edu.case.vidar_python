@@ -30,11 +30,8 @@ namespace vidar_app
             }
             catch
             {
-                //try-fault
-                ((IDisposable)digitizeEngine).Dispose();
                 throw;
             }
-            ((IDisposable)digitizeEngine).Dispose();
             return 0u;
         }
     }
