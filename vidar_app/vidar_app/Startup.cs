@@ -9,6 +9,7 @@ using static vidar_app.VscsiMethods;
 using System.Runtime.CompilerServices;
 using System.Net.NetworkInformation;
 using System.Drawing;
+using System.Transactions;
 
 namespace vidar_app
 {
@@ -42,7 +43,6 @@ namespace vidar_app
                 };
 
                 StringBuilder stringBuilder = new StringBuilder(4096);
-                stringBuilder.Append("Digitizer is warming up, please wait...");
 
                 // Call LocateHardware (placeholder implementation)
                 int num4 = (int)Hardware.LocateHardware(hardwareInfo);
@@ -51,14 +51,15 @@ namespace vidar_app
                     Console.WriteLine("Hardware Located");
                 }
 
+                Console.WriteLine("Reading Digitizer Capabilities...");
+
                 int status = digitizeEngine.GetDigInfo(ref dIGITIZERINFO);
                 if (status == 0)
                 {
                     Console.WriteLine("Digitizer Info Retrieved");
                 }
 
-                Console.WriteLine(getModelName(ref dIGITIZERINFO));
-                Console.WriteLine(parseScannerInfo(ref dIGITIZERINFO));
+                parseScannerInfo(ref dIGITIZERINFO);
 
 
             }
@@ -68,20 +69,22 @@ namespace vidar_app
             }
         }
 
-        public static string parseScannerInfo(ref _DIGITIZERINFO digitizerInfo)
+        public static void parseScannerInfo(ref _DIGITIZERINFO digitizerInfo)
         {
-            // Offsets are from decompiled code, size and data type are inferred through trial and error.
             // TODO Go through the loops in the decomp for the drop downs.
+
+            // Offsets are from decompiled code, size and data type are inferred through trial and error.
+            string modelName = getModelName(ref digitizerInfo);
             string serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
             string firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
             int hardwareVersionNumber = (int)digitizerInfo.Data[118];
 
             int currentResolution = (int)digitizerInfo.Data[42];
-            short opticalResolution = parseShortValue(ref digitizerInfo, 44, 2);
+            short opticalResolution = parseShortValue(ref digitizerInfo, 44);
             float maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
 
-            short currentBitDepth = parseShortValue(ref digitizerInfo, 68, 2);
-            // max num of films.
+            short currentBitDepth = parseShortValue(ref digitizerInfo, 68);
+            short maxFilms = parseShortValue(ref digitizerInfo, 90);
 
             string darkEnhance = parseBinaryValue(ref digitizerInfo, 86, "Dark Enhance not available", "Dark Enhance available");
             string lineFilter = parseBinaryValue(ref digitizerInfo, 88, "Line Filter not available", "Line Filter available");
@@ -89,31 +92,36 @@ namespace vidar_app
             string unloadMedium = parseBinaryValue(ref digitizerInfo, 100, "Single unloadMedium() command to eject film", "Double unloadMedium() command to eject film");
             string limitedScans = parseBinaryValue(ref digitizerInfo, 140, "Unlimited scans device", "Limited scans device");
 
-            // time since reset
-            // TODO fixed line time
-            //lamp type
-            // translation table
-            //feeder type
+            string lineTime = getLineTime(ref digitizerInfo);
+            string feederType = getFeederType(ref digitizerInfo);
+            string lampType = getLampType(ref digitizerInfo);
+            string translationTable = getTranslationTable(ref digitizerInfo);
+            // time since reset is stored here as well.
 
 
-            Console.WriteLine(serialNumber);
-            Console.WriteLine(firmwareVersionNumber);
-            Console.WriteLine(hardwareVersionNumber);
+            Console.WriteLine($"Digitizer model: {modelName}");
+            Console.WriteLine($"Serial Number: {serialNumber}");
+            Console.WriteLine($"Firmware version number: {firmwareVersionNumber}");
+            Console.WriteLine($"Hardware version number: {hardwareVersionNumber}");
 
-            Console.WriteLine(currentResolution);
-            Console.WriteLine(opticalResolution);
-            Console.WriteLine(maxWidthInInches);
+            Console.WriteLine($"Current resolution = {currentResolution}");
+            Console.WriteLine($"Optical resolution = {opticalResolution}");
+            Console.WriteLine($"Maximum width in inches = {maxWidthInInches}");
 
-            Console.WriteLine(currentBitDepth);
+            Console.WriteLine($"Current Bit Depth = {currentBitDepth}");
+            Console.WriteLine($"Maximum number of films = {maxFilms}");
 
             Console.WriteLine(darkEnhance);
             Console.WriteLine(lineFilter);
             Console.WriteLine(filmBackup);
             Console.WriteLine(unloadMedium);
             Console.WriteLine(limitedScans);
-            
 
-            return "SFINX FJDESI";
+            Console.WriteLine(lineTime);
+            Console.WriteLine(feederType);
+            Console.WriteLine(lampType);
+            Console.Write(translationTable);
+
         }
 
         public static string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
@@ -132,9 +140,9 @@ namespace vidar_app
             return BitConverter.ToSingle(extractedBytes, 0);
         }
 
-        public static short parseShortValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        public static short parseShortValue(ref _DIGITIZERINFO digitizerInfo, int offset)
         {
-            byte[] extractedBytes = new byte[size];
+            byte[] extractedBytes = new byte[2];
             Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
 
             return BitConverter.ToInt16(extractedBytes, 0);
@@ -153,6 +161,153 @@ namespace vidar_app
             } else
             {
                 return ifOne;
+            }
+        }
+
+        public static string getLineTime(ref _DIGITIZERINFO digitizerInfo)
+        {
+            short value = parseShortValue(ref digitizerInfo, 84);
+
+            StringBuilder sb = new StringBuilder("");
+
+            if (value == 1)
+            {
+                short fixedLineTime = parseShortValue(ref digitizerInfo, 82);
+
+                sb.Append($"Fixed Line = {fixedLineTime}");
+            } else
+            {
+                short lineTimeRangeStart = parseShortValue(ref digitizerInfo, 78);
+                short lineTimeRangeEnd = parseShortValue(ref digitizerInfo, 80);
+
+                // this below value could be a int instead of a short but I have no way to test without the hardware.
+                short lineTimeCurrent = parseShortValue(ref digitizerInfo, 82);
+
+                sb.AppendLine($"Line time range start = {lineTimeRangeStart}");
+                sb.AppendLine($"Line time range end = {lineTimeRangeEnd}");
+                sb.AppendLine($"Line time current = {lineTimeCurrent}");
+
+            }
+
+            return sb.ToString();
+        }
+
+        public static string getTranslationTable(ref _DIGITIZERINFO digitizerInfo)
+        {
+            short value = parseShortValue(ref digitizerInfo, 96);
+
+            StringBuilder sb = new StringBuilder("");
+
+            if (value == 1)
+            {
+                sb.AppendLine("Translation table selection available.");
+            } else if (value == 0)
+            {
+                ushort scannerType = (ushort)digitizerInfo.Data[104];
+
+                if (scannerType != 19 && scannerType != 22 && scannerType != 23)
+                {
+                    sb.AppendLine("Translation tables are limited to Linear and LOG.");
+                } else
+                {
+                    sb.AppendLine("Translation table selection is limited to Power 5 only.");
+                }
+            }
+
+            short value2 = parseShortValue(ref digitizerInfo, 98);
+
+            switch (value2)
+            {
+                default:
+                    sb.AppendLine("Translation table locations 0 and 1 setting unknown.");
+                    break;
+                case 5:
+                    sb.Append("\r\nTranslation table locations 0 and 1 set to Power 5.");
+                    break;
+                case 1:
+                    ushort scannerType = (ushort)digitizerInfo.Data[104];
+
+                    if (scannerType != 19 && scannerType != 22 && scannerType != 23)
+                    {
+                        sb.Append("Translation table locations 0 and 1 set to LOG..");
+                    }
+                    else
+                    {
+                        sb.Append("Translation table locations 0 and 1 set to Power 5.");
+                    }
+
+                    break;
+                case 0:
+                    sb.Append("Translation table location 0 set to Linear, location 1 set to LOG.");
+                    break;
+
+            }
+
+            return sb.ToString();
+        }
+
+        public static string getFeederType(ref _DIGITIZERINFO digitizerInfo)
+        {
+            int value = parseShortValue(ref digitizerInfo, 102);
+            
+            switch (value)
+            {
+                case 3:
+                    return "Feeder type is B (9.45 inches wide, 100 sheet capacity).";
+                case 2:
+                    return "Feeder type is C (14 inches wide).";
+                case 4:
+                    return "Feeder type is D (Smartfeeder XL, 9.45 to 10 inches wide with loading flap).";
+                case 0:
+                    return "No feeder found.";
+                case 253:
+                    return "Feeder type is A3 (9.45 inches wide, no loading flap).";
+                case 255:
+                    return "Feeder type is Film Director.";
+                case 254:
+                    return "Feeder type is A2 (9.45 inches wide with loading flap).";
+                default:
+                    return "Feeder type is unknown.";
+            }
+
+        }
+
+        public static string getLampType(ref _DIGITIZERINFO digitizerInfo)
+        {
+            int value = parseShortValue(ref digitizerInfo, 138);
+
+            switch (value)
+            {
+                case 0:
+                    return "Lamp type is a fluorescent bulb.";
+                case 7:
+                    return "Lamp type is a fluorescent bulb full width cartridge.";
+                case 8:
+                    return "Lamp type is a fluorescent bulb mammo width cartridge.";
+                case 9:
+                    return "Lamp type is a fluorescent bulb full width roller cartridge.";
+                case 10:
+                    return "Lamp type is a fluorescent bulb mammo width roller cartridge.";
+                case 1:
+                    return "Lamp type is a white LED full width cartridge.";
+                case 2:
+                    return "Lamp type is a red LED full width cartridge.";
+                case 3:
+                    return "Lamp type is a white LED full width roller cartridge.";
+                case 4:
+                    return "Lamp type is a red LED full width roller cartridge.";
+                case 5:
+                    return "Lamp type is a white LED mammo width cartridge.";
+                case 6:
+                    return "Lamp type is a white LED mammo width roller cartridge.";
+                case 11:
+                    return "Lamp type is a white LED ten inch width cartridge.";
+                case 12:
+                    return "Lamp type is a blue LED full width cartridge.";
+                case 13:
+                    return "Lamp type is a green LED full width cartridge.";
+                default:
+                    return "Lamp type is unknown.";
             }
         }
 
