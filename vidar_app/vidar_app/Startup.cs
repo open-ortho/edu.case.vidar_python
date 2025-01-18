@@ -8,6 +8,7 @@ using static vidar_app.VscsiTypes;
 using static vidar_app.VscsiMethods;
 using System.Runtime.CompilerServices;
 using System.Net.NetworkInformation;
+using System.Drawing;
 
 namespace vidar_app
 {
@@ -69,6 +70,7 @@ namespace vidar_app
 
         public static string parseScannerInfo(ref _DIGITIZERINFO digitizerInfo)
         {
+            // Offsets are from decompiled code, size and data type are inferred through trial and error.
             // TODO Go through the loops in the decomp for the drop downs.
             string serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
             string firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
@@ -79,6 +81,19 @@ namespace vidar_app
             float maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
 
             short currentBitDepth = parseShortValue(ref digitizerInfo, 68, 2);
+            // max num of films.
+
+            string darkEnhance = parseBinaryValue(ref digitizerInfo, 86, "Dark Enhance not available", "Dark Enhance available");
+            string lineFilter = parseBinaryValue(ref digitizerInfo, 88, "Line Filter not available", "Line Filter available");
+            string filmBackup = parseBinaryValue(ref digitizerInfo, 92, "Film backup not available", "Film backup available");
+            string unloadMedium = parseBinaryValue(ref digitizerInfo, 100, "Single unloadMedium() command to eject film", "Double unloadMedium() command to eject film");
+            string limitedScans = parseBinaryValue(ref digitizerInfo, 140, "Unlimited scans device", "Limited scans device");
+
+            // time since reset
+            // TODO fixed line time
+            //lamp type
+            // translation table
+            //feeder type
 
 
             Console.WriteLine(serialNumber);
@@ -91,6 +106,12 @@ namespace vidar_app
 
             Console.WriteLine(currentBitDepth);
 
+            Console.WriteLine(darkEnhance);
+            Console.WriteLine(lineFilter);
+            Console.WriteLine(filmBackup);
+            Console.WriteLine(unloadMedium);
+            Console.WriteLine(limitedScans);
+            
 
             return "SFINX FJDESI";
         }
@@ -117,6 +138,22 @@ namespace vidar_app
             Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
 
             return BitConverter.ToInt16(extractedBytes, 0);
+        }
+
+        public static string parseBinaryValue(ref _DIGITIZERINFO digitizerInfo, int offset, string ifZero, string ifOne)
+        {
+            byte[] extractedBytes = new byte[2];
+            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+
+            short value = BitConverter.ToInt16(extractedBytes, 0);
+
+            if (value == 0)
+            {
+                return ifZero;
+            } else
+            {
+                return ifOne;
+            }
         }
 
         public static string getModelName(ref _DIGITIZERINFO digitizerInfo)
