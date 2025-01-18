@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static vidar_app.VscsiTypes;
 using static vidar_app.VscsiMethods;
 using System.Runtime.CompilerServices;
+using System.Net.NetworkInformation;
 
 namespace vidar_app
 {
@@ -56,11 +57,66 @@ namespace vidar_app
                 }
 
                 Console.WriteLine(getModelName(ref dIGITIZERINFO));
+                Console.WriteLine(parseScannerInfo(ref dIGITIZERINFO));
+
+
             }
             catch (Exception ex)
             {
                 throw ex;
             }
+        }
+
+        public static string parseScannerInfo(ref _DIGITIZERINFO digitizerInfo)
+        {
+            // TODO Go through the loops in the decomp for the drop downs.
+            string serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
+            string firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
+            int hardwareVersionNumber = (int)digitizerInfo.Data[118];
+
+            int currentResolution = (int)digitizerInfo.Data[42];
+            short opticalResolution = parseShortValue(ref digitizerInfo, 44, 2);
+            float maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
+
+            short currentBitDepth = parseShortValue(ref digitizerInfo, 68, 2);
+
+
+            Console.WriteLine(serialNumber);
+            Console.WriteLine(firmwareVersionNumber);
+            Console.WriteLine(hardwareVersionNumber);
+
+            Console.WriteLine(currentResolution);
+            Console.WriteLine(opticalResolution);
+            Console.WriteLine(maxWidthInInches);
+
+            Console.WriteLine(currentBitDepth);
+
+
+            return "SFINX FJDESI";
+        }
+
+        public static string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        {
+            byte[] extractedBytes = new byte[size];
+            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+
+            return Encoding.ASCII.GetString(extractedBytes);
+        }
+
+        public static float parseFloatValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        {
+            byte[] extractedBytes = new byte[size];
+            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+
+            return BitConverter.ToSingle(extractedBytes, 0);
+        }
+
+        public static short parseShortValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        {
+            byte[] extractedBytes = new byte[size];
+            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+
+            return BitConverter.ToInt16(extractedBytes, 0);
         }
 
         public static string getModelName(ref _DIGITIZERINFO digitizerInfo)
