@@ -1,20 +1,32 @@
 ﻿using vidar_app;
 
-int status = Startup.InitializeDigitizer();
+VscsiTypes._DIGITIZERINFO? scannerInfo = Startup.InitializeDigitizer();
 
-Console.WriteLine("Enter a command: ");
-string command = Console.ReadLine().ToLower();
-
-switch(command)
+if (!scannerInfo.HasValue)
 {
-    case "calibrate":
-        Calibrate.calibrate();
-        break;
+    return;
+} else
+{
+    VscsiTypes._DIGITIZERINFO digitizerInfo = scannerInfo.Value;
 
-    default:
-        Console.WriteLine("Unknown Command");
-        break;
+    Console.WriteLine("Enter a command: ");
+    string command = Console.ReadLine().ToLower();
+
+    switch (command)
+    {
+        case "calibrate":
+            Calibrate.calibrate();
+            break;
+
+        case "eject":
+            Eject.eject(digitizerInfo);
+            break;
+
+        default:
+            Console.WriteLine("Unknown Command");
+            break;
+    }
+
+    Console.WriteLine("");
+    Console.WriteLine("Shutting Down");
 }
-
-Console.WriteLine("");
-Console.WriteLine("Shutting Down");
