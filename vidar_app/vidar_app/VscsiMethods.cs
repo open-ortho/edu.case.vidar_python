@@ -13,8 +13,10 @@ namespace vidar_app
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int EjectFilm(ref _DIGITIZERINFO digitizerInfo, int flag);
 
+
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Calibrate();
+
 
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [SuppressUnmanagedCodeSecurity]

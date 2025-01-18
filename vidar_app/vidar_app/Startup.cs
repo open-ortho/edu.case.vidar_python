@@ -48,10 +48,9 @@ namespace vidar_app
                 int num4 = (int)Hardware.LocateHardware(hardwareInfo);
                 if (num4 == 0)
                 {
-                    Console.WriteLine("Hardware Located");
                 } else
                 {
-                    Console.WriteLine("Hardware Not Found");
+                    Console.WriteLine("Hardware could not be found");
                     return 1;
                 }
 
@@ -107,6 +106,10 @@ namespace vidar_app
             // time since reset is stored here as well.
 
 
+            Console.WriteLine("");
+            Console.WriteLine("");
+            Console.WriteLine("-------------------------------------------------------------");
+
             Console.WriteLine($"Digitizer model: {modelName}");
             Console.WriteLine($"Serial Number: {serialNumber}");
             Console.WriteLine($"Firmware version number: {firmwareVersionNumber}");
@@ -130,6 +133,9 @@ namespace vidar_app
             Console.WriteLine(lampType);
             Console.Write(translationTable);
 
+            Console.WriteLine("-------------------------------------------------------------");
+            Console.WriteLine("");
+            Console.WriteLine("");
         }
 
         public static string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
@@ -230,23 +236,23 @@ namespace vidar_app
                     sb.AppendLine("Translation table locations 0 and 1 setting unknown.");
                     break;
                 case 5:
-                    sb.Append("\r\nTranslation table locations 0 and 1 set to Power 5.");
+                    sb.AppendLine("Translation table locations 0 and 1 set to Power 5.");
                     break;
                 case 1:
                     ushort scannerType = (ushort)digitizerInfo.Data[104];
 
                     if (scannerType != 19 && scannerType != 22 && scannerType != 23)
                     {
-                        sb.Append("Translation table locations 0 and 1 set to LOG..");
+                        sb.AppendLine("Translation table locations 0 and 1 set to LOG..");
                     }
                     else
                     {
-                        sb.Append("Translation table locations 0 and 1 set to Power 5.");
+                        sb.AppendLine("Translation table locations 0 and 1 set to Power 5.");
                     }
 
                     break;
                 case 0:
-                    sb.Append("Translation table location 0 set to Linear, location 1 set to LOG.");
+                    sb.AppendLine("Translation table location 0 set to Linear, location 1 set to LOG.");
                     break;
 
             }
