@@ -24,6 +24,10 @@ namespace vidar_app
 
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [SuppressUnmanagedCodeSecurity]
-        internal static extern uint Scan(_DIGITIZERINFO* P_0, _SCANPARAMETERS* P_1, byte** P_2, uint* P_3);
+        internal static extern int Scan(ref _DIGITIZERINFO P_0, ref _SCANPARAMETERS P_1, ref byte[] P_2, ref uint P_3);
+
+        [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [SuppressUnmanagedCodeSecurity]
+        internal static extern short getVidarError(int P_0, ref _VIDARERRORINFO P_1, ref ushort P_2);
     }
 }

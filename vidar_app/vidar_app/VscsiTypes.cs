@@ -97,5 +97,13 @@ namespace vidar_app
             public _SCANPARAMETERS* scanParametersPtr;
             public _DIGITIZERINFO* digitizerInfoPtr;
         }
+
+        [StructLayout(LayoutKind.Sequential, Size = 82)]
+        public unsafe struct _VIDARERRORINFO
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 500)]
+            public byte[] Data;
+        }
+
     }
 }

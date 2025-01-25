@@ -13,7 +13,6 @@ namespace vidar_app
     internal class DigitizeEngine
     {
         public static int ErrorCode = 0;
-        public _SCANPARAMETERS scan_parameters;
 
 
         public int GetDigInfo(ref _DIGITIZERINFO digitizerInfo)
@@ -26,8 +25,10 @@ namespace vidar_app
         }
 
 
-        public void InitScanParams()
+        public _SCANPARAMETERS InitScanParams()
         {
+            _SCANPARAMETERS scan_parameters = new _SCANPARAMETERS();
+
             scan_parameters.Field0 = 16;
             scan_parameters.Field2 = 600;
             scan_parameters.Field56 = 600;
@@ -47,6 +48,13 @@ namespace vidar_app
             scan_parameters.Field60 = 0;
             scan_parameters.Field64 = 0;
             scan_parameters.Field68 = 0;
+
+            return scan_parameters;
+        }
+
+        public static void StartScan(ref int status, ref _DIGITIZERINFO digitizerInfo, ref _SCANPARAMETERS scan_parameters, ref byte[] imageBuffer, ref uint totalBytesRecieved)
+        {
+            status = VscsiMethods.Scan(ref digitizerInfo, ref scan_parameters, ref imageBuffer, ref totalBytesRecieved);
         }
     }
 
