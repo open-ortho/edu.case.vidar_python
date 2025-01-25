@@ -1,7 +1,11 @@
 ﻿using vidar_app;
+using static vidar_app.Scanner;
 
+ScannerData scanner_data = new ScannerData();
 VscsiTypes._DIGITIZERINFO digitizerInfo = new VscsiTypes._DIGITIZERINFO();
-int status = Startup.InitializeDigitizer(ref digitizerInfo);
+
+//parses readable data out of returned DIGITIZERINFO, prints it and returns a populated scanner_data struct.
+int status = Startup.InitializeDigitizer(ref digitizerInfo, ref scanner_data);
 
 if (status != 0)
 {

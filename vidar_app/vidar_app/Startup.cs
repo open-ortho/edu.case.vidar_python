@@ -10,12 +10,13 @@ using System.Runtime.CompilerServices;
 using System.Net.NetworkInformation;
 using System.Drawing;
 using System.Transactions;
+using static vidar_app.Scanner;
 
 namespace vidar_app
 {
     internal class Startup
     {
-        public static unsafe int InitializeDigitizer(ref _DIGITIZERINFO dIGITIZERINFO)
+        public static unsafe int InitializeDigitizer(ref _DIGITIZERINFO dIGITIZERINFO, ref ScannerData scanner_data)
         {
             DigitizeEngine digitizeEngine = null;
             DigitizeEngine digitizeEngine2 = new DigitizeEngine();
@@ -60,7 +61,7 @@ namespace vidar_app
                 if (status == 0)
                 {
                     Console.WriteLine("Digitizer Info Retrieved");
-                    parseScannerInfo(ref dIGITIZERINFO);
+                    parseScannerInfo(ref dIGITIZERINFO, ref scanner_data);
                     return 0;
                 } else
                 {
@@ -74,33 +75,33 @@ namespace vidar_app
             }
         }
 
-        public static void parseScannerInfo(ref _DIGITIZERINFO digitizerInfo)
+        public static void parseScannerInfo(ref _DIGITIZERINFO digitizerInfo, ref ScannerData scanner_data)
         {
             // TODO Go through the loops in the decomp for the drop downs.
 
             // Offsets are from decompiled code, size and data type are inferred through trial and error.
-            string modelName = getModelName(ref digitizerInfo);
-            string serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
-            string firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
-            int hardwareVersionNumber = (int)digitizerInfo.Data[118];
+            scanner_data.modelName = getModelName(ref digitizerInfo);
+            scanner_data.serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
+            scanner_data.firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
+            scanner_data.hardwareVersionNumber = (int)digitizerInfo.Data[118];
 
-            int currentResolution = (int)digitizerInfo.Data[42];
-            short opticalResolution = parseShortValue(ref digitizerInfo, 44);
-            float maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
+            scanner_data.currentResolution = (int)digitizerInfo.Data[42];
+            scanner_data.opticalResolution = parseShortValue(ref digitizerInfo, 44);
+            scanner_data.maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
 
-            short currentBitDepth = parseShortValue(ref digitizerInfo, 68);
-            short maxFilms = parseShortValue(ref digitizerInfo, 90);
+            scanner_data.currentBitDepth = parseShortValue(ref digitizerInfo, 68);
+            scanner_data.maxFilms = parseShortValue(ref digitizerInfo, 90);
 
-            string darkEnhance = parseBinaryValue(ref digitizerInfo, 86, "Dark Enhance not available", "Dark Enhance available");
-            string lineFilter = parseBinaryValue(ref digitizerInfo, 88, "Line Filter not available", "Line Filter available");
-            string filmBackup = parseBinaryValue(ref digitizerInfo, 92, "Film backup not available", "Film backup available");
-            string unloadMedium = parseBinaryValue(ref digitizerInfo, 100, "Single unloadMedium() command to eject film", "Double unloadMedium() command to eject film");
-            string limitedScans = parseBinaryValue(ref digitizerInfo, 140, "Unlimited scans device", "Limited scans device");
+            scanner_data.darkEnhance = parseBinaryValue(ref digitizerInfo, 86, "Dark Enhance not available", "Dark Enhance available");
+            scanner_data.lineFilter = parseBinaryValue(ref digitizerInfo, 88, "Line Filter not available", "Line Filter available");
+            scanner_data.filmBackup = parseBinaryValue(ref digitizerInfo, 92, "Film backup not available", "Film backup available");
+            scanner_data.unloadMedium = parseBinaryValue(ref digitizerInfo, 100, "Single unloadMedium() command to eject film", "Double unloadMedium() command to eject film");
+            scanner_data.limitedScans = parseBinaryValue(ref digitizerInfo, 140, "Unlimited scans device", "Limited scans device");
 
-            string lineTime = getLineTime(ref digitizerInfo);
-            string feederType = getFeederType(ref digitizerInfo);
-            string lampType = getLampType(ref digitizerInfo);
-            string translationTable = getTranslationTable(ref digitizerInfo);
+            scanner_data.lineTime = getLineTime(ref digitizerInfo);
+            scanner_data.feederType = getFeederType(ref digitizerInfo);
+            scanner_data.lampType = getLampType(ref digitizerInfo);
+            scanner_data.translationTable = getTranslationTable(ref digitizerInfo);
             // time since reset is stored here as well.
 
 
@@ -108,32 +109,33 @@ namespace vidar_app
             Console.WriteLine("");
             Console.WriteLine("-------------------------------------------------------------");
 
-            Console.WriteLine($"Digitizer model: {modelName}");
-            Console.WriteLine($"Serial Number: {serialNumber}");
-            Console.WriteLine($"Firmware version number: {firmwareVersionNumber}");
-            Console.WriteLine($"Hardware version number: {hardwareVersionNumber}");
+            Console.WriteLine($"Digitizer model: {scanner_data.modelName}");
+            Console.WriteLine($"Serial Number: {scanner_data.serialNumber}");
+            Console.WriteLine($"Firmware version number: {scanner_data.firmwareVersionNumber}");
+            Console.WriteLine($"Hardware version number: {scanner_data.hardwareVersionNumber}");
 
-            Console.WriteLine($"Current resolution = {currentResolution}");
-            Console.WriteLine($"Optical resolution = {opticalResolution}");
-            Console.WriteLine($"Maximum width in inches = {maxWidthInInches}");
+            Console.WriteLine($"Current resolution = {scanner_data.currentResolution}");
+            Console.WriteLine($"Optical resolution = {scanner_data.opticalResolution}");
+            Console.WriteLine($"Maximum width in inches = {scanner_data.maxWidthInInches}");
 
-            Console.WriteLine($"Current Bit Depth = {currentBitDepth}");
-            Console.WriteLine($"Maximum number of films = {maxFilms}");
+            Console.WriteLine($"Current Bit Depth = {scanner_data.currentBitDepth}");
+            Console.WriteLine($"Maximum number of films = {scanner_data.maxFilms}");
 
-            Console.WriteLine(darkEnhance);
-            Console.WriteLine(lineFilter);
-            Console.WriteLine(filmBackup);
-            Console.WriteLine(unloadMedium);
-            Console.WriteLine(limitedScans);
+            Console.WriteLine(scanner_data.darkEnhance);
+            Console.WriteLine(scanner_data.lineFilter);
+            Console.WriteLine(scanner_data.filmBackup);
+            Console.WriteLine(scanner_data.unloadMedium);
+            Console.WriteLine(scanner_data.limitedScans);
 
-            Console.WriteLine(lineTime);
-            Console.WriteLine(feederType);
-            Console.WriteLine(lampType);
-            Console.Write(translationTable);
+            Console.WriteLine(scanner_data.lineTime);
+            Console.WriteLine(scanner_data.feederType);
+            Console.WriteLine(scanner_data.lampType);
+            Console.Write(scanner_data.translationTable);
 
             Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("");
             Console.WriteLine("");
+
         }
 
         public static string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
