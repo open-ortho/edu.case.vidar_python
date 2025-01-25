@@ -21,5 +21,9 @@ namespace vidar_app
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [SuppressUnmanagedCodeSecurity]
         internal static extern int findDigitizer(byte* P_0, ushort* P_1, ushort* P_2);
+
+        [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [SuppressUnmanagedCodeSecurity]
+        internal static extern uint Scan(_DIGITIZERINFO* P_0, _SCANPARAMETERS* P_1, byte** P_2, uint* P_3);
     }
 }

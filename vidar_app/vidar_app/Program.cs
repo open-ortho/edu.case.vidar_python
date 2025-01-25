@@ -25,6 +25,10 @@ switch (command)
         Eject.eject(digitizerInfo);
         break;
 
+    case "scan":
+        Scan.scan(digitizerInfo, scanner_data);
+        break;
+
     default:
         Console.WriteLine("Unknown Command");
         break;

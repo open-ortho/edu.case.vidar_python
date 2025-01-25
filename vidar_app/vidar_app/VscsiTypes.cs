@@ -81,10 +81,21 @@ namespace vidar_app
             [FieldOffset(40)] public short Field40;   // Offset 40
             [FieldOffset(44)] public int Field44;     // Offset 44
             [FieldOffset(48)] public int Field48;     // Offset 48
+            [FieldOffset(52)] public int Field52;     // Offset 52
             [FieldOffset(56)] public short Field56;   // Offset 56
             [FieldOffset(60)] public int Field60;     // Offset 60
             [FieldOffset(64)] public int Field64;     // Offset 64
             [FieldOffset(68)] public short Field68;   // Offset 68
+        }
+
+        [StructLayout(LayoutKind.Sequential, Size = 20)]
+        public unsafe struct _SCANFILM
+        {
+            public int* num2Ptr;
+            public byte** imageBufferPtr;
+            public uint* totalBytesRecieved;
+            public _SCANPARAMETERS* scanParametersPtr;
+            public _DIGITIZERINFO* digitizerInfoPtr;
         }
     }
 }
