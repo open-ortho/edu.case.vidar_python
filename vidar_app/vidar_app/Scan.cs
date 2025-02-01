@@ -25,45 +25,53 @@ namespace vidar_app
                 _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams();
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
-                scan_parameters.Field4 = (short)(scan_parameters.Field2 * scanner_data.maxWidthInInches);
+                //scan_parameters.Field4 = (short)(scan_parameters.Field2 * scanner_data.maxWidthInInches); // 1050
 
                 // Unsure what the Max_inches value is, but I calculated it to be 51 with the default values.
-                //digitizeEngine.scan_parameters.Field8 = digitizeEngine.scan_parameters.Field56 * ?Max_Inches?
+                //digitizeEngine.scan_parameters.Field8 = digitizeEngine.scan_parameters.Field56 * ?Max_Inches? //3825
 
                 // To be honest not sure what this one does, but once again matches with the hardcoded defaults.
-                scan_parameters.Field24 = (short)Math.Ceiling((double)scan_parameters.Field0);
+                //scan_parameters.Field24 = (short)Math.Ceiling((double)scan_parameters.Field0*0.125); //1
 
                 // Not sure what this one does either, i think it turns into scanByteCount though.
-                scan_parameters.Field52 = 0;
+                //scan_parameters.Field52 = 0;
 
-                // 8400*30600*2=514,080,000, persumably width*heigh*channels or something.
-                /**int imageBufferSize = scan_parameters.Field4 *
-                                      scan_parameters.Field8 *
-                                      scan_parameters.Field24;**/
-                int imageBufferSize = 14 * 51 * 600;
+
+                /*int imageBufferSize = scan_parameters.Data[4] *
+                                    scan_parameters.Data[8] *
+                                    scan_parameters.Data[24];*/
+
+                int imageBufferSize = 700_000;
 
 
 
                 byte[] imageBuffer = new byte[imageBufferSize];
-                Array.Clear(imageBuffer, 0, imageBufferSize);
 
                 uint totalBytesRecieved = 0;
 
                 int status = -1;
 
-                //int status = Scan(ref digitizerInfo, ref scan_parameters, ref imageBuffer, ref totalBytesRecieved);
 
-                Thread thread = new Thread(() => DigitizeEngine.StartScan(ref status, ref digitizerInfo, ref scan_parameters, ref imageBuffer, ref totalBytesRecieved));
+                DigitizeEngine.StartScan(ref status, ref digitizerInfo, ref scan_parameters, ref imageBuffer, ref totalBytesRecieved);
+
+                /*
+                Thread thread = new Thread(() => DigitizeEngine.StartScan(ref status, digitzerInfoPtr, spPtr, imageBufferPtr, totBytesPtr));
                 thread.Start();
                 thread.Join();
+                */
 
-                Console.WriteLine(status);
+                if (status != 0)
+                {
+                    ushort num3 = 0;
+                    _VIDARERRORINFO errInfo = new _VIDARERRORINFO();
+                    short s = getVidarError(status, ref errInfo, ref num3);
 
-                ushort num3 = 0;
-                _VIDARERRORINFO errInfo = new _VIDARERRORINFO();
-                short s = getVidarError(status, ref errInfo, ref num3);
+                    Console.WriteLine(Encoding.ASCII.GetString(errInfo.Data));
 
-                Console.WriteLine(Encoding.ASCII.GetString(errInfo.Data));
+                    return status;
+                }
+
+
                 return 0;
 
             }
@@ -72,6 +80,31 @@ namespace vidar_app
                 Console.WriteLine(ex.ToString());
                 return 1;
             }
+        }
+
+        static byte[] StructToByteArray(_SCANPARAMETERS structObj)
+        {
+            int size = Marshal.SizeOf(structObj);
+            byte[] byteArray = new byte[size];
+
+            // Allocate unmanaged memory
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            try
+            {
+                // Copy struct data to unmanaged memory
+                Marshal.StructureToPtr(structObj, ptr, false);
+
+                // Copy unmanaged memory to byte array
+                Marshal.Copy(ptr, byteArray, 0, size);
+            }
+            finally
+            {
+                // Free the unmanaged memory
+                Marshal.FreeHGlobal(ptr);
+            }
+
+            return byteArray;
         }
     }
 }

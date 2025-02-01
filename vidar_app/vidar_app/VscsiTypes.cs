@@ -62,30 +62,11 @@ namespace vidar_app
         }
 
 
-        [StructLayout(LayoutKind.Explicit, Size = 72)]
+        [StructLayout(LayoutKind.Sequential, Size = 72)]
         public struct _SCANPARAMETERS
         {
-            // Explicit memory layout with placeholder fields.
-            [FieldOffset(0)] public short Field0;     // Offset 0
-            [FieldOffset(2)] public short Field2;     // Offset 2
-            [FieldOffset(4)] public short Field4;     // Offset 4
-            [FieldOffset(8)] public int Field8;       // Offset 8
-            [FieldOffset(12)] public sbyte Field12;   // Offset 12
-            [FieldOffset(16)] public int Field16;     // Offset 16
-            [FieldOffset(20)] public short Field20;   // Offset 20
-            [FieldOffset(24)] public int Field24;     // Offset 24
-            [FieldOffset(28)] public short Field28;   // Offset 28
-            [FieldOffset(30)] public short Field30;   // Offset 30
-            [FieldOffset(32)] public int Field32;     // Offset 32
-            [FieldOffset(36)] public int Field36;     // Offset 36
-            [FieldOffset(40)] public short Field40;   // Offset 40
-            [FieldOffset(44)] public int Field44;     // Offset 44
-            [FieldOffset(48)] public int Field48;     // Offset 48
-            [FieldOffset(52)] public int Field52;     // Offset 52
-            [FieldOffset(56)] public short Field56;   // Offset 56
-            [FieldOffset(60)] public int Field60;     // Offset 60
-            [FieldOffset(64)] public int Field64;     // Offset 64
-            [FieldOffset(68)] public short Field68;   // Offset 68
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 72)]
+            public byte[] Data;
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 20)]
