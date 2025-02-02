@@ -7,8 +7,13 @@ using System.Text;
 using static vidar_app.VscsiTypes;
 using static vidar_app.Scanner;
 using static vidar_app.VscsiMethods;
+using static vidar_app.TiffHandling;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Collections;
+using System;
+using System.IO;
 
 namespace vidar_app
 {
@@ -26,31 +31,28 @@ namespace vidar_app
                 _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams();
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
-                //scan_parameters.Field4 = (short)(scan_parameters.Field2 * scanner_data.maxWidthInInches); // 1050
+                scan_parameters.setShort(4, (short)(scan_parameters.getShort(2) * scanner_data.maxWidthInInches)); // 1050
 
                 // Unsure what the Max_inches value is, but I calculated it to be 51 with the default values.
-                //digitizeEngine.scan_parameters.Field8 = digitizeEngine.scan_parameters.Field56 * ?Max_Inches? //3825
+                // TODO figure out Max_Inches
+                scan_parameters.setInt(8, scan_parameters.getShort(56) * 51); //?Max_Inches?) //3825
 
                 // To be honest not sure what this one does, but once again matches with the hardcoded defaults.
-                //scan_parameters.Field24 = (short)Math.Ceiling((double)scan_parameters.Field0*0.125); //1
+                scan_parameters.setInt(24, (short)Math.Ceiling((double)scan_parameters.getShort(0)*0.125)); //1
 
                 // Not sure what this one does either, i think it turns into scanByteCount though.
                 //scan_parameters.Field52 = 0;
 
 
-                /*int imageBufferSize = scan_parameters.Data[4] *
-                                    scan_parameters.Data[8] *
-                                    scan_parameters.Data[24];*/
-
-                int imageBufferSize = 700_000;
-
-
-
-                //byte[] imageBuffer = new byte[imageBufferSize];
-
 
                 uint totalBytesRecieved = 0;
                 int status = -1;
+
+
+                // Taken from decomp
+                int imageBufferSize = scan_parameters.getShort(4) *
+                                    scan_parameters.getInt(8) *
+                                    scan_parameters.getInt(24);
 
 
                 IntPtr imageBufferPtr = Marshal.AllocHGlobal(imageBufferSize);
@@ -63,6 +65,7 @@ namespace vidar_app
                 Marshal.FreeHGlobal(imageBufferPtr);
 
 
+                // If there is an error while scanning.
                 if (status != 0)
                 {
                     ushort num3 = 0;
@@ -70,12 +73,29 @@ namespace vidar_app
                     short s = getVidarError(status, ref errInfo, ref num3);
 
                     Console.WriteLine(Encoding.ASCII.GetString(errInfo.Data));
-                    Marshal.FreeHGlobal(imageBufferPtr);
 
                     return status;
                 }
 
-                Marshal.FreeHGlobal(imageBufferPtr);
+                // taken from the decompiled code.
+                if ((int)(scan_parameters.Data[36]) == 1)
+                {
+                    // TODO There are some changes here for different options.
+                    // i.e. WhiteIsZero, b12BitHigh, and some scan params.
+                }
+
+
+                //
+                Console.WriteLine("File Path to write the scan to (end with .png): ");
+                string filePath = Console.ReadLine();
+
+                short width = scan_parameters.getShort(40);
+                short height = scan_parameters.getShort(44);
+                writeImageToFile(imageBuffer, height, width, filePath);
+
+                //int writingStatus = writeToTifFile(imageBuffer, scan_parameters);
+
+
                 return 0;
 
             }
@@ -86,29 +106,30 @@ namespace vidar_app
             }
         }
 
-        static byte[] StructToByteArray(_SCANPARAMETERS structObj)
+        public unsafe static void writeImageToFile(byte[] imageBuffer, int height, int width, string filePath)
         {
-            int size = Marshal.SizeOf(structObj);
-            byte[] byteArray = new byte[size];
-
-            // Allocate unmanaged memory
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-
-            try
+            using (MemoryStream ms = new MemoryStream(imageBuffer))
             {
-                // Copy struct data to unmanaged memory
-                Marshal.StructureToPtr(structObj, ptr, false);
+                using (Bitmap bitmap = new Bitmap(width, height))
+                {
+                    // Create a grayscale image from the byte array
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            // Calculate the byte index based on the position
+                            byte grayValue = imageBuffer[y * width + x];
+                            Color color = Color.FromArgb(grayValue, grayValue, grayValue);
+                            bitmap.SetPixel(x, y, color);
+                        }
+                    }
 
-                // Copy unmanaged memory to byte array
-                Marshal.Copy(ptr, byteArray, 0, size);
-            }
-            finally
-            {
-                // Free the unmanaged memory
-                Marshal.FreeHGlobal(ptr);
+                    // Save the image to a file
+                    bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                }
             }
 
-            return byteArray;
+            Console.WriteLine("Image saved successfully!");
         }
     }
 }
