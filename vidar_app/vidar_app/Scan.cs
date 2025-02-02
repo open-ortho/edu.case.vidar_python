@@ -8,6 +8,7 @@ using static vidar_app.VscsiTypes;
 using static vidar_app.Scanner;
 using static vidar_app.VscsiMethods;
 using System.ComponentModel;
+using System.Drawing;
 
 namespace vidar_app
 {
@@ -45,20 +46,22 @@ namespace vidar_app
 
 
 
-                byte[] imageBuffer = new byte[imageBufferSize];
+                //byte[] imageBuffer = new byte[imageBufferSize];
+
 
                 uint totalBytesRecieved = 0;
-
                 int status = -1;
 
 
-                DigitizeEngine.StartScan(ref status, ref digitizerInfo, ref scan_parameters, ref imageBuffer, ref totalBytesRecieved);
+                IntPtr imageBufferPtr = Marshal.AllocHGlobal(imageBufferSize);
+                byte* bytePtr = (byte*)imageBufferPtr.ToPointer();
 
-                /*
-                Thread thread = new Thread(() => DigitizeEngine.StartScan(ref status, digitzerInfoPtr, spPtr, imageBufferPtr, totBytesPtr));
-                thread.Start();
-                thread.Join();
-                */
+                DigitizeEngine.StartScan(ref status, ref digitizerInfo, ref scan_parameters, ref bytePtr, ref totalBytesRecieved);
+
+                byte[] imageBuffer = new byte[totalBytesRecieved];
+                Marshal.Copy(imageBufferPtr, imageBuffer, 0, (int)totalBytesRecieved);
+                Marshal.FreeHGlobal(imageBufferPtr);
+
 
                 if (status != 0)
                 {
@@ -67,11 +70,12 @@ namespace vidar_app
                     short s = getVidarError(status, ref errInfo, ref num3);
 
                     Console.WriteLine(Encoding.ASCII.GetString(errInfo.Data));
+                    Marshal.FreeHGlobal(imageBufferPtr);
 
                     return status;
                 }
 
-
+                Marshal.FreeHGlobal(imageBufferPtr);
                 return 0;
 
             }
