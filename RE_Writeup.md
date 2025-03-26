@@ -112,8 +112,104 @@ short initScanner(void)
 
 A frustrating pattern we will continue to run into is a whole lot of pointer arithmetic and weird packing/typing. I do not know enough about decompilers or scanner drivers to say what this is due to. It was hard to infer how to call these library functions, so I needed more clues.
 
-Looking through the headers for `VIDARScanNDTPRO.exe` led me to believe it was a `.NET` application:
+Looking through the headers for `VIDARScanNDTPRO.exe` led me to believe it was a .NET application:
 
 ![image](https://github.com/user-attachments/assets/9e09604c-54b2-49ea-b348-0c8f9625c27a)
 
-Thinking this app was `.NET` led me to try a different decompiler: ILSpy, which is made specifically to decompile .NET applications. With a more in-depth compiler, I could see how the program makes the backend calls to replicate it.
+Thinking this app was .NET led me to try a different decompiler: ILSpy, which is made specifically to decompile .NET applications. With a more in-depth compiler, I could see how the program makes the backend calls to replicate it.
+
+Using ILSpy means I can see the .NET (C#) code for `VIDARScanNDTPRO.exe`:
+
+![image](https://github.com/user-attachments/assets/72d8ea3e-a18f-4c0f-b47b-0ada577bfdca)
+
+The .NET application makes calls to the DLL (`Vscsi32.dll`) for low-level calls.
+
+Here is a simple example from the `DigitizerEngine` that calls the DLL's `Calibrate()` function.
+
+```C#
+	public void Normalize()
+	{
+		DigitizeEngine digitizeEngine = null;
+		DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+		try
+		{
+			digitizeEngine = digitizeEngine2;
+			ErrorCode = global::<Module>.Calibrate();
+			if (ErrorCode != 0)
+			{
+				CheckError();
+			}
+		}
+		catch
+		{
+			//try-fault
+			((IDisposable)digitizeEngine).Dispose();
+			throw;
+		}
+		((IDisposable)digitizeEngine).Dispose();
+	}
+```
+
+In this case, calling the `Calibrate()` function is fairly straightforward as it takes no parameters and clearly returns an error code; however, this is not always the case.
+
+As a more complex example, here is a call to the `ScanFilm()` function:
+
+```C#
+
+*(int*)(&sCANFILM) = (int)(&num2);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 16)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref gETDIGINFO, 4));
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 12)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.sp);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 4)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.image_buffer);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 8)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.total_bytes_received);
+System.Runtime.CompilerServices.Unsafe.As<_SCANPARAMETERS, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref global::<Module>.?A0x8f06ef6e.sp, 52)) = 0;
+global::<Module>.GetTickCount();
+uint tickCount = global::<Module>.GetTickCount();
+void* ptr3 = (void*)(int)global::<Module>._beginthreadex(null, 0u, (delegate* unmanaged[Stdcall, Stdcall]<void*, uint>)global::<Module>.__unep@?ScanFilm@?A0x8f06ef6e@@$$FYGIPAX@Z, &sCANFILM, 0u, null);
+``` 
+
+The call is on that last line, called with parameters, the most notable of which is `sCANFILM`, which is populated above with some other values that need to be determined. `sCANFILM` seems to be a structure that contains some fields, one of which is a pointer to a `_SCANPARAMETERS` structure, which itself is a collection of fields. Here is where we gain another level of complexity as we do not get the decompilation of these structs; we can just see their total size in memory.
+
+For example, here is the `_SCANFILM` struct:
+
+```C#
+[StructLayout(LayoutKind.Sequential, Size = 20)]
+[DebugInfoInPDB]
+[MiscellaneousBits(65)]
+[NativeCppClass]
+internal struct _SCANFILM
+{
+}
+```
+
+We know that a `_SCANFILM` instance is 20 bytes in total, but we need to infer anything else based upon how it is used. Here is the population of an instance of `_SCANFILM`:
+
+```		C#
+*(int*)(&sCANFILM) = (int)(&num2);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 16)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref gETDIGINFO, 4));
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 12)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.sp);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 4)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.image_buffer);
+System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 8)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.total_bytes_received);
+```
+
+For the sake of readability, I will remove some of the decompilation artifacts and substitute some pseudocode:
+
+```		C#
+// The first field is inferred to be a pointer to "num2"
+*(int*)(&sCANFILM) = (int)(&num2);
+
+// The fifth field is a pointer to the value stored at byte position 4 in "gETDIGINFO" (this is scanner initialization info)
+sCANFILM[16] = (int)gETDIGINFO[4];
+
+// The fourth field is a pointer to a "sp" (this is a scan parameters struct)
+sCANFILM[12] = (int)global::<Module>.?A0x8f06ef6e.sp;
+
+// The second field, a pointer, is the buffer to which the scanned data is written.
+sCANFILM[4] = (int)global::<Module>.?A0x8f06ef6e.image_buffer;
+
+// The third field is a pointer to a variable tracking the current total bytes recieved from the scanner
+sCANFILM[8] = (int)global::<Module>.?A0x8f06ef6e.total_bytes_received;
+```
+
+Now we get a clearer picture of what the `_SCANFILM` struct stores and how.
+
+This is what most of the work of this reverse engineering looked like: searching the decompilation and inferring internal properties after clearing out all of the garbage.
