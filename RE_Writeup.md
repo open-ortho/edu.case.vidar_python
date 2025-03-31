@@ -1,5 +1,14 @@
 # Reverse Engineering Writeup for VIDAR Radiographic Film Scanner
 
+## Contents
+- [Goal](#goal)
+- [Current Software](#current-software)
+- [Information Gathering](#information-gathering)
+- [Reverse Engineering Calibration Packet Traffic](#reverse-engineering-calibration-packet-traffic)
+- [Static Analysis](#static-analysis)
+- [What do we Really Need?](#what-do-we-really-need)
+  
+
 ## Goal
 Recreate the drivers for the VIDAR Radiographic Film Scanner to be later refined to the Case Western Reserve University Bolton Center's needs. Future improvements
 include a more intuitive interface, the ability to operate over a network connection, and operating a cluster of scanners at once. At this point, we are looking for a CLI to operate the scanner, which can later be
@@ -193,7 +202,7 @@ System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.Com
 
 For the sake of readability, I will remove some of the decompilation artifacts and substitute some pseudocode:
 
-```		C#
+```C#
 // The first field is inferred to be a pointer to "num2"
 *(int*)(&sCANFILM) = (int)(&num2);
 
@@ -213,3 +222,22 @@ sCANFILM[8] = (int)global::<Module>.?A0x8f06ef6e.total_bytes_received;
 Now we get a clearer picture of what the `_SCANFILM` struct stores and how.
 
 This is what most of the work of this reverse engineering looked like: searching the decompilation and inferring internal properties after clearing out all of the garbage.
+
+## What do we Really Need?
+
+The next task was to narrow down what functions from the `vscsi32.dll` library I needed to use for basic scanner functions. This is where we take our first step into dynamic analysis. Using x32dbg, we can connect to a process and see all available and called functions.
+After connecting to a running instance of `VIDARScannerNDTPRO.exe`, we can see all of the imported functions available from `vscsi32.dll`:
+
+![image](https://github.com/user-attachments/assets/95ad8a4c-9855-480e-b560-c1c338f83793)
+
+It is important to note that there are many functions that seem to implement basic actions as helper procedures. It would be more useful to see what the scanner software (`VIDARScannerNDTPRO.exe`) is directly calling.
+Setting some breakpoints and poking around with the software led to this list of directly called functions: `findDigitizer`, `getDigitizerInfo`, `EjectFilm`, `Calibrate`, and `Scan`. Here is the call counter after starting up the program, ejecting a film, and calibrating the scanner:
+
+![image](https://github.com/user-attachments/assets/d425ea3a-f1e7-4d69-af8e-660bbb586f32)
+
+Looking at the timing and hits counter in the dynamic debugger, we can infer what these functions are doing. `EjectFilm`, `Calibrate`, and `Scan` are exactly what you expect; they do the respective actions. `findDigitizer` is called once during startup; it searches the computer's USB interfaces for the scanner hardware device. The `getDigitizerInfo` is called on startup, and before each of the three actions, it queries the connected scanner's available settings and other information.
+
+Now, we have a list of five functions we want our new drivers to be able to call. Next is the actual implementation.
+
+
+
