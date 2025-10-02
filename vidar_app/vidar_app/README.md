@@ -8,6 +8,18 @@ Vidar App is a .NET 8 console application for interacting with Vidar digitizer/s
 - Windows OS (required for native DLLs)
 - `Vscsi32.dll` must be available in the application directory or in your system PATH
 
+### Getting `Vscsi32.dll`
+
+1. **Install Vidar Driver/Software:**
+   - Download and install the official Vidar scanner driver/software package from Vidar or your hardware provider.
+   - The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
+
+2. **Locate the DLL:**
+   - After installation, you can usually find `Vscsi32.dll` in the Vidar installation directory, `C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll`
+
+3. **Copy the DLL:**
+   - Copy `Vscsi32.dll` to this directory.
+
 ## Building
 
 ### Using Command Line
