@@ -22,7 +22,16 @@ This is how i collected packet to perform the Vidar Info operation.
 
 The Vidar Scanner has a Vidar Info
 
+## .NET Code
+
+.NET code in `vidar_app`. This is a console app that uses the `Vscsi32.dll` library to control the scanner. This is the most functional code so far.
+
+
 ## C Code
 
 C code in `vidar_c`. Tried to see if it was easier in C, but i don't think it is.
+
+## Python Code
+
+Python code in `vidar_py`. Attempt with Python. Not complete.
 
