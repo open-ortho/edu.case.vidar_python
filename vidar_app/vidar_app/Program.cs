@@ -1,6 +1,8 @@
 ﻿using vidar_app;
 using static vidar_app.Scanner;
 
+Console.WriteLine("Looking for Scanner...");
+
 ScannerData scanner_data = new ScannerData();
 VscsiTypes._DIGITIZERINFO digitizerInfo = new VscsiTypes._DIGITIZERINFO();
 
