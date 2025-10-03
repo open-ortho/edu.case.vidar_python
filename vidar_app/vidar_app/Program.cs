@@ -14,34 +14,39 @@ if (status != 0)
     return;
 }
 
-Console.WriteLine("\nWelcome to Vidar Scanner Console!");
-Console.WriteLine("-------------------------------------------------------------");
-Console.WriteLine("Available commands (press the first letter):");
-Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
-Console.WriteLine("  [E]ject      - Eject the film from the digitizer");
-Console.WriteLine("  [S]can       - Initiate a scan using the digitizer");
-Console.WriteLine("-------------------------------------------------------------");
-
-Console.Write("Enter a command: ");
-string command = Console.ReadLine().Trim().ToLower();
-
-switch (command)
+bool running = true;
+while (running)
 {
-    case "c":
-        Calibrate.calibrate();
-        break;
+    Console.WriteLine("\nWelcome to Vidar Scanner Console!");
+    Console.WriteLine("-------------------------------------------------------------");
+    Console.WriteLine("Available commands (press the key):");
+    Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
+    Console.WriteLine("  [E]ject      - Eject the film from the digitizer");
+    Console.WriteLine("  [S]can       - Initiate a scan using the digitizer");
+    Console.WriteLine("  [Q]uit       - Exit the application");
+    Console.WriteLine("-------------------------------------------------------------");
 
-    case "e":
-        Eject.eject(digitizerInfo);
-        break;
-
-    case "s":
-        Scan.scan(digitizerInfo, scanner_data);
-        break;
-
-    default:
-        Console.WriteLine("Unknown Command");
-        break;
+    Console.Write("Enter a command: ");
+    var key = Console.ReadKey(true).Key;
+    Console.WriteLine();
+    switch (key)
+    {
+        case ConsoleKey.C:
+            Calibrate.calibrate();
+            break;
+        case ConsoleKey.E:
+            Eject.eject(digitizerInfo);
+            break;
+        case ConsoleKey.S:
+            Scan.scan(digitizerInfo, scanner_data);
+            break;
+        case ConsoleKey.Q:
+            running = false;
+            break;
+        default:
+            Console.WriteLine("Unknown Command");
+            break;
+    }
 }
 
 Console.WriteLine("");
