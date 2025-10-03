@@ -2,3 +2,56 @@ Pipfile.lock
 __pycache__
 *.o
 test.py
+
+# .NET & Visual Studio build outputs
+bin/
+obj/
+*.dll
+*.exe
+*.app
+*.log
+*.vspscc
+*.vssscc
+*.user
+*.suo
+*.cache
+*.pdb
+*.mdb
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+
+# Visual Studio files
+.vs/
+.vscode/
+*.ncb
+*.sdf
+*.opensdf
+*.sln.docstates
+
+# NuGet packages
+*.nupkg
+packages/
+project.lock.json
+packages.lock.json
+
+# Backup & migration logs
+Backup/
+UpgradeLog.htm
+
+# Test results and temp files
+TestResults/
+*.TestResults
+*.tmp
+*.temp
+*.log
+*.vsix
+*.psess
+*.vsp
+*.vspx
+*.vsix
+*.docstates
+_ReSharper*/
+*.DotSettings.user
+
+artifacts/
