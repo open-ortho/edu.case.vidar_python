@@ -53,3 +53,5 @@ TestResults/
 *.docstates
 _ReSharper*/
 *.DotSettings.user
+
+artifacts/
