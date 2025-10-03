@@ -14,20 +14,28 @@ if (status != 0)
     return;
 }
 
-Console.WriteLine("Enter a command: ");
-string command = Console.ReadLine().ToLower();
+Console.WriteLine("\nWelcome to Vidar Scanner Console!");
+Console.WriteLine("-------------------------------------------------------------");
+Console.WriteLine("Available commands (press the first letter):");
+Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
+Console.WriteLine("  [E]ject      - Eject the film from the digitizer");
+Console.WriteLine("  [S]can       - Initiate a scan using the digitizer");
+Console.WriteLine("-------------------------------------------------------------");
+
+Console.Write("Enter a command: ");
+string command = Console.ReadLine().Trim().ToLower();
 
 switch (command)
 {
-    case "calibrate":
+    case "c":
         Calibrate.calibrate();
         break;
 
-    case "eject":
+    case "e":
         Eject.eject(digitizerInfo);
         break;
 
-    case "scan":
+    case "s":
         Scan.scan(digitizerInfo, scanner_data);
         break;
 
