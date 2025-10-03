@@ -38,7 +38,11 @@ while (running)
             Eject.eject(digitizerInfo);
             break;
         case ConsoleKey.S:
-            Scan.scan(digitizerInfo, scanner_data);
+            int scanStatus = Scan.scan(digitizerInfo, scanner_data);
+            if (scanStatus != 0)
+            {
+                Console.WriteLine($"ERROR: Scan failed with status code: {scanStatus}");
+            }
             break;
         case ConsoleKey.Q:
             running = false;

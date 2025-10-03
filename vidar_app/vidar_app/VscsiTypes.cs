@@ -117,6 +117,9 @@ namespace vidar_app
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 500)]
             public byte[] Data;
+
+            public short errorCode => Data != null && Data.Length >= 2 ? BitConverter.ToInt16(Data, 0) : (short)0;
+            public string errorMsg => Data != null && Data.Length > 2 ? Encoding.ASCII.GetString(Data, 2, Data.Length - 2).TrimEnd('\0') : string.Empty;
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 8)]

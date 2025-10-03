@@ -72,7 +72,9 @@ namespace vidar_app
                     _VIDARERRORINFO errInfo = new _VIDARERRORINFO();
                     short s = getVidarError(status, ref errInfo, ref num3);
 
-                    Console.WriteLine(Encoding.ASCII.GetString(errInfo.Data));
+                    // Print error code and message using new struct properties
+                    Console.WriteLine($"ERROR {errInfo.errorCode}: [{errInfo.errorMsg}]");
+                    Console.WriteLine();
 
                     return status;
                 }
