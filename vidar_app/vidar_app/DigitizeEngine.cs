@@ -37,18 +37,15 @@ namespace vidar_app
 
             scan_parameters.Data = new byte[72];
 
-            //DigitizeEngine.InsertShort(scan_parameters.Data, 16, 0);
-            DigitizeEngine.InsertShort(scan_parameters.Data, 8, 0);
+            // 16-bit depth (changed from 8-bit)
+            DigitizeEngine.InsertShort(scan_parameters.Data, 16, 0);
 
+            // 300 DPI resolution (changed from 75 DPI)
+            DigitizeEngine.InsertShort(scan_parameters.Data, 300, 56);
+            DigitizeEngine.InsertShort(scan_parameters.Data, 300, 2);
 
-            //DigitizeEngine.InsertShort(scan_parameters.Data, 600, 2);
-            //DigitizeEngine.InsertShort(scan_parameters.Data, 600, 56);
-            DigitizeEngine.InsertShort(scan_parameters.Data, 75, 56);
-            DigitizeEngine.InsertShort(scan_parameters.Data, 75, 2);
-
-
-            //DigitizeEngine.InsertShort(scan_parameters.Data, 8400, 4);
-            DigitizeEngine.InsertShort(scan_parameters.Data, 1050, 4);
+            // Width adjusted for 300 DPI: 300 * 14 inches = 4200
+            DigitizeEngine.InsertShort(scan_parameters.Data, 4200, 4);
 
             DigitizeEngine.InsertShort(scan_parameters.Data, 1, 28);
             DigitizeEngine.InsertShort(scan_parameters.Data, 0, 30);
@@ -56,11 +53,11 @@ namespace vidar_app
             DigitizeEngine.InsertShort(scan_parameters.Data, 8400, 40);
             DigitizeEngine.InsertShort(scan_parameters.Data, 0, 68);
 
-            //DigitizeEngine.InsertInt(scan_parameters.Data, 30600, 8);
-            DigitizeEngine.InsertInt(scan_parameters.Data, 3825, 8);
+            // Height adjusted for 300 DPI: 3825 * 4 = 15300
+            DigitizeEngine.InsertInt(scan_parameters.Data, 15300, 8);
 
-            //DigitizeEngine.InsertInt(scan_parameters.Data, 2, 24);
-            DigitizeEngine.InsertInt(scan_parameters.Data, 1, 24);
+            // Bytes per pixel: 2 for 16-bit (changed from 1 for 8-bit)
+            DigitizeEngine.InsertInt(scan_parameters.Data, 2, 24);
 
             DigitizeEngine.InsertInt(scan_parameters.Data, 1, 32);
             DigitizeEngine.InsertInt(scan_parameters.Data, 1, 36);
