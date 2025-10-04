@@ -40,11 +40,15 @@ Vidar App is a .NET 8 console application for interacting with Vidar digitizer/s
 
 After building, you can run the application using one of the following methods:
 
-### Using Command Line
+### Command-line usage
 
-```
-dotnet run --project vidar_app/vidar_app.csproj
-```
+- The application accepts an optional `--config <path>` argument to specify the path to the `scan_config.ini` file.
+  - Example (published EXE): `vidar_app.exe --config "C:\path\to\scan_config.ini"`
+  - Example (dotnet run): `dotnet run -- --config "C:\path\to\scan_config.ini"`
+
+- If `--config` is omitted the application defaults to the original behaviour: it looks for (and if missing creates) `scan_config.ini` next to the executable (same behavior as before).
+
+- Note: the path given to `--config` is used as-is (relative paths are resolved by the process working directory). If you want paths relative to the executable, change the path to an absolute path or update the code to resolve relative to the exe directory.
 
 ### Using Visual Studio
 
@@ -128,7 +132,7 @@ Offset4_Width = 1050
 
 This streamlined workflow allows you to quickly test different parameter combinations without manually entering values each time.
 
-**Config File Location:** The config file is created in the same directory as the executable (typically `bin/Debug/net8.0/` or `bin/Release/net8.0/`).
+**Config File Location:** The config file is created in the same directory as the executable (typically `bin/Debug/net8.0/` or `bin/Release/net8.0/`). If you provide `--config <path>` the application will use that file instead.
 
 **Common Parameters to Adjust:**
 - `Offset2_DPI` and `Offset56_DPI_Secondary`: Resolution (75, 150, 300, 600)

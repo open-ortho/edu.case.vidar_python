@@ -3,6 +3,18 @@ using System.Diagnostics;
 using vidar_app;
 using static vidar_app.Scanner;
 
+// Parse command-line args for optional --config <path>
+string? configPath = null;
+var cmdArgs = Environment.GetCommandLineArgs();
+for (int i = 1; i < cmdArgs.Length; i++)
+{
+    if (cmdArgs[i].Equals("--config", StringComparison.OrdinalIgnoreCase) && i + 1 < cmdArgs.Length)
+    {
+        configPath = cmdArgs[i + 1];
+        i++; // skip next
+    }
+}
+
 // Resolve version once at startup using assembly metadata
 string appVersion = GetAssemblyVersion() ?? "unknown";
 
@@ -24,7 +36,7 @@ bool RunApp()
     Console.WriteLine("Looking for Scanner...");
 
     // Load scan configuration from file (creates default if not exists)
-    ScanConfig scanConfig = ScanConfig.Load();
+    ScanConfig scanConfig = ScanConfig.Load(configPath);
 
     // Create scanner data and digitizer info objects
     ScannerData scanner_data = new ScannerData();
