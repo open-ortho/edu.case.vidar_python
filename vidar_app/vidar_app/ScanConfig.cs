@@ -16,9 +16,9 @@ namespace vidar_app
         private const string CONFIG_FILENAME = "scan_config.ini";
 
         // Scan parameters with their default values (from original code before PR)
-        public short Offset0_BitDepth { get; set; } = 8;
+        public short Offset0_BitDepth { get; set; } = 16;
         // Keep internal Offset2 name but the INI exposes a single 'DPI' key
-        public short Offset2_DPI_X { get; set; } = 75;
+        public short Offset2_DPI_X { get; set; } = 300;
         public short Offset4_Width { get; set; } = 1050;
         public int Offset8_Height { get; set; } = 3825;
         public sbyte Offset12_Unknown { get; set; } = 2;
@@ -33,16 +33,16 @@ namespace vidar_app
         public int Offset44_OutputHeight { get; set; } = 30600;
         public int Offset48_Unknown { get; set; } = 0;
         // Y-Axis DPI is kept for internal completeness but is derived from Offset2_DPI
-        public short Offset56_DPI_Y { get; set; } = 75;
+        public short Offset56_DPI_Y { get; set; } = 300;
         public int Offset60_Unknown { get; set; } = 0;
         public int Offset64_Unknown { get; set; } = 0;
         public short Offset68_Unknown { get; set; } = 0;
 
         // New output options
-        // OutputFormat: "TIFF" or "PNG" (default "TIFF")
-        public string OutputFormat { get; set; } = "TIFF";
+        // OutputFormat: "TIFF" or "PNG" (default "PNG")
+        public string OutputFormat { get; set; } = "PNG";
         // OutputPath: directory where images will be written (default current directory)
-        public string OutputPath { get; set; } = ".";
+        public string OutputPath { get; set; } = "~\\Desktop\\VidarScans";
         // OutputPrefix: filename prefix template. Use ${DPI} and ${BIT} tokens.
         public string OutputPrefix { get; set; } = "${DPI}DPI_${BIT}BIT";
 
@@ -130,68 +130,68 @@ namespace vidar_app
             sb.AppendLine("# Edit values to test different settings, then restart the app to reload.");
             sb.AppendLine("#");
             sb.AppendLine("# NOTES:");
-            sb.AppendLine("# - These are the original default values from before the 300 DPI/16-bit changes");
+            sb.AppendLine("# - These are default values for 300 DPI/16-bit");
             sb.AppendLine("# - Format: key = value  # description");
             sb.AppendLine("# - Lines starting with # or ; are comments");
-            sb.AppendLine("# - Unknown parameters have been reverse-engineered but their exact purpose is unclear");
+            //sb.AppendLine("# - Unknown parameters have been reverse-engineered but their exact purpose is unclear");
             sb.AppendLine("");
 
             sb.AppendLine("[ScanParameters]");
             sb.AppendLine("");
             sb.AppendLine("# Bit depth (8 or 16)");
-            sb.AppendLine($"Offset0_BitDepth = {Offset0_BitDepth}");
+            sb.AppendLine($"BitDepth = {Offset0_BitDepth}");
             sb.AppendLine("");
             sb.AppendLine("# DPI resolution (tested DPIs: 75, 150, 300)");
             sb.AppendLine($"DPI = {Offset2_DPI_X}");
             sb.AppendLine("");
-            sb.AppendLine("# Width in pixels (typically DPI * max_width_inches)");
-            sb.AppendLine($"Offset4_Width = {Offset4_Width}");
-            sb.AppendLine("");
-            sb.AppendLine("# Height in pixels");
-            sb.AppendLine($"Offset8_Height = {Offset8_Height}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown byte value");
-            sb.AppendLine($"Offset12_Unknown = {Offset12_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset16_Unknown = {Offset16_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown short value");
-            sb.AppendLine($"Offset20_Unknown = {Offset20_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Bytes per pixel (1 for 8-bit, 2 for 16-bit)");
-            sb.AppendLine($"Offset24_BytesPerPixel = {Offset24_BytesPerPixel}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown short value");
-            sb.AppendLine($"Offset28_Unknown = {Offset28_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown short value");
-            sb.AppendLine($"Offset30_Unknown = {Offset30_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset32_Unknown = {Offset32_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset36_Unknown = {Offset36_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Output width");
-            sb.AppendLine($"Offset40_OutputWidth = {Offset40_OutputWidth}");
-            sb.AppendLine("");
-            sb.AppendLine("# Output height");
-            sb.AppendLine($"Offset44_OutputHeight = {Offset44_OutputHeight}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset48_Unknown = {Offset48_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset60_Unknown = {Offset60_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown int value");
-            sb.AppendLine($"Offset64_Unknown = {Offset64_Unknown}");
-            sb.AppendLine("");
-            sb.AppendLine("# Unknown short value");
-            sb.AppendLine($"Offset68_Unknown = {Offset68_Unknown}");
-            sb.AppendLine("");
+            //sb.AppendLine("# Width in pixels (typically DPI * max_width_inches)");
+            //sb.AppendLine($"Offset4_Width = {Offset4_Width}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Height in pixels");
+            //sb.AppendLine($"Offset8_Height = {Offset8_Height}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown byte value");
+            //sb.AppendLine($"Offset12_Unknown = {Offset12_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset16_Unknown = {Offset16_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown short value");
+            //sb.AppendLine($"Offset20_Unknown = {Offset20_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Bytes per pixel (1 for 8-bit, 2 for 16-bit)");
+            //sb.AppendLine($"Offset24_BytesPerPixel = {Offset24_BytesPerPixel}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown short value");
+            //sb.AppendLine($"Offset28_Unknown = {Offset28_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown short value");
+            //sb.AppendLine($"Offset30_Unknown = {Offset30_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset32_Unknown = {Offset32_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset36_Unknown = {Offset36_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Output width");
+            //sb.AppendLine($"Offset40_OutputWidth = {Offset40_OutputWidth}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Output height");
+            //sb.AppendLine($"Offset44_OutputHeight = {Offset44_OutputHeight}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset48_Unknown = {Offset48_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset60_Unknown = {Offset60_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown int value");
+            //sb.AppendLine($"Offset64_Unknown = {Offset64_Unknown}");
+            //sb.AppendLine("");
+            //sb.AppendLine("# Unknown short value");
+            //sb.AppendLine($"Offset68_Unknown = {Offset68_Unknown}");
+            //sb.AppendLine("");
             sb.AppendLine("# Output options");
             sb.AppendLine("# OutputFormat: TIFF or PNG");
             sb.AppendLine($"OutputFormat = {OutputFormat}");
@@ -212,7 +212,7 @@ namespace vidar_app
             {
                 switch (key)
                 {
-                    case "Offset0_BitDepth":
+                    case "BitDepth":
                         Offset0_BitDepth = short.Parse(value);
                         break;
                     case "DPI":

@@ -111,21 +111,17 @@ The configuration file uses a simple INI format:
 [ScanParameters]
 
 # Bit depth (8 or 16)
-Offset0_BitDepth = 8
+BitDepth = 8
 
-# DPI resolution (common values: 75, 150, 300, 600)
-Offset2_DPI = 75
+# DPI resolution (common values: 75, 150, 300)
+DPI = 75
 
-# Width in pixels (typically DPI * max_width_inches)
-Offset4_Width = 1050
-
-# ... additional parameters ...
 ```
 
 **To test different scan settings:**
 
 1. Open `scan_config.ini` in a text editor
-2. Modify the values you want to test (e.g., change `Offset2_DPI` from 75 to 300)
+2. Modify the values you want to test (e.g., change `DPI` from 75 to 300)
 3. Save the file
 4. Press `[R]` in the application to restart and reload the configuration
 5. Press `[S]` to scan with the new settings
@@ -133,12 +129,6 @@ Offset4_Width = 1050
 This streamlined workflow allows you to quickly test different parameter combinations without manually entering values each time.
 
 **Config File Location:** The config file is created in the same directory as the executable (typically `bin/Debug/net8.0/` or `bin/Release/net8.0/`). If you provide `--config <path>` the application will use that file instead.
-
-**Common Parameters to Adjust:**
-- `Offset2_DPI` and `Offset56_DPI_Secondary`: Resolution (75, 150, 300, 600)
-- `Offset0_BitDepth`: Color depth (8 or 16)
-- `Offset24_BytesPerPixel`: Should be 1 for 8-bit, 2 for 16-bit
-- `Offset4_Width` and `Offset8_Height`: Scan dimensions in pixels
 
 ## Reverse engineering write-up
 
