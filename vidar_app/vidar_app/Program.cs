@@ -36,7 +36,8 @@ bool RunApp()
         Console.WriteLine("Available commands (press the key):");
         Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
         Console.WriteLine("  [E]ject      - Eject the film from the digitizer");
-        Console.WriteLine("  [S]can       - Initiate a scan using the digitizer");
+        Console.WriteLine("  [S]can       - Initiate a scan using default settings (300 DPI, 16-bit)");
+        Console.WriteLine("  [P]arameters - Scan with custom DPI and bit depth parameters");
         Console.WriteLine("  [R]estart    - Re-detect scanner and re-initialize");
         Console.WriteLine("  [Q]uit       - Exit the application");
         Console.WriteLine("-------------------------------------------------------------");
@@ -57,6 +58,13 @@ bool RunApp()
                 if (scanStatus != 0)
                 {
                     Console.WriteLine($"ERROR: Scan failed with status code: {scanStatus}");
+                }
+                break;
+            case ConsoleKey.P:
+                int customScanStatus = Scan.scanWithCustomParams(digitizerInfo, scanner_data);
+                if (customScanStatus != 0)
+                {
+                    Console.WriteLine($"ERROR: Custom scan failed with status code: {customScanStatus}");
                 }
                 break;
             case ConsoleKey.R:

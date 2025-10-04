@@ -21,6 +21,11 @@ namespace vidar_app
     {
         public unsafe static int scan(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data)
         {
+            return scan(digitizerInfo, scanner_data, null, null);
+        }
+
+        public unsafe static int scan(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data, int? customDpi, int? customBitDepth)
+        {
             DigitizeEngine digitizeEngine = null;
             DigitizeEngine digitizeEngine2 = new DigitizeEngine();
 
@@ -28,7 +33,18 @@ namespace vidar_app
             {
                 digitizeEngine = digitizeEngine2;
 
-                _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams();
+                _SCANPARAMETERS scan_parameters;
+                
+                if (customDpi.HasValue && customBitDepth.HasValue)
+                {
+                    Console.WriteLine($"Using custom scan parameters: {customDpi.Value} DPI, {customBitDepth.Value}-bit depth");
+                    scan_parameters = digitizeEngine.InitScanParams(customDpi.Value, customBitDepth.Value);
+                }
+                else
+                {
+                    Console.WriteLine("Using default scan parameters: 300 DPI, 16-bit depth");
+                    scan_parameters = digitizeEngine.InitScanParams();
+                }
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
                 scan_parameters.setShort(4, (short)(scan_parameters.getShort(2) * scanner_data.maxWidthInInches)); // 1050
@@ -132,6 +148,64 @@ namespace vidar_app
             }
 
             Console.WriteLine("Image saved successfully!");
+        }
+
+        // Scan with custom parameters - prompts user for DPI and bit depth
+        public unsafe static int scanWithCustomParams(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data)
+        {
+            Console.WriteLine("\n=== Custom Scan Configuration ===");
+            Console.WriteLine("Enter scan parameters (or press Enter to use defaults):");
+            
+            Console.Write("DPI (default 300): ");
+            string dpiInput = Console.ReadLine();
+            int dpi = string.IsNullOrWhiteSpace(dpiInput) ? 300 : int.Parse(dpiInput);
+            
+            Console.Write("Bit Depth - 8 or 16 (default 16): ");
+            string bitDepthInput = Console.ReadLine();
+            int bitDepth = string.IsNullOrWhiteSpace(bitDepthInput) ? 16 : int.Parse(bitDepthInput);
+
+            return scan(digitizerInfo, scanner_data, dpi, bitDepth);
+        }
+
+        // Print the raw scan parameters for debugging
+        public static void printScanParameters(_SCANPARAMETERS scan_parameters)
+        {
+            Console.WriteLine("\n=== Raw Scan Parameters (72 bytes) ===");
+            Console.WriteLine("Offset | Value (bytes) | Value (interpreted)");
+            Console.WriteLine("-------|---------------|--------------------");
+            
+            // Key parameters we know
+            Console.WriteLine($"  0    | {scan_parameters.getShort(0):D5}        | Bit depth");
+            Console.WriteLine($"  2    | {scan_parameters.getShort(2):D5}        | DPI (primary)");
+            Console.WriteLine($"  4    | {scan_parameters.getShort(4):D5}        | Width in pixels");
+            Console.WriteLine($"  8    | {scan_parameters.getInt(8):D5}        | Height in pixels");
+            Console.WriteLine($" 12    | {scan_parameters.Data[12]:D5}        | Unknown byte");
+            Console.WriteLine($" 16    | {scan_parameters.getInt(16):D5}        | Unknown int");
+            Console.WriteLine($" 20    | {scan_parameters.getShort(20):D5}        | Unknown short");
+            Console.WriteLine($" 24    | {scan_parameters.getInt(24):D5}        | Bytes per pixel");
+            Console.WriteLine($" 28    | {scan_parameters.getShort(28):D5}        | Unknown short");
+            Console.WriteLine($" 30    | {scan_parameters.getShort(30):D5}        | Unknown short");
+            Console.WriteLine($" 32    | {scan_parameters.getInt(32):D5}        | Unknown int");
+            Console.WriteLine($" 36    | {scan_parameters.getInt(36):D5}        | Unknown int");
+            Console.WriteLine($" 40    | {scan_parameters.getShort(40):D5}        | Output width");
+            Console.WriteLine($" 44    | {scan_parameters.getInt(44):D5}        | Output height");
+            Console.WriteLine($" 48    | {scan_parameters.getInt(48):D5}        | Unknown int");
+            Console.WriteLine($" 56    | {scan_parameters.getShort(56):D5}        | DPI (secondary)");
+            Console.WriteLine($" 60    | {scan_parameters.getInt(60):D5}        | Unknown int");
+            Console.WriteLine($" 64    | {scan_parameters.getInt(64):D5}        | Unknown int");
+            Console.WriteLine($" 68    | {scan_parameters.getShort(68):D5}        | Unknown short");
+            
+            Console.WriteLine("\nFull hex dump:");
+            for (int i = 0; i < scan_parameters.Data.Length; i += 16)
+            {
+                Console.Write($"{i:D3}: ");
+                for (int j = 0; j < 16 && (i + j) < scan_parameters.Data.Length; j++)
+                {
+                    Console.Write($"{scan_parameters.Data[i + j]:X2} ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine("=====================================\n");
         }
     }
 }

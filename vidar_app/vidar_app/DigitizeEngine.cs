@@ -33,19 +33,25 @@ namespace vidar_app
 
         public _SCANPARAMETERS InitScanParams()
         {
+            // Use default 300 DPI and 16-bit depth
+            return InitScanParams(300, 16);
+        }
+
+        public _SCANPARAMETERS InitScanParams(int dpi, int bitDepth)
+        {
             _SCANPARAMETERS scan_parameters = new _SCANPARAMETERS();
 
             scan_parameters.Data = new byte[72];
 
-            // 16-bit depth (changed from 8-bit)
-            DigitizeEngine.InsertShort(scan_parameters.Data, 16, 0);
+            // Bit depth at offset 0
+            DigitizeEngine.InsertShort(scan_parameters.Data, (short)bitDepth, 0);
 
-            // 300 DPI resolution (changed from 75 DPI)
-            DigitizeEngine.InsertShort(scan_parameters.Data, 300, 56);
-            DigitizeEngine.InsertShort(scan_parameters.Data, 300, 2);
+            // DPI resolution at offsets 2 and 56
+            DigitizeEngine.InsertShort(scan_parameters.Data, (short)dpi, 56);
+            DigitizeEngine.InsertShort(scan_parameters.Data, (short)dpi, 2);
 
-            // Width adjusted for 300 DPI: 300 * 14 inches = 4200
-            DigitizeEngine.InsertShort(scan_parameters.Data, 4200, 4);
+            // Width: DPI * 14 inches (approximate max width)
+            DigitizeEngine.InsertShort(scan_parameters.Data, (short)(dpi * 14), 4);
 
             DigitizeEngine.InsertShort(scan_parameters.Data, 1, 28);
             DigitizeEngine.InsertShort(scan_parameters.Data, 0, 30);
@@ -53,11 +59,11 @@ namespace vidar_app
             DigitizeEngine.InsertShort(scan_parameters.Data, 8400, 40);
             DigitizeEngine.InsertShort(scan_parameters.Data, 0, 68);
 
-            // Height adjusted for 300 DPI: 3825 * 4 = 15300
-            DigitizeEngine.InsertInt(scan_parameters.Data, 15300, 8);
+            // Height: DPI * 51 inches (calculated from original ratio)
+            DigitizeEngine.InsertInt(scan_parameters.Data, dpi * 51, 8);
 
-            // Bytes per pixel: 2 for 16-bit (changed from 1 for 8-bit)
-            DigitizeEngine.InsertInt(scan_parameters.Data, 2, 24);
+            // Bytes per pixel: calculated from bit depth
+            DigitizeEngine.InsertInt(scan_parameters.Data, (int)Math.Ceiling((double)bitDepth * 0.125), 24);
 
             DigitizeEngine.InsertInt(scan_parameters.Data, 1, 32);
             DigitizeEngine.InsertInt(scan_parameters.Data, 1, 36);
@@ -69,6 +75,22 @@ namespace vidar_app
 
             DigitizeEngine.InsertSByte(scan_parameters.Data, 2, 12);
 
+
+            return scan_parameters;
+        }
+
+        // Initialize scan parameters with raw byte array for advanced users
+        public _SCANPARAMETERS InitScanParamsRaw(byte[] rawData)
+        {
+            _SCANPARAMETERS scan_parameters = new _SCANPARAMETERS();
+
+            if (rawData.Length != 72)
+            {
+                throw new ArgumentException("Raw scan parameters must be exactly 72 bytes");
+            }
+
+            scan_parameters.Data = new byte[72];
+            Array.Copy(rawData, scan_parameters.Data, 72);
 
             return scan_parameters;
         }
