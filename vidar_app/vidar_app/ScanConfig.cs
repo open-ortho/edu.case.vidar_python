@@ -38,30 +38,31 @@ namespace vidar_app
 
         /// <summary>
         /// Loads configuration from file. If file doesn't exist, creates it with defaults.
+        /// If configPath is null, uses default location next to the executable.
         /// </summary>
-        public static ScanConfig Load()
+        public static ScanConfig Load(string? configPath = null)
         {
-            string configPath = GetConfigPath();
-            
-            if (!File.Exists(configPath))
+            string path = configPath ?? GetConfigPath();
+
+            if (!File.Exists(path))
             {
-                Console.WriteLine($"Config file not found at: {configPath}");
+                Console.WriteLine($"Config file not found at: {path}");
                 Console.WriteLine("Creating default config file with original parameters...");
                 ScanConfig defaultConfig = new ScanConfig();
-                defaultConfig.Save();
+                defaultConfig.Save(path);
                 return defaultConfig;
             }
 
-            Console.WriteLine($"Loading scan configuration from: {configPath}");
+            Console.WriteLine($"Loading scan configuration from: {path}");
             ScanConfig config = new ScanConfig();
-            
+
             try
             {
-                string[] lines = File.ReadAllLines(configPath);
+                string[] lines = File.ReadAllLines(path);
                 foreach (string line in lines)
                 {
                     string trimmed = line.Trim();
-                    
+
                     // Skip comments and empty lines
                     if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith("#") || trimmed.StartsWith(";"))
                         continue;
@@ -72,12 +73,12 @@ namespace vidar_app
                     {
                         string key = trimmed.Substring(0, equalsIndex).Trim();
                         string value = trimmed.Substring(equalsIndex + 1).Trim();
-                        
+
                         // Remove inline comments
                         int commentIndex = value.IndexOf('#');
                         if (commentIndex >= 0)
                             value = value.Substring(0, commentIndex).Trim();
-                        
+
                         config.SetValue(key, value);
                     }
                 }
@@ -93,11 +94,12 @@ namespace vidar_app
 
         /// <summary>
         /// Saves current configuration to file with comments explaining each parameter.
+        /// If configPath is null, saves next to the executable.
         /// </summary>
-        public void Save()
+        public void Save(string? configPath = null)
         {
-            string configPath = GetConfigPath();
-            
+            string path = configPath ?? GetConfigPath();
+
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("# Vidar Scanner Configuration");
             sb.AppendLine("# This file controls scan parameters sent to the scanner hardware.");
@@ -169,8 +171,8 @@ namespace vidar_app
             sb.AppendLine("# Unknown short value");
             sb.AppendLine($"Offset68_Unknown = {Offset68_Unknown}");
             
-            File.WriteAllText(configPath, sb.ToString());
-            Console.WriteLine($"Configuration saved to: {configPath}");
+            File.WriteAllText(path, sb.ToString());
+            Console.WriteLine($"Configuration saved to: {path}");
         }
 
         private void SetValue(string key, string value)
