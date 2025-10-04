@@ -68,13 +68,13 @@ namespace vidar_app
         {
             // Named offsets for fields in the Data array to improve readability
             public const int OFFSET_BitDepth = 0;           // short
-            public const int OFFSET_DPI = 2;                // short
+            public const int OFFSET_DPI_X = 2;              // short - X DPI
             public const int OFFSET_Width = 4;              // short
             public const int OFFSET_Height = 8;             // int
             public const int OFFSET_BytesPerPixel = 24;     // int
-            public const int OFFSET_OutputWidth = 40;       // short (legacy)
-            public const int OFFSET_OutputHeight = 44;      // int (legacy)
-            public const int OFFSET_DPI_Secondary = 56;     // short
+            public const int OFFSET_OutputWidth = 40;       // short (returned actual width)
+            public const int OFFSET_OutputHeight = 44;      // int (returned actual height)
+            public const int OFFSET_DPI_Y = 56;             // short - Y DPI (secondary)
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 72)]
             public byte[] Data;

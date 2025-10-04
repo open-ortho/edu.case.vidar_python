@@ -33,7 +33,7 @@ namespace vidar_app
 
                 _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams(config);
 
-                Console.WriteLine($"Scan parameters loaded from config: {config.Offset2_DPI} DPI, {config.Offset0_BitDepth}-bit depth");
+                Console.WriteLine($"Scan parameters loaded from config: {config.Offset2_DPI_X} DPI, {config.Offset0_BitDepth}-bit depth");
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
                 scan_parameters.setShort(4, (short)(scan_parameters.getShort(2) * scanner_data.maxWidthInInches)); // 1050

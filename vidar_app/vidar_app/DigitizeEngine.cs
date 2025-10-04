@@ -39,23 +39,24 @@ namespace vidar_app
             _SCANPARAMETERS scan_parameters = new _SCANPARAMETERS();
             scan_parameters.Data = new byte[72];
 
-            // Populate all offsets from config
-            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset0_BitDepth, 0);
-            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset2_DPI, 2);
-            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset4_Width, 4);
-            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset8_Height, 8);
+            // Populate all offsets from config using named offsets
+            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset0_BitDepth, _SCANPARAMETERS.OFFSET_BitDepth);
+            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset2_DPI_X, _SCANPARAMETERS.OFFSET_DPI_X);
+            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset4_Width, _SCANPARAMETERS.OFFSET_Width);
+            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset8_Height, _SCANPARAMETERS.OFFSET_Height);
             DigitizeEngine.InsertSByte(scan_parameters.Data, config.Offset12_Unknown, 12);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset16_Unknown, 16);
             DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset20_Unknown, 20);
-            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset24_BytesPerPixel, 24);
+            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset24_BytesPerPixel, _SCANPARAMETERS.OFFSET_BytesPerPixel);
             DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset28_Unknown, 28);
             DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset30_Unknown, 30);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset32_Unknown, 32);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset36_Unknown, 36);
-            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset40_OutputWidth, 40);
-            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset44_OutputHeight, 44);
+            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset40_OutputWidth, _SCANPARAMETERS.OFFSET_OutputWidth);
+            DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset44_OutputHeight, _SCANPARAMETERS.OFFSET_OutputHeight);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset48_Unknown, 48);
-            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset56_DPI_Secondary, 56);
+            // Ensure secondary DPI is set to the same value (ScanConfig.Load already kept them in sync)
+            DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset56_DPI_Y, _SCANPARAMETERS.OFFSET_DPI_Y);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset60_Unknown, 60);
             DigitizeEngine.InsertInt(scan_parameters.Data, config.Offset64_Unknown, 64);
             DigitizeEngine.InsertShort(scan_parameters.Data, config.Offset68_Unknown, 68);

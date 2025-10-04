@@ -17,7 +17,8 @@ namespace vidar_app
 
         // Scan parameters with their default values (from original code before PR)
         public short Offset0_BitDepth { get; set; } = 8;
-        public short Offset2_DPI { get; set; } = 75;
+        // Keep internal Offset2 name but the INI exposes a single 'DPI' key
+        public short Offset2_DPI_X { get; set; } = 75;
         public short Offset4_Width { get; set; } = 1050;
         public int Offset8_Height { get; set; } = 3825;
         public sbyte Offset12_Unknown { get; set; } = 2;
@@ -31,7 +32,8 @@ namespace vidar_app
         public short Offset40_OutputWidth { get; set; } = 8400;
         public int Offset44_OutputHeight { get; set; } = 30600;
         public int Offset48_Unknown { get; set; } = 0;
-        public short Offset56_DPI_Secondary { get; set; } = 75;
+        // Y-Axis DPI is kept for internal completeness but is derived from Offset2_DPI
+        public short Offset56_DPI_Y { get; set; } = 75;
         public int Offset60_Unknown { get; set; } = 0;
         public int Offset64_Unknown { get; set; } = 0;
         public short Offset68_Unknown { get; set; } = 0;
@@ -97,6 +99,9 @@ namespace vidar_app
                 Console.WriteLine("Using default values.");
             }
 
+            // Ensure secondary DPI equals primary DPI — keep only one DPI in the config semantics
+            config.Offset56_DPI_Y = config.Offset2_DPI_X;
+
             // Print the resolved output configuration so user knows where images will be written
             try
             {
@@ -126,7 +131,7 @@ namespace vidar_app
             sb.AppendLine("#");
             sb.AppendLine("# NOTES:");
             sb.AppendLine("# - These are the original default values from before the 300 DPI/16-bit changes");
-            sb.AppendLine("# - Format: OffsetXX_Name = value  # description");
+            sb.AppendLine("# - Format: key = value  # description");
             sb.AppendLine("# - Lines starting with # or ; are comments");
             sb.AppendLine("# - Unknown parameters have been reverse-engineered but their exact purpose is unclear");
             sb.AppendLine("");
@@ -136,8 +141,8 @@ namespace vidar_app
             sb.AppendLine("# Bit depth (8 or 16)");
             sb.AppendLine($"Offset0_BitDepth = {Offset0_BitDepth}");
             sb.AppendLine("");
-            sb.AppendLine("# DPI resolution (common values: 75, 150, 300, 600)");
-            sb.AppendLine($"Offset2_DPI = {Offset2_DPI}");
+            sb.AppendLine("# DPI resolution (tested DPIs: 75, 150, 300)");
+            sb.AppendLine($"DPI = {Offset2_DPI_X}");
             sb.AppendLine("");
             sb.AppendLine("# Width in pixels (typically DPI * max_width_inches)");
             sb.AppendLine($"Offset4_Width = {Offset4_Width}");
@@ -178,9 +183,6 @@ namespace vidar_app
             sb.AppendLine("# Unknown int value");
             sb.AppendLine($"Offset48_Unknown = {Offset48_Unknown}");
             sb.AppendLine("");
-            sb.AppendLine("# DPI resolution (secondary, should match Offset2_DPI)");
-            sb.AppendLine($"Offset56_DPI_Secondary = {Offset56_DPI_Secondary}");
-            sb.AppendLine("");
             sb.AppendLine("# Unknown int value");
             sb.AppendLine($"Offset60_Unknown = {Offset60_Unknown}");
             sb.AppendLine("");
@@ -213,8 +215,10 @@ namespace vidar_app
                     case "Offset0_BitDepth":
                         Offset0_BitDepth = short.Parse(value);
                         break;
-                    case "Offset2_DPI":
-                        Offset2_DPI = short.Parse(value);
+                    case "DPI":
+                        // new, single DPI key for INI
+                        Offset2_DPI_X = short.Parse(value);
+                        Offset56_DPI_Y = short.Parse(value);
                         break;
                     case "Offset4_Width":
                         Offset4_Width = short.Parse(value);
@@ -254,9 +258,6 @@ namespace vidar_app
                         break;
                     case "Offset48_Unknown":
                         Offset48_Unknown = int.Parse(value);
-                        break;
-                    case "Offset56_DPI_Secondary":
-                        Offset56_DPI_Secondary = short.Parse(value);
                         break;
                     case "Offset60_Unknown":
                         Offset60_Unknown = int.Parse(value);
