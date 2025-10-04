@@ -1,5 +1,10 @@
-﻿using vidar_app;
+﻿using System.Reflection;
+using System.Diagnostics;
+using vidar_app;
 using static vidar_app.Scanner;
+
+// Resolve version once at startup using assembly metadata
+string appVersion = GetAssemblyVersion() ?? "unknown";
 
 // Main application loop. Handles restart and quit logic.
 while (true)
@@ -34,7 +39,8 @@ bool RunApp()
 
     while (true)
     {
-        Console.WriteLine("\nWelcome to Vidar Scanner Console!");
+        Console.WriteLine();
+        Console.WriteLine($"Welcome to Vidar Scanner Console!  (version: {appVersion})");
         Console.WriteLine("-------------------------------------------------------------");
         Console.WriteLine("Available commands (press the key):");
         Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
@@ -74,4 +80,25 @@ bool RunApp()
                 break;
         }
     }
+}
+
+static string? GetAssemblyVersion()
+{
+    var entry = Assembly.GetEntryAssembly();
+    if (entry == null) return null;
+
+    // Prefer AssemblyInformationalVersion
+    var infoAttr = entry.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    if (!string.IsNullOrWhiteSpace(infoAttr)) return infoAttr;
+
+    // Next prefer product/file version
+    try
+    {
+        var fileVer = FileVersionInfo.GetVersionInfo(entry.Location).ProductVersion;
+        if (!string.IsNullOrWhiteSpace(fileVer)) return fileVer;
+    }
+    catch { }
+
+    // Fallback to assembly name version
+    return entry.GetName().Version?.ToString();
 }
