@@ -89,36 +89,52 @@ Excluding artifacts from Git:
 When started, the app shows a simple key-driven menu. Press the single letter key shown in brackets to run a command (the program reads a single key press, no Enter required):
 
 - `[C]` Calibrate   – Calibrates the digitizer.
-- `[E]` Eject       – Ejects the film from the digitizer. The `Eject` command receives the detected digitizer info.
-- `[S]` Scan        – Initiates a scan using default settings (300 DPI, 16-bit depth).
-- `[P]` Parameters  – Scan with custom DPI and bit depth parameters (for testing different settings).
-- `[R]` Restart     – Re-detects and re-initializes the scanner (returns to detection step).
+- `[E]` Eject       – Ejects the film from the digitizer.
+- `[S]` Scan        – Initiates a scan using parameters from `scan_config.ini`.
+- `[R]` Restart     – Re-detects and re-initializes the scanner, and reloads configuration from `scan_config.ini`.
 - `[Q]` Quit        – Exit the application.
 
-Example: press the `S` key to start a scan with default settings. If a command fails, the program prints an error code to the console.
+Example: press the `S` key to start a scan with the settings loaded from the config file. If a command fails, the program prints an error code to the console.
 
-### Custom Scan Parameters
+### Configuration File
 
-The `[P]` Parameters option allows you to test different scan settings to find the optimal configuration for your scanner. When you select this option:
+The application uses a configuration file (`scan_config.ini`) to control scan parameters. On first run, if the file doesn't exist, it will be automatically created with default values (original settings from before the 300 DPI changes: 75 DPI, 8-bit depth).
 
-1. You'll be prompted to enter a DPI value (default: 300)
-2. You'll be prompted to enter a bit depth (8 or 16, default: 16)
-3. The scan will proceed with your custom values
+The configuration file uses a simple INI format:
 
-This is useful for:
-- Testing different resolutions to find the best quality/speed trade-off
-- Troubleshooting image distortion or sizing issues
-- Experimenting with scanner capabilities
+```ini
+# Vidar Scanner Configuration
+[ScanParameters]
 
-**Common DPI values to try:** 75, 150, 200, 300, 600
-**Bit depth options:** 8-bit (grayscale) or 16-bit (higher quality grayscale)
+# Bit depth (8 or 16)
+Offset0_BitDepth = 8
 
-### Default Scan Settings
+# DPI resolution (common values: 75, 150, 300, 600)
+Offset2_DPI = 75
 
-The default scan settings (used with `[S]` option) are:
-- **Resolution:** 300 DPI
-- **Bit Depth:** 16-bit
-- These provide a good balance of quality and file size for most radiographic film scanning applications.
+# Width in pixels (typically DPI * max_width_inches)
+Offset4_Width = 1050
+
+# ... additional parameters ...
+```
+
+**To test different scan settings:**
+
+1. Open `scan_config.ini` in a text editor
+2. Modify the values you want to test (e.g., change `Offset2_DPI` from 75 to 300)
+3. Save the file
+4. Press `[R]` in the application to restart and reload the configuration
+5. Press `[S]` to scan with the new settings
+
+This streamlined workflow allows you to quickly test different parameter combinations without manually entering values each time.
+
+**Config File Location:** The config file is created in the same directory as the executable (typically `bin/Debug/net8.0/` or `bin/Release/net8.0/`).
+
+**Common Parameters to Adjust:**
+- `Offset2_DPI` and `Offset56_DPI_Secondary`: Resolution (75, 150, 300, 600)
+- `Offset0_BitDepth`: Color depth (8 or 16)
+- `Offset24_BytesPerPixel`: Should be 1 for 8-bit, 2 for 16-bit
+- `Offset4_Width` and `Offset8_Height`: Scan dimensions in pixels
 
 ## Reverse engineering write-up
 

@@ -29,9 +29,6 @@ namespace vidar_app
                 ushort num2 = 0;
                 ushort num3 = 0;
 
-                // Initialize scan parameters
-                digitizeEngine.InitScanParams();
-
                 VscsiTypes.ArrayType1 arr1 = new VscsiTypes.ArrayType1();
 
                 // Initialize HARDWAREINFO structure
