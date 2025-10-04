@@ -88,13 +88,37 @@ Excluding artifacts from Git:
 
 When started, the app shows a simple key-driven menu. Press the single letter key shown in brackets to run a command (the program reads a single key press, no Enter required):
 
-- `[C]` Calibrate — Calibrates the digitizer.
-- `[E]` Eject     — Ejects the film from the digitizer. The `Eject` command receives the detected digitizer info.
-- `[S]` Scan      — Initiates a scan using the digitizer. The command returns a status code printed to the console on error.
-- `[R]` Restart   — Re-detects and re-initializes the scanner (returns to detection step).
-- `[Q]` Quit      — Exit the application.
+- `[C]` Calibrate   â€“ Calibrates the digitizer.
+- `[E]` Eject       â€“ Ejects the film from the digitizer. The `Eject` command receives the detected digitizer info.
+- `[S]` Scan        â€“ Initiates a scan using default settings (300 DPI, 16-bit depth).
+- `[P]` Parameters  â€“ Scan with custom DPI and bit depth parameters (for testing different settings).
+- `[R]` Restart     â€“ Re-detects and re-initializes the scanner (returns to detection step).
+- `[Q]` Quit        â€“ Exit the application.
 
-Example: press the `S` key to start a scan. If a command fails, the program prints an error code to the console.
+Example: press the `S` key to start a scan with default settings. If a command fails, the program prints an error code to the console.
+
+### Custom Scan Parameters
+
+The `[P]` Parameters option allows you to test different scan settings to find the optimal configuration for your scanner. When you select this option:
+
+1. You'll be prompted to enter a DPI value (default: 300)
+2. You'll be prompted to enter a bit depth (8 or 16, default: 16)
+3. The scan will proceed with your custom values
+
+This is useful for:
+- Testing different resolutions to find the best quality/speed trade-off
+- Troubleshooting image distortion or sizing issues
+- Experimenting with scanner capabilities
+
+**Common DPI values to try:** 75, 150, 200, 300, 600
+**Bit depth options:** 8-bit (grayscale) or 16-bit (higher quality grayscale)
+
+### Default Scan Settings
+
+The default scan settings (used with `[S]` option) are:
+- **Resolution:** 300 DPI
+- **Bit Depth:** 16-bit
+- These provide a good balance of quality and file size for most radiographic film scanning applications.
 
 ## Reverse engineering write-up
 
