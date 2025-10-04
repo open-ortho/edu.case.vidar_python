@@ -1,4 +1,4 @@
-@echo on
+@echo off
 REM Build and publish the app
 setlocal enabledelayedexpansion
 set PROJ=vidar_app\vidar_app.csproj
