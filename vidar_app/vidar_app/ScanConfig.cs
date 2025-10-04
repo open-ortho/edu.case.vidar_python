@@ -36,6 +36,14 @@ namespace vidar_app
         public int Offset64_Unknown { get; set; } = 0;
         public short Offset68_Unknown { get; set; } = 0;
 
+        // New output options
+        // OutputFormat: "TIFF" or "PNG" (default "TIFF")
+        public string OutputFormat { get; set; } = "TIFF";
+        // OutputPath: directory where images will be written (default current directory)
+        public string OutputPath { get; set; } = ".";
+        // OutputPrefix: filename prefix template. Use ${DPI} and ${BIT} tokens.
+        public string OutputPrefix { get; set; } = "${DPI}DPI_${BIT}BIT";
+
         /// <summary>
         /// Loads configuration from file. If file doesn't exist, creates it with defaults.
         /// If configPath is null, uses default location next to the executable.
@@ -89,6 +97,17 @@ namespace vidar_app
                 Console.WriteLine("Using default values.");
             }
 
+            // Print the resolved output configuration so user knows where images will be written
+            try
+            {
+                string resolvedPath = ExpandPath(config.OutputPath ?? ".");
+                Console.WriteLine($"Output configuration: Format={config.OutputFormat}, Path={resolvedPath}, Prefix={config.OutputPrefix}");
+            }
+            catch
+            {
+                Console.WriteLine($"Output configuration: Format={config.OutputFormat}, Path={config.OutputPath}, Prefix={config.OutputPrefix}");
+            }
+
             return config;
         }
 
@@ -111,7 +130,7 @@ namespace vidar_app
             sb.AppendLine("# - Lines starting with # or ; are comments");
             sb.AppendLine("# - Unknown parameters have been reverse-engineered but their exact purpose is unclear");
             sb.AppendLine("");
-            
+
             sb.AppendLine("[ScanParameters]");
             sb.AppendLine("");
             sb.AppendLine("# Bit depth (8 or 16)");
@@ -170,7 +189,17 @@ namespace vidar_app
             sb.AppendLine("");
             sb.AppendLine("# Unknown short value");
             sb.AppendLine($"Offset68_Unknown = {Offset68_Unknown}");
-            
+            sb.AppendLine("");
+            sb.AppendLine("# Output options");
+            sb.AppendLine("# OutputFormat: TIFF or PNG");
+            sb.AppendLine($"OutputFormat = {OutputFormat}");
+            sb.AppendLine("");
+            sb.AppendLine("# OutputPath: directory where image files will be written");
+            sb.AppendLine($"OutputPath = {OutputPath}");
+            sb.AppendLine("");
+            sb.AppendLine("# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}");
+            sb.AppendLine($"OutputPrefix = {OutputPrefix}");
+
             File.WriteAllText(path, sb.ToString());
             Console.WriteLine($"Configuration saved to: {path}");
         }
@@ -238,6 +267,15 @@ namespace vidar_app
                     case "Offset68_Unknown":
                         Offset68_Unknown = short.Parse(value);
                         break;
+                    case "OutputFormat":
+                        OutputFormat = value.ToUpperInvariant();
+                        break;
+                    case "OutputPath":
+                        OutputPath = value;
+                        break;
+                    case "OutputPrefix":
+                        OutputPrefix = value;
+                        break;
                     default:
                         Console.WriteLine($"Warning: Unknown config key: {key}");
                         break;
@@ -254,6 +292,37 @@ namespace vidar_app
             // Place config file in the same directory as the executable
             string exeDir = AppDomain.CurrentDomain.BaseDirectory;
             return Path.Combine(exeDir, CONFIG_FILENAME);
+        }
+
+        private static string ExpandPath(string path)
+        {
+            // Expand user home directory (~) and environment variables
+            if (string.IsNullOrWhiteSpace(path))
+                return path ?? string.Empty;
+
+            try
+            {
+                string p = path.Trim();
+
+                // Expand environment variables (e.g., %USERPROFILE%) first
+                p = Environment.ExpandEnvironmentVariables(p);
+
+                // Expand ~ to user profile folder
+                if (p.StartsWith("~"))
+                {
+                    string homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string rest = p.Length == 1 ? string.Empty : p.Substring(1).TrimStart('\\', '/');
+                    p = Path.Combine(homePath, rest);
+                }
+
+                // Return full absolute path
+                return Path.GetFullPath(p);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error expanding path: {ex.Message}");
+                return path;
+            }
         }
     }
 }
