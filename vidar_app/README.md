@@ -4,21 +4,20 @@ Vidar App is a .NET 8 console application for interacting with Vidar digitizer/s
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- Windows OS (required for native DLLs)
-- `Vscsi32.dll` must be available in the application directory or in your system PATH
+- Windows OS with x86 32 bit support (required for native DLLs)
+- The Vidar scanner driver / WinUSB binding must be installed on target machines. Typically this is provided by the Vidar driver package (INF/SYS/CAT). The driver must be installed/added (for example with `pnputil /add-driver <path-to-inf> /install`) and administrative privileges are required. On 64-bit Windows a properly signed driver is required for normal operation.
+- `Vscsi32.dll` must be available in the application directory or in your system PATH (the packager attempts to copy this DLL into the release).
 
 ### Getting `Vscsi32.dll`
 
 1. **Install Vidar Driver/Software:**
-   - Download and install the official Vidar scanner driver/software package from Vidar or your hardware provider.
-   - The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
+   - Download and install the official Vidar scanner driver/software package from Vidar or your hardware provider. The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
 
 2. **Locate the DLL:**
    - After installation, you can usually find `Vscsi32.dll` in the Vidar installation directory, `C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll`
 
 3. **Copy the DLL:**
-   - Copy `Vscsi32.dll` to this directory.
+   - Copy `Vscsi32.dll` to this directory if you are building or running from source.
 
 ## Building
 
@@ -70,7 +69,7 @@ How to run the packager:
 
    Notes:
    - Run the script from `cmd.exe` (not PowerShell) to see full command echoing reliably. If you run it from PowerShell, PowerShell will invoke cmd to execute the batch file, but debugging output is clearer in a dedicated Command Prompt.
-   - The script requires the .NET SDK and PowerShell's `Compress-Archive` cmdlet (PowerShell 5+), and it expects `Vscsi32.dll` to be present either in the current directory or in `C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll`.
+   - The script requires the .NET SDK to be present if you intend to run the `dotnet` build/publish steps locally. The packager will publish a self-contained release for the configured RID (see the script), and it attempts to include `Vscsi32.dll` from either the repo root or the Vidar driver install location.
 
 Where to find the ZIP:
 
@@ -103,7 +102,7 @@ A write-up describing how the Vidar driver and protocols were reverse engineered
 ## Notes
 
 - Ensure `Vscsi32.dll` is present and accessible.
-- Administrative privileges may be required for hardware access.
+- Administrative privileges may be required for hardware access and driver installation.
 - For troubleshooting, check console output for error codes.
 
 ## Troubleshooting
