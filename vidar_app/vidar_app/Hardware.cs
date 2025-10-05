@@ -6,12 +6,9 @@ namespace vidar_app
     {
         internal unsafe static uint LocateHardware(VscsiTypes._HARDWAREINFO HwInfo)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 _HARDWAREINFO* hwInfoPtr = &HwInfo;
 
                 // Access the fields of _HARDWAREINFO

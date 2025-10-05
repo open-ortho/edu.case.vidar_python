@@ -15,13 +15,10 @@ namespace vidar_app
     {
         public static int calibrate()
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 Console.WriteLine("Calibrating...");
 
                 int status = VscsiMethods.Calibrate();
@@ -38,9 +35,9 @@ namespace vidar_app
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }

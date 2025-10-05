@@ -15,13 +15,10 @@ namespace vidar_app
     {
         public static int eject(VscsiTypes._DIGITIZERINFO dIGITIZERINFO)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 Console.WriteLine("Ejecting film...");
 
                 int status = VscsiMethods.EjectFilm(ref dIGITIZERINFO, 0);
@@ -38,9 +35,9 @@ namespace vidar_app
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }

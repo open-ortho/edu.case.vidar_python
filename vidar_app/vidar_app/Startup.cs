@@ -21,14 +21,10 @@ namespace vidar_app
     {
         public static unsafe int InitializeDigitizer(ref _DIGITIZERINFO dIGITIZERINFO, ref ScannerData scanner_data)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
-                int num = 0;
                 ushort num2 = 0;
                 ushort num3 = 0;
 
@@ -69,9 +65,9 @@ namespace vidar_app
                     return status;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 

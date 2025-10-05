@@ -24,13 +24,10 @@ namespace vidar_app
     {
         public unsafe static int scan(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data, ScanConfig config)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams(config);
 
                 Console.WriteLine($"Scan parameters loaded from config: {config.Offset2_DPI_X} DPI, {config.Offset0_BitDepth}-bit depth");
