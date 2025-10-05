@@ -55,3 +55,5 @@ _ReSharper*/
 *.DotSettings.user
 
 artifacts/
+# Scanner configuration file (user-specific)
+scan_config.ini

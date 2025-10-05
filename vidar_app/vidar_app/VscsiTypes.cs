@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace vidar_app
 {
@@ -66,6 +61,16 @@ namespace vidar_app
         [StructLayout(LayoutKind.Sequential, Size = 72)]
         public struct _SCANPARAMETERS
         {
+            // Named offsets for fields in the Data array to improve readability
+            public const int OFFSET_BitDepth = 0;           // short
+            public const int OFFSET_DPI_X = 2;              // short - X DPI
+            public const int OFFSET_Width = 4;              // short
+            public const int OFFSET_Height = 8;             // int
+            public const int OFFSET_BytesPerPixel = 24;     // int
+            public const int OFFSET_OutputWidth = 40;       // short (returned actual width)
+            public const int OFFSET_OutputHeight = 44;      // int (returned actual height)
+            public const int OFFSET_DPI_Y = 56;             // short - Y DPI (secondary)
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 72)]
             public byte[] Data;
 
