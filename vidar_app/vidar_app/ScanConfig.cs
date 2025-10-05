@@ -34,8 +34,6 @@ namespace vidar_app
         public short Offset68_Unknown { get; set; } = 0;
 
         // New output options
-        // OutputFormat: "TIFF" or "PNG" (default "PNG")
-        public string OutputFormat { get; set; } = "PNG";
         // OutputPath: directory where images will be written (default current directory)
         public string OutputPath { get; set; } = "~\\Desktop\\VidarScans";
         // OutputPrefix: filename prefix template. Use ${DPI} and ${BIT} tokens.
@@ -101,11 +99,11 @@ namespace vidar_app
             try
             {
                 string resolvedPath = ExpandPath(config.OutputPath ?? ".");
-                Console.WriteLine($"Output configuration: Format={config.OutputFormat}, Path={resolvedPath}, Prefix={config.OutputPrefix}");
+                Console.WriteLine($"Output configuration: Format=PNG, Path={resolvedPath}, Prefix={config.OutputPrefix}");
             }
             catch
             {
-                Console.WriteLine($"Output configuration: Format={config.OutputFormat}, Path={config.OutputPath}, Prefix={config.OutputPrefix}");
+                Console.WriteLine($"Output configuration: Format=PNG, Path={config.OutputPath}, Prefix={config.OutputPrefix}");
             }
 
             return config;
@@ -188,10 +186,7 @@ namespace vidar_app
             //sb.AppendLine($"Offset68_Unknown = {Offset68_Unknown}");
             //sb.AppendLine("");
             sb.AppendLine("# Output options");
-            sb.AppendLine("# OutputFormat: TIFF or PNG");
-            sb.AppendLine($"OutputFormat = {OutputFormat}");
-            sb.AppendLine("");
-            sb.AppendLine("# OutputPath: directory where image files will be written");
+            sb.AppendLine("# OutputPath: directory where image files will be written (PNG format)");
             sb.AppendLine($"OutputPath = {OutputPath}");
             sb.AppendLine("");
             sb.AppendLine("# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}");
@@ -262,9 +257,6 @@ namespace vidar_app
                         break;
                     case "Offset68_Unknown":
                         Offset68_Unknown = short.Parse(value);
-                        break;
-                    case "OutputFormat":
-                        OutputFormat = value.ToUpperInvariant();
                         break;
                     case "OutputPath":
                         OutputPath = value;
