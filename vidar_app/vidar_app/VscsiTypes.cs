@@ -19,22 +19,21 @@ namespace vidar_app
     public class VscsiTypes
     {
         [StructLayout(LayoutKind.Sequential, Size = 144)]
-        public struct _DIGITIZERINFO
+        public unsafe struct _DIGITIZERINFO
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 144)]
-            public byte[] Data;
+            public fixed byte Data[144];
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 148)]
-        public struct _GETDIGINFO
+        public unsafe struct _GETDIGINFO
         {
             public int Status;
-            public byte[] Data;
+            public fixed byte Data[144];
         }
 
         // Method to convert _GETDIGINFO to _DIGITIZERINFO
         // a _GETDIGINFO is  a _DIGITIZERINFO but with a integer prepended
-        public static int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
+        public static unsafe int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
         {
             // Extract the 4-byte integer from the _GETDIGINFO struct (Status)
             int status = getDigInfo.Status;
@@ -42,9 +41,11 @@ namespace vidar_app
             // Initialize the _DIGITIZERINFO structure
             digitizerInfo = new _DIGITIZERINFO();
 
-            // Copy the remaining bytes into _DIGITIZERINFO (assuming the size of _DIGITIZERINFO is 144 bytes)
-            digitizerInfo.Data = new byte[144];  // Assuming _DIGITIZERINFO has a Data array for simplicity
-            Array.Copy(getDigInfo.Data, 0, digitizerInfo.Data, 0, 144);  // Copy data starting from byte 4 of _GETDIGINFO
+            // Copy the remaining bytes into _DIGITIZERINFO
+            for (int i = 0; i < 144; i++)
+            {
+                digitizerInfo.Data[i] = getDigInfo.Data[i];
+            }
 
             // Return the extracted status code
             return status;
@@ -67,7 +68,7 @@ namespace vidar_app
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 72)]
-        public struct _SCANPARAMETERS
+        public unsafe struct _SCANPARAMETERS
         {
             // Named offsets for fields in the Data array to improve readability
             public const int OFFSET_BitDepth = 0;           // short
@@ -79,39 +80,38 @@ namespace vidar_app
             public const int OFFSET_OutputHeight = 44;      // int (returned actual height)
             public const int OFFSET_DPI_Y = 56;             // short - Y DPI (secondary)
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 72)]
-            public byte[] Data;
+            public fixed byte Data[72];
 
-            public unsafe short getShort(int offset)
+            public short getShort(int offset)
             {
-                byte[] shortBytes = new byte[2];
-                Array.Copy(this.Data, offset, shortBytes, 0, 2);
-
-                return (short)BitConverter.ToInt16(shortBytes, 0);
+                fixed (byte* ptr = Data)
+                {
+                    return *(short*)(ptr + offset);
+                }
             }
 
-            public unsafe int getInt(int offset)
+            public int getInt(int offset)
             {
-                byte[] intBytes = new byte[4];
-                Array.Copy(this.Data, offset, intBytes, 0, 4);
-
-                return BitConverter.ToInt32(intBytes, 0);
+                fixed (byte* ptr = Data)
+                {
+                    return *(int*)(ptr + offset);
+                }
             }
 
-            public unsafe void setShort(int offset, short value)
+            public void setShort(int offset, short value)
             {
-                byte[] shortBytes = BitConverter.GetBytes(value);
-
-                // Set the bytes in the byte array at the specified offset
-                Array.Copy(shortBytes, 0, this.Data, offset, 2);
+                fixed (byte* ptr = Data)
+                {
+                    *(short*)(ptr + offset) = value;
+                }
             }
 
-            public unsafe void setInt(int offset, int value)
+            public void setInt(int offset, int value)
             {
-                byte[] intBytes = BitConverter.GetBytes(value);
-
-                // Set the bytes in the byte array at the specified offset
-                Array.Copy(intBytes, 0, this.Data, offset, 4);
+                fixed (byte* ptr = Data)
+                {
+                    *(int*)(ptr + offset) = value;
+                }
             }
         }
 
@@ -128,11 +128,35 @@ namespace vidar_app
         [StructLayout(LayoutKind.Sequential, Size = 82)]
         public unsafe struct _VIDARERRORINFO
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 500)]
-            public byte[] Data;
+            public fixed byte Data[500];
 
-            public short errorCode => Data != null && Data.Length >= 2 ? BitConverter.ToInt16(Data, 0) : (short)0;
-            public string errorMsg => Data != null && Data.Length > 2 ? Encoding.ASCII.GetString(Data, 2, Data.Length - 2).TrimEnd('\0') : string.Empty;
+            public short errorCode
+            {
+                get
+                {
+                    fixed (byte* ptr = Data)
+                    {
+                        return *(short*)ptr;
+                    }
+                }
+            }
+
+            public string errorMsg
+            {
+                get
+                {
+                    fixed (byte* ptr = Data)
+                    {
+                        // Skip first 2 bytes (errorCode) and read the rest as ASCII string
+                        int length = 0;
+                        for (int i = 2; i < 500 && ptr[i] != 0; i++)
+                        {
+                            length++;
+                        }
+                        return Encoding.ASCII.GetString(ptr + 2, length);
+                    }
+                }
+            }
         }
     }
 }
