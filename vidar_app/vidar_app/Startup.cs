@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿/*
+ * Startup.cs
+ * Scanner initialization and digitizer information retrieval.
+ *
+ * Responsibilities:
+ *  - Initialize and detect connected Vidar scanner hardware
+ *  - Retrieve and parse digitizer capabilities and configuration
+ *  - Display scanner model, firmware version, and supported features
+ *
+ * Target framework: .NET 8
+ */
+
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using static vidar_app.VscsiTypes;
-using static vidar_app.VscsiMethods;
-using System.Runtime.CompilerServices;
-using System.Net.NetworkInformation;
-using System.Drawing;
-using System.Transactions;
 using static vidar_app.Scanner;
 
 namespace vidar_app
@@ -99,7 +102,7 @@ namespace vidar_app
             scanner_data.feederType = getFeederType(ref digitizerInfo);
             scanner_data.lampType = getLampType(ref digitizerInfo);
             scanner_data.translationTable = getTranslationTable(ref digitizerInfo);
-            // time since reset is stored here as well.
+            // time since reset is stored here as well..
 
 
             Console.WriteLine("");

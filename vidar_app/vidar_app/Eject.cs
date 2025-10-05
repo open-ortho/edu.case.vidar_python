@@ -1,4 +1,15 @@
-﻿namespace vidar_app
+﻿/*
+ * Eject.cs
+ * Film eject command for scanner feeder.
+ *
+ * Responsibilities:
+ *  - Eject film from the digitizer feeder mechanism
+ *  - Report eject status to console
+ *
+ * Target framework: .NET 8
+ */
+
+namespace vidar_app
 {
     internal class Eject
     {

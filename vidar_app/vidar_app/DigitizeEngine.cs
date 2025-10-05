@@ -1,5 +1,17 @@
-﻿using static vidar_app.VscsiTypes;
+﻿/*
+ * DigitizeEngine.cs
+ * Core scan parameter initialization and execution engine.
+ *
+ * Responsibilities:
+ *  - Initialize scan parameters from ScanConfig
+ *  - Convert managed scan parameters to native format for VSCSI driver
+ *  - Coordinate scan execution via VscsiMethods
+ *  - Retrieve digitizer information
+ *
+ * Target framework: .NET 8
+ */
 
+using static vidar_app.VscsiTypes;
 
 namespace vidar_app
 {

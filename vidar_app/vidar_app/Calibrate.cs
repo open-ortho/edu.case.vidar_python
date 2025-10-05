@@ -1,4 +1,15 @@
-﻿namespace vidar_app
+﻿/*
+ * Calibrate.cs
+ * Scanner calibration command.
+ *
+ * Responsibilities:
+ *  - Execute digitizer calibration via VSCSI driver
+ *  - Report calibration status to console
+ *
+ * Target framework: .NET 8
+ */
+
+namespace vidar_app
 {
     internal class Calibrate
     {

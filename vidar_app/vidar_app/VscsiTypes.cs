@@ -1,4 +1,16 @@
-﻿using System.Runtime.CompilerServices;
+﻿/*
+ * VscsiTypes.cs
+ * Type definitions for Vidar SCSI/USB scanner communication.
+ *
+ * Responsibilities:
+ *  - Define P/Invoke-compatible structs for scanner data exchange
+ *  - Provide byte-array accessors for scan parameters and device info
+ *  - Support marshalling between managed and native scanner DLL structures
+ *
+ * Target framework: .NET 8
+ */
+
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -12,9 +24,6 @@ namespace vidar_app
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 144)]
             public byte[] Data;
         }
-
-
-
 
         [StructLayout(LayoutKind.Sequential, Size = 148)]
         public struct _GETDIGINFO
@@ -56,7 +65,6 @@ namespace vidar_app
             // Add fields here if necessary. 
             // Since you did not specify the fields, we assume it's a raw byte array representation
         }
-
 
         [StructLayout(LayoutKind.Sequential, Size = 72)]
         public struct _SCANPARAMETERS
@@ -126,58 +134,5 @@ namespace vidar_app
             public short errorCode => Data != null && Data.Length >= 2 ? BitConverter.ToInt16(Data, 0) : (short)0;
             public string errorMsg => Data != null && Data.Length > 2 ? Encoding.ASCII.GetString(Data, 2, Data.Length - 2).TrimEnd('\0') : string.Empty;
         }
-
-        [StructLayout(LayoutKind.Sequential, Size = 8)]
-        internal struct Tiffheader
-        {
-            public short field1;
-            public short field2;
-            public int field3;
-
-            public unsafe byte[] toByteArray()
-            {
-                byte[] bytes = new byte[8];
-
-                // Convert and copy each field using BitConverter
-                Array.Copy(BitConverter.GetBytes(this.field1), 0, bytes, 0, 2);
-                Array.Copy(BitConverter.GetBytes(this.field2), 0, bytes, 2, 2);
-                Array.Copy(BitConverter.GetBytes(this.field3), 0, bytes, 4, 4);
-
-                return bytes;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential, Size = 12)]
-        internal struct TiffTag
-        {
-            public short field1;
-            public short field2;
-            public int field3;
-            public int field4;
-
-            public TiffTag(short field1, short field2, int field3, int field4)
-            {
-                this.field1 = field1;
-                this.field2 = field2;
-                this.field3 = field3;
-                this.field4 = field4;
-            }
-
-            public unsafe byte[] toByteArray()
-            {
-                byte[] bytes = new byte[12];
-
-                // Convert and copy each field using BitConverter
-                Array.Copy(BitConverter.GetBytes(this.field1), 0, bytes, 0, 2);
-                Array.Copy(BitConverter.GetBytes(this.field2), 0, bytes, 2, 2);
-                Array.Copy(BitConverter.GetBytes(this.field3), 0, bytes, 4, 4);
-                Array.Copy(BitConverter.GetBytes(this.field4), 0, bytes, 8, 4);
-
-
-                return bytes;
-            }
-        }
-
-
     }
 }
