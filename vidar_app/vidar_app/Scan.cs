@@ -36,14 +36,14 @@ namespace vidar_app
                 Console.WriteLine($"Scan parameters loaded from config: {config.Offset2_DPI_X} DPI, {config.Offset0_BitDepth}-bit depth");
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
-                scan_parameters.setShort(4, (short)(scan_parameters.getShort(2) * scanner_data.maxWidthInInches)); // 1050
+                scan_parameters.setShort(VscsiTypes._SCANPARAMETERS.OFFSET_Width, (short)(scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_X) * scanner_data.maxWidthInInches)); // 1050
 
                 // Unsure what the Max_inches value is, but I calculated it to be 51 with the default values.
                 // TODO figure out Max_Inches
-                scan_parameters.setInt(8, scan_parameters.getShort(56) * 51); //?Max_Inches?) //3825
+                scan_parameters.setInt(VscsiTypes._SCANPARAMETERS.OFFSET_Height, scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_Y) * 51); //?Max_Inches?) //3825
 
                 // To be honest not sure what this one does, but once again matches with the hardcoded defaults.
-                scan_parameters.setInt(24, (short)Math.Ceiling((double)scan_parameters.getShort(0)*0.125)); //1
+                scan_parameters.setInt(VscsiTypes._SCANPARAMETERS.OFFSET_BytesPerPixel, (short)Math.Ceiling((double)scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth)*0.125)); //1
 
                 // Not sure what this one does either, i think it turns into scanByteCount though.
                 //scan_parameters.Field52 = 0;
@@ -55,9 +55,9 @@ namespace vidar_app
 
 
                 // Taken from decomp
-                int imageBufferSize = scan_parameters.getShort(4) *
-                                    scan_parameters.getInt(8) *
-                                    scan_parameters.getInt(24);
+                int imageBufferSize = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_Width) *
+                                    scan_parameters.getInt(VscsiTypes._SCANPARAMETERS.OFFSET_Height) *
+                                    scan_parameters.getInt(VscsiTypes._SCANPARAMETERS.OFFSET_BytesPerPixel);
 
 
                 IntPtr imageBufferPtr = Marshal.AllocHGlobal(imageBufferSize);
@@ -109,18 +109,18 @@ namespace vidar_app
                 Directory.CreateDirectory(outDir);
 
                 string prefix = config.OutputPrefix ?? "${DPI}DPI_${BIT}BIT";
-                prefix = prefix.Replace("${DPI}", scan_parameters.getShort(2).ToString());
-                prefix = prefix.Replace("${BIT}", scan_parameters.getShort(0).ToString());
+                prefix = prefix.Replace("${DPI}", scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_X).ToString());
+                prefix = prefix.Replace("${BIT}", scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth).ToString());
 
                 string extension = format == "PNG" ? "png" : "tif";
                 string fileName = prefix + "." + extension;
                 string filePath = Path.Combine(outDir, fileName);
 
-                short width = scan_parameters.getShort(40);
-                short height = scan_parameters.getShort(44);
+                short width = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_OutputWidth);
+                short height = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_OutputHeight);
 
                 // Read bit depth from scan parameters (offset 0 is used in the rest of the code)
-                short bitDepth = scan_parameters.getShort(0);
+                short bitDepth = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth);
 
                 // Save based on chosen format
                 if (format == "PNG")
