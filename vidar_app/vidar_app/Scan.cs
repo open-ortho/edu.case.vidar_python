@@ -1,22 +1,12 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using static vidar_app.VscsiTypes;
-using static vidar_app.Scanner;
-using static vidar_app.VscsiMethods;
-using static vidar_app.TiffHandling;
-using System.ComponentModel;
-using System.Collections;
-using System;
-using System.IO;
-
-// ImageSharp for proper 16-bit grayscale support
+﻿// ImageSharp for proper 16-bit grayscale support
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using System.Runtime.InteropServices;
+using static vidar_app.Scanner;
+using static vidar_app.TiffHandling;
+using static vidar_app.VscsiMethods;
+using static vidar_app.VscsiTypes;
 
 namespace vidar_app
 {
