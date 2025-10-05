@@ -125,7 +125,14 @@ namespace vidar_app
             public _DIGITIZERINFO* digitizerInfoPtr;
         }
 
-        [StructLayout(LayoutKind.Sequential, Size = 82)]
+        // Error information structure returned by the native Vscsi32.dll
+        // Note: Original decompiled code had Size = 82, but this was likely an error.
+        // The 500-byte buffer is necessary to accommodate full error messages from the scanner hardware.
+        // Risk analysis:
+        //   - Size too small (82): Buffer overrun when DLL writes long error messages → crash/corruption
+        //   - Size too large (500): Wastes stack space but prevents corruption → safe
+        // The native DLL will write based on its own struct definition, so we must provide adequate space.
+        [StructLayout(LayoutKind.Sequential, Size = 500)]
         public unsafe struct _VIDARERRORINFO
         {
             public fixed byte Data[500];
