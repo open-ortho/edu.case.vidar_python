@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿/*
+ * Startup.cs
+ * Scanner initialization and digitizer information retrieval.
+ *
+ * Responsibilities:
+ *  - Initialize and detect connected Vidar scanner hardware
+ *  - Retrieve and parse digitizer capabilities and configuration
+ *  - Display scanner model, firmware version, and supported features
+ *
+ * Target framework: .NET 8
+ */
+
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using static vidar_app.VscsiTypes;
-using static vidar_app.VscsiMethods;
-using System.Runtime.CompilerServices;
-using System.Net.NetworkInformation;
-using System.Drawing;
-using System.Transactions;
 using static vidar_app.Scanner;
 
 namespace vidar_app
@@ -18,14 +21,10 @@ namespace vidar_app
     {
         public static unsafe int InitializeDigitizer(ref _DIGITIZERINFO dIGITIZERINFO, ref ScannerData scanner_data)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
-                int num = 0;
                 ushort num2 = 0;
                 ushort num3 = 0;
 
@@ -66,13 +65,13 @@ namespace vidar_app
                     return status;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
-        public static void parseScannerInfo(ref _DIGITIZERINFO digitizerInfo, ref ScannerData scanner_data)
+        public static unsafe void parseScannerInfo(ref _DIGITIZERINFO digitizerInfo, ref ScannerData scanner_data)
         {
             // TODO Go through the loops in the decomp for the drop downs.
 
@@ -80,9 +79,13 @@ namespace vidar_app
             scanner_data.modelName = getModelName(ref digitizerInfo);
             scanner_data.serialNumber = parseStringValue(ref digitizerInfo, 106, 6);
             scanner_data.firmwareVersionNumber = parseStringValue(ref digitizerInfo, 113, 4);
-            scanner_data.hardwareVersionNumber = (int)digitizerInfo.Data[118];
+            
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                scanner_data.hardwareVersionNumber = (int)ptr[118];
+                scanner_data.currentResolution = (int)ptr[42];
+            }
 
-            scanner_data.currentResolution = (int)digitizerInfo.Data[42];
             scanner_data.opticalResolution = parseShortValue(ref digitizerInfo, 44);
             scanner_data.maxWidthInInches = parseFloatValue(ref digitizerInfo, 72, 10);
 
@@ -99,7 +102,7 @@ namespace vidar_app
             scanner_data.feederType = getFeederType(ref digitizerInfo);
             scanner_data.lampType = getLampType(ref digitizerInfo);
             scanner_data.translationTable = getTranslationTable(ref digitizerInfo);
-            // time since reset is stored here as well.
+            // time since reset is stored here as well..
 
 
             Console.WriteLine("");
@@ -135,36 +138,49 @@ namespace vidar_app
 
         }
 
-        public static string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        public static unsafe string parseStringValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
         {
             byte[] extractedBytes = new byte[size];
-            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    extractedBytes[i] = ptr[offset + i];
+                }
+            }
 
             return Encoding.ASCII.GetString(extractedBytes);
         }
 
-        public static float parseFloatValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
+        public static unsafe float parseFloatValue(ref _DIGITIZERINFO digitizerInfo, int offset, int size)
         {
             byte[] extractedBytes = new byte[size];
-            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    extractedBytes[i] = ptr[offset + i];
+                }
+            }
 
             return BitConverter.ToSingle(extractedBytes, 0);
         }
 
-        public static short parseShortValue(ref _DIGITIZERINFO digitizerInfo, int offset)
+        public static unsafe short parseShortValue(ref _DIGITIZERINFO digitizerInfo, int offset)
         {
-            byte[] extractedBytes = new byte[2];
-            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
-
-            return BitConverter.ToInt16(extractedBytes, 0);
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                return *(short*)(ptr + offset);
+            }
         }
 
-        public static string parseBinaryValue(ref _DIGITIZERINFO digitizerInfo, int offset, string ifZero, string ifOne)
+        public static unsafe string parseBinaryValue(ref _DIGITIZERINFO digitizerInfo, int offset, string ifZero, string ifOne)
         {
-            byte[] extractedBytes = new byte[2];
-            Array.Copy(digitizerInfo.Data, offset, extractedBytes, 0, extractedBytes.Length);
-
-            short value = BitConverter.ToInt16(extractedBytes, 0);
+            short value;
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                value = *(short*)(ptr + offset);
+            }
 
             if (value == 0)
             {
@@ -175,7 +191,7 @@ namespace vidar_app
             }
         }
 
-        public static string getLineTime(ref _DIGITIZERINFO digitizerInfo)
+        public static unsafe string getLineTime(ref _DIGITIZERINFO digitizerInfo)
         {
             short value = parseShortValue(ref digitizerInfo, 84);
 
@@ -203,19 +219,23 @@ namespace vidar_app
             return sb.ToString();
         }
 
-        public static string getTranslationTable(ref _DIGITIZERINFO digitizerInfo)
+        public static unsafe string getTranslationTable(ref _DIGITIZERINFO digitizerInfo)
         {
             short value = parseShortValue(ref digitizerInfo, 96);
 
             StringBuilder sb = new StringBuilder("");
+
+            ushort scannerType;
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                scannerType = ptr[104];
+            }
 
             if (value == 1)
             {
                 sb.AppendLine("Translation table selection available.");
             } else if (value == 0)
             {
-                ushort scannerType = (ushort)digitizerInfo.Data[104];
-
                 if (scannerType != 19 && scannerType != 22 && scannerType != 23)
                 {
                     sb.AppendLine("Translation tables are limited to Linear and LOG.");
@@ -236,8 +256,6 @@ namespace vidar_app
                     sb.AppendLine("Translation table locations 0 and 1 set to Power 5.");
                     break;
                 case 1:
-                    ushort scannerType = (ushort)digitizerInfo.Data[104];
-
                     if (scannerType != 19 && scannerType != 22 && scannerType != 23)
                     {
                         sb.AppendLine("Translation table locations 0 and 1 set to LOG..");
@@ -257,7 +275,7 @@ namespace vidar_app
             return sb.ToString();
         }
 
-        public static string getFeederType(ref _DIGITIZERINFO digitizerInfo)
+        public static unsafe string getFeederType(ref _DIGITIZERINFO digitizerInfo)
         {
             int value = parseShortValue(ref digitizerInfo, 102);
             
@@ -283,7 +301,7 @@ namespace vidar_app
 
         }
 
-        public static string getLampType(ref _DIGITIZERINFO digitizerInfo)
+        public static unsafe string getLampType(ref _DIGITIZERINFO digitizerInfo)
         {
             int value = parseShortValue(ref digitizerInfo, 138);
 
@@ -322,11 +340,16 @@ namespace vidar_app
             }
         }
 
-        public static string getModelName(ref _DIGITIZERINFO digitizerInfo)
+        public static unsafe string getModelName(ref _DIGITIZERINFO digitizerInfo)
         {
 
             // From decompiled code, 104 is the memory offset for the scanner type.
-            ushort result = (ushort)digitizerInfo.Data[104];
+            ushort result;
+            fixed (byte* ptr = digitizerInfo.Data)
+            {
+                result = ptr[104];
+            }
+            
             string value;
 
             switch(result) {

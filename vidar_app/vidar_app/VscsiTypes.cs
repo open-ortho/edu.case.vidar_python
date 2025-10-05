@@ -1,4 +1,16 @@
-﻿using System.Runtime.CompilerServices;
+﻿/*
+ * VscsiTypes.cs
+ * Type definitions for Vidar SCSI/USB scanner communication.
+ *
+ * Responsibilities:
+ *  - Define P/Invoke-compatible structs for scanner data exchange
+ *  - Provide byte-array accessors for scan parameters and device info
+ *  - Support marshalling between managed and native scanner DLL structures
+ *
+ * Target framework: .NET 8
+ */
+
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,25 +19,21 @@ namespace vidar_app
     public class VscsiTypes
     {
         [StructLayout(LayoutKind.Sequential, Size = 144)]
-        public struct _DIGITIZERINFO
+        public unsafe struct _DIGITIZERINFO
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 144)]
-            public byte[] Data;
+            public fixed byte Data[144];
         }
 
-
-
-
         [StructLayout(LayoutKind.Sequential, Size = 148)]
-        public struct _GETDIGINFO
+        public unsafe struct _GETDIGINFO
         {
             public int Status;
-            public byte[] Data;
+            public fixed byte Data[144];
         }
 
         // Method to convert _GETDIGINFO to _DIGITIZERINFO
         // a _GETDIGINFO is  a _DIGITIZERINFO but with a integer prepended
-        public static int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
+        public static unsafe int ConvertGetDigInfoToDigitizerInfo(_GETDIGINFO getDigInfo, out _DIGITIZERINFO digitizerInfo)
         {
             // Extract the 4-byte integer from the _GETDIGINFO struct (Status)
             int status = getDigInfo.Status;
@@ -33,9 +41,11 @@ namespace vidar_app
             // Initialize the _DIGITIZERINFO structure
             digitizerInfo = new _DIGITIZERINFO();
 
-            // Copy the remaining bytes into _DIGITIZERINFO (assuming the size of _DIGITIZERINFO is 144 bytes)
-            digitizerInfo.Data = new byte[144];  // Assuming _DIGITIZERINFO has a Data array for simplicity
-            Array.Copy(getDigInfo.Data, 0, digitizerInfo.Data, 0, 144);  // Copy data starting from byte 4 of _GETDIGINFO
+            // Copy the remaining bytes into _DIGITIZERINFO
+            for (int i = 0; i < 144; i++)
+            {
+                digitizerInfo.Data[i] = getDigInfo.Data[i];
+            }
 
             // Return the extracted status code
             return status;
@@ -57,9 +67,8 @@ namespace vidar_app
             // Since you did not specify the fields, we assume it's a raw byte array representation
         }
 
-
         [StructLayout(LayoutKind.Sequential, Size = 72)]
-        public struct _SCANPARAMETERS
+        public unsafe struct _SCANPARAMETERS
         {
             // Named offsets for fields in the Data array to improve readability
             public const int OFFSET_BitDepth = 0;           // short
@@ -71,39 +80,38 @@ namespace vidar_app
             public const int OFFSET_OutputHeight = 44;      // int (returned actual height)
             public const int OFFSET_DPI_Y = 56;             // short - Y DPI (secondary)
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 72)]
-            public byte[] Data;
+            public fixed byte Data[72];
 
-            public unsafe short getShort(int offset)
+            public short getShort(int offset)
             {
-                byte[] shortBytes = new byte[2];
-                Array.Copy(this.Data, offset, shortBytes, 0, 2);
-
-                return (short)BitConverter.ToInt16(shortBytes, 0);
+                fixed (byte* ptr = Data)
+                {
+                    return *(short*)(ptr + offset);
+                }
             }
 
-            public unsafe int getInt(int offset)
+            public int getInt(int offset)
             {
-                byte[] intBytes = new byte[4];
-                Array.Copy(this.Data, offset, intBytes, 0, 4);
-
-                return BitConverter.ToInt32(intBytes, 0);
+                fixed (byte* ptr = Data)
+                {
+                    return *(int*)(ptr + offset);
+                }
             }
 
-            public unsafe void setShort(int offset, short value)
+            public void setShort(int offset, short value)
             {
-                byte[] shortBytes = BitConverter.GetBytes(value);
-
-                // Set the bytes in the byte array at the specified offset
-                Array.Copy(shortBytes, 0, this.Data, offset, 2);
+                fixed (byte* ptr = Data)
+                {
+                    *(short*)(ptr + offset) = value;
+                }
             }
 
-            public unsafe void setInt(int offset, int value)
+            public void setInt(int offset, int value)
             {
-                byte[] intBytes = BitConverter.GetBytes(value);
-
-                // Set the bytes in the byte array at the specified offset
-                Array.Copy(intBytes, 0, this.Data, offset, 4);
+                fixed (byte* ptr = Data)
+                {
+                    *(int*)(ptr + offset) = value;
+                }
             }
         }
 
@@ -117,67 +125,45 @@ namespace vidar_app
             public _DIGITIZERINFO* digitizerInfoPtr;
         }
 
-        [StructLayout(LayoutKind.Sequential, Size = 82)]
+        // Error information structure returned by the native Vscsi32.dll
+        // Note: Original decompiled code had Size = 82, but this was likely an error.
+        // The 500-byte buffer is necessary to accommodate full error messages from the scanner hardware.
+        // Risk analysis:
+        //   - Size too small (82): Buffer overrun when DLL writes long error messages → crash/corruption
+        //   - Size too large (500): Wastes stack space but prevents corruption → safe
+        // The native DLL will write based on its own struct definition, so we must provide adequate space.
+        [StructLayout(LayoutKind.Sequential, Size = 500)]
         public unsafe struct _VIDARERRORINFO
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 500)]
-            public byte[] Data;
+            public fixed byte Data[500];
 
-            public short errorCode => Data != null && Data.Length >= 2 ? BitConverter.ToInt16(Data, 0) : (short)0;
-            public string errorMsg => Data != null && Data.Length > 2 ? Encoding.ASCII.GetString(Data, 2, Data.Length - 2).TrimEnd('\0') : string.Empty;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Size = 8)]
-        internal struct Tiffheader
-        {
-            public short field1;
-            public short field2;
-            public int field3;
-
-            public unsafe byte[] toByteArray()
+            public short errorCode
             {
-                byte[] bytes = new byte[8];
-
-                // Convert and copy each field using BitConverter
-                Array.Copy(BitConverter.GetBytes(this.field1), 0, bytes, 0, 2);
-                Array.Copy(BitConverter.GetBytes(this.field2), 0, bytes, 2, 2);
-                Array.Copy(BitConverter.GetBytes(this.field3), 0, bytes, 4, 4);
-
-                return bytes;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential, Size = 12)]
-        internal struct TiffTag
-        {
-            public short field1;
-            public short field2;
-            public int field3;
-            public int field4;
-
-            public TiffTag(short field1, short field2, int field3, int field4)
-            {
-                this.field1 = field1;
-                this.field2 = field2;
-                this.field3 = field3;
-                this.field4 = field4;
+                get
+                {
+                    fixed (byte* ptr = Data)
+                    {
+                        return *(short*)ptr;
+                    }
+                }
             }
 
-            public unsafe byte[] toByteArray()
+            public string errorMsg
             {
-                byte[] bytes = new byte[12];
-
-                // Convert and copy each field using BitConverter
-                Array.Copy(BitConverter.GetBytes(this.field1), 0, bytes, 0, 2);
-                Array.Copy(BitConverter.GetBytes(this.field2), 0, bytes, 2, 2);
-                Array.Copy(BitConverter.GetBytes(this.field3), 0, bytes, 4, 4);
-                Array.Copy(BitConverter.GetBytes(this.field4), 0, bytes, 8, 4);
-
-
-                return bytes;
+                get
+                {
+                    fixed (byte* ptr = Data)
+                    {
+                        // Skip first 2 bytes (errorCode) and read the rest as ASCII string
+                        int length = 0;
+                        for (int i = 2; i < 500 && ptr[i] != 0; i++)
+                        {
+                            length++;
+                        }
+                        return Encoding.ASCII.GetString(ptr + 2, length);
+                    }
+                }
             }
         }
-
-
     }
 }

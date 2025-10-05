@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static vidar_app.VscsiTypes;
-
+﻿/*
+ * Eject.cs
+ * Film eject command for scanner feeder.
+ *
+ * Responsibilities:
+ *  - Eject film from the digitizer feeder mechanism
+ *  - Report eject status to console
+ *
+ * Target framework: .NET 8
+ */
 
 namespace vidar_app
 {
@@ -12,13 +15,10 @@ namespace vidar_app
     {
         public static int eject(VscsiTypes._DIGITIZERINFO dIGITIZERINFO)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 Console.WriteLine("Ejecting film...");
 
                 int status = VscsiMethods.EjectFilm(ref dIGITIZERINFO, 0);
@@ -35,9 +35,9 @@ namespace vidar_app
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }

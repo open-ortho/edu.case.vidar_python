@@ -1,9 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿/*
+ * Calibrate.cs
+ * Scanner calibration command.
+ *
+ * Responsibilities:
+ *  - Execute digitizer calibration via VSCSI driver
+ *  - Report calibration status to console
+ *
+ * Target framework: .NET 8
+ */
 
 namespace vidar_app
 {
@@ -11,13 +15,10 @@ namespace vidar_app
     {
         public static int calibrate()
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 Console.WriteLine("Calibrating...");
 
                 int status = VscsiMethods.Calibrate();
@@ -34,9 +35,9 @@ namespace vidar_app
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }

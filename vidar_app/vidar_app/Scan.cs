@@ -1,12 +1,22 @@
-﻿// ImageSharp for proper 16-bit grayscale support
+﻿// -----------------------------------------------------------------------------
+// <summary>
+//     Vidar App - Scan
+//     Coordinates scan setup and image capture. Converts the raw driver buffer into
+//     PNG image files. Supports 8-bit and 16-bit grayscale output.
+//
+//     Target framework: .NET 8
+// </summary>
+// ----------------------------------------------------------------------------
+
+// ImageSharp for proper 16-bit grayscale support
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Runtime.InteropServices;
 using static vidar_app.Scanner;
-using static vidar_app.TiffHandling;
 using static vidar_app.VscsiMethods;
 using static vidar_app.VscsiTypes;
+using static vidar_app.VscsiTypes._SCANPARAMETERS;
 
 namespace vidar_app
 {
@@ -14,26 +24,23 @@ namespace vidar_app
     {
         public unsafe static int scan(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data, ScanConfig config)
         {
-            DigitizeEngine digitizeEngine = null;
-            DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+            DigitizeEngine digitizeEngine = new DigitizeEngine();
 
             try
             {
-                digitizeEngine = digitizeEngine2;
-
                 _SCANPARAMETERS scan_parameters = digitizeEngine.InitScanParams(config);
 
                 Console.WriteLine($"Scan parameters loaded from config: {config.Offset2_DPI_X} DPI, {config.Offset0_BitDepth}-bit depth");
 
                 // Guess, this multiplies DPI and max width to get the width of the image.
-                scan_parameters.setShort(VscsiTypes._SCANPARAMETERS.OFFSET_Width, (short)(scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_X) * scanner_data.maxWidthInInches)); // 1050
+                scan_parameters.setShort(OFFSET_Width, (short)(scan_parameters.getShort(OFFSET_DPI_X) * scanner_data.maxWidthInInches)); // 1050
 
                 // Unsure what the Max_inches value is, but I calculated it to be 51 with the default values.
                 // TODO figure out Max_Inches
-                scan_parameters.setInt(VscsiTypes._SCANPARAMETERS.OFFSET_Height, scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_Y) * 51); //?Max_Inches?) //3825
+                scan_parameters.setInt(OFFSET_Height, scan_parameters.getShort(OFFSET_DPI_Y) * 51); //?Max_Inches?) //3825
 
                 // To be honest not sure what this one does, but once again matches with the hardcoded defaults.
-                scan_parameters.setInt(VscsiTypes._SCANPARAMETERS.OFFSET_BytesPerPixel, (short)Math.Ceiling((double)scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth)*0.125)); //1
+                scan_parameters.setInt(OFFSET_BytesPerPixel, (short)Math.Ceiling((double)scan_parameters.getShort(OFFSET_BitDepth)*0.125)); //1
 
                 // Not sure what this one does either, i think it turns into scanByteCount though.
                 //scan_parameters.Field52 = 0;
@@ -45,9 +52,9 @@ namespace vidar_app
 
 
                 // Taken from decomp
-                int imageBufferSize = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_Width) *
-                                    scan_parameters.getInt(VscsiTypes._SCANPARAMETERS.OFFSET_Height) *
-                                    scan_parameters.getInt(VscsiTypes._SCANPARAMETERS.OFFSET_BytesPerPixel);
+                int imageBufferSize = scan_parameters.getShort(OFFSET_Width) *
+                                    scan_parameters.getInt(OFFSET_Height) *
+                                    scan_parameters.getInt(OFFSET_BytesPerPixel);
 
 
                 IntPtr imageBufferPtr = Marshal.AllocHGlobal(imageBufferSize);
@@ -83,7 +90,6 @@ namespace vidar_app
 
 
                 // Build output filename using config
-                string format = (config.OutputFormat ?? "TIFF").ToUpperInvariant();
                 string outDir = string.IsNullOrWhiteSpace(config.OutputPath) ? "." : config.OutputPath;
 
                 // Expand environment variables (e.g. %USERPROFILE%) and support ~ for home directory
@@ -99,32 +105,20 @@ namespace vidar_app
                 Directory.CreateDirectory(outDir);
 
                 string prefix = config.OutputPrefix ?? "${DPI}DPI_${BIT}BIT";
-                prefix = prefix.Replace("${DPI}", scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_DPI_X).ToString());
-                prefix = prefix.Replace("${BIT}", scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth).ToString());
+                prefix = prefix.Replace("${DPI}", scan_parameters.getShort(OFFSET_DPI_X).ToString());
+                prefix = prefix.Replace("${BIT}", scan_parameters.getShort(OFFSET_BitDepth).ToString());
 
-                string extension = format == "PNG" ? "png" : "tif";
-                string fileName = prefix + "." + extension;
+                string fileName = prefix + ".png";
                 string filePath = Path.Combine(outDir, fileName);
 
-                short width = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_OutputWidth);
-                short height = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_OutputHeight);
+                short width = scan_parameters.getShort(OFFSET_OutputWidth);
+                short height = scan_parameters.getShort(OFFSET_OutputHeight);
 
                 // Read bit depth from scan parameters (offset 0 is used in the rest of the code)
-                short bitDepth = scan_parameters.getShort(VscsiTypes._SCANPARAMETERS.OFFSET_BitDepth);
+                short bitDepth = scan_parameters.getShort(OFFSET_BitDepth);
 
-                // Save based on chosen format
-                if (format == "PNG")
-                {
-                    writeImageToFile(imageBuffer, height, width, filePath, bitDepth);
-                }
-                else
-                {
-                    // Prefer existing TIFF writer; writeToTifFile expects scan parameters
-                    // If you want to write multi-page TIFFs or implement 16-bit TIFF encoding through ImageSharp,
-                    // update writeToTifFile accordingly.
-                    int tiffStatus = writeToTifFile(imageBuffer, scan_parameters);
-                    Console.WriteLine($"TIFF write status: {tiffStatus}");
-                }
+                // Save as PNG
+                writeImageToFile(imageBuffer, height, width, filePath, bitDepth);
 
                 return 0;
 
