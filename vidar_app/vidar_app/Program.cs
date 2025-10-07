@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Diagnostics;
-using vidar_app;
-using static vidar_app.Scanner;
+using BFD9010.Scanner;
+using static BFD9010.Scanner.Scanner;
 
 // Parse command-line args for optional --config <path>
 string? configPath = null;
@@ -40,7 +40,7 @@ bool RunApp()
 
     // Create scanner data and digitizer info objects
     ScannerData scanner_data = new ScannerData();
-    VscsiTypes._DIGITIZERINFO digitizerInfo = new VscsiTypes._DIGITIZERINFO();
+    BFD9010.Scanner.VscsiTypes._DIGITIZERINFO digitizerInfo = new BFD9010.Scanner.VscsiTypes._DIGITIZERINFO();
 
     //parses readable data out of returned DIGITIZERINFO, prints it and returns a populated scanner_data struct.
     int status = Startup.InitializeDigitizer(ref digitizerInfo, ref scanner_data);
@@ -52,7 +52,7 @@ bool RunApp()
     while (true)
     {
         Console.WriteLine();
-        Console.WriteLine($"Welcome to Vidar Scanner Console!  (version: {appVersion})");
+        Console.WriteLine($"Welcome to BFD9010 Scanner Console!  (version: {appVersion})");
         Console.WriteLine("-------------------------------------------------------------");
         Console.WriteLine("Available commands (press the key):");
         Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
