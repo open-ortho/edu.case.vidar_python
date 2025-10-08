@@ -27,6 +27,6 @@ namespace BFD9010.Scanner
 
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [SuppressUnmanagedCodeSecurity]
-        internal static extern short getVidarError(int P_0, ref _VIDARERRORINFO P_1, ref ushort P_2);
+        public static extern short getVidarError(int P_0, ref _VIDARERRORINFO P_1, ref ushort P_2);
     }
 }

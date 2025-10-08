@@ -66,15 +66,15 @@ public class ScannerService
     /// <summary>
     /// Perform a scan and return the image bytes
     /// </summary>
-    public async Task<(int status, byte[]? imageBytes)> ScanAsync()
+    public async Task<(int status, byte[]? imageBytes, string? errorMessage)> ScanAsync()
     {
         if (!_isInitialized || _digitizerInfo == null || _scannerData == null)
         {
             _logger.LogError("Scanner not initialized");
-            return (-1, null);
+            return (-1, null, "Scanner not initialized");
         }
 
-        return await Task.Run(() =>
+        return await Task.Run<(int, byte[]?, string?)>(() =>
         {
             try
             {
@@ -128,40 +128,62 @@ public class ScannerService
                         // Clean up temp file
                         try { File.Delete(filePath); } catch { }
                         
-                        return (0, imageBytes);
+                        return (0, imageBytes, null);
                     }
                     else
                     {
                         _logger.LogError("Scan completed but image file not found: {Path}", filePath);
-                        return (-1, null);
+                        return (-1, null, "Scan completed but image file not found");
                     }
                 }
                 else
                 {
-                    _logger.LogError("Scan failed with status: {Status}", status);
-                    return (status, null);
+                    // Get detailed error information from the scanner
+                    string errorMessage = GetVidarErrorMessage(status);
+                    _logger.LogError("Scan failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    return (status, null, errorMessage);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during scan");
-                return (-1, null);
+                return (-1, null, $"Exception during scan: {ex.Message}");
             }
         });
     }
 
     /// <summary>
+    /// Get detailed error message from the scanner hardware
+    /// </summary>
+    private unsafe string GetVidarErrorMessage(int statusCode)
+    {
+        try
+        {
+            ushort num3 = 0;
+            _VIDARERRORINFO errInfo = new _VIDARERRORINFO();
+            Scanner.VscsiMethods.getVidarError(statusCode, ref errInfo, ref num3);
+
+            // Return formatted error message with code and description
+            return $"ERROR {errInfo.errorCode}: [{errInfo.errorMsg}]";
+        }
+        catch (Exception ex)
+        {
+            return $"Status code: {statusCode} (unable to retrieve error details: {ex.Message})";
+        }
+    }
+
+    /// <summary>
     /// Calibrate the scanner
     /// </summary>
-    public async Task<int> CalibrateAsync()
+    public async Task<(int status, string? errorMessage)> CalibrateAsync()
     {
         if (!_isInitialized)
         {
             _logger.LogError("Scanner not initialized");
-            return -1;
+            return (-1, "Scanner not initialized");
         }
 
-        return await Task.Run(() =>
+        return await Task.Run<(int, string?)>(() =>
         {
             try
             {
@@ -171,18 +193,19 @@ public class ScannerService
                 if (status == 0)
                 {
                     _logger.LogInformation("Calibration completed successfully");
+                    return (0, null);
                 }
                 else
                 {
-                    _logger.LogError("Calibration failed with status: {Status}", status);
+                    string errorMessage = GetVidarErrorMessage(status);
+                    _logger.LogError("Calibration failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    return (status, errorMessage);
                 }
-
-                return status;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during calibration");
-                return -1;
+                return (-1, $"Exception during calibration: {ex.Message}");
             }
         });
     }
@@ -190,15 +213,15 @@ public class ScannerService
     /// <summary>
     /// Eject film from scanner
     /// </summary>
-    public async Task<int> EjectAsync()
+    public async Task<(int status, string? errorMessage)> EjectAsync()
     {
         if (!_isInitialized || _digitizerInfo == null)
         {
             _logger.LogError("Scanner not initialized");
-            return -1;
+            return (-1, "Scanner not initialized");
         }
 
-        return await Task.Run(() =>
+        return await Task.Run<(int, string?)>(() =>
         {
             try
             {
@@ -209,18 +232,19 @@ public class ScannerService
                 if (status == 0)
                 {
                     _logger.LogInformation("Film ejected successfully");
+                    return (0, null);
                 }
                 else
                 {
-                    _logger.LogError("Film eject failed with status: {Status}", status);
+                    string errorMessage = GetVidarErrorMessage(status);
+                    _logger.LogError("Film eject failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    return (status, errorMessage);
                 }
-
-                return status;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during eject");
-                return -1;
+                return (-1, $"Exception during eject: {ex.Message}");
             }
         });
     }

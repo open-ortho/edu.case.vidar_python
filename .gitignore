@@ -57,3 +57,4 @@ _ReSharper*/
 artifacts/
 # Scanner configuration file (user-specific)
 scan_config.ini
+Vscsi32.dll

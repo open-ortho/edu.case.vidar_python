@@ -137,7 +137,7 @@ app.MapPost("/Device/{id}/$scan", async (string id, [FromServices] ScannerServic
     }
 
     // Perform the scan
-    var (status, imageBytes) = await scanner.ScanAsync();
+    var (status, imageBytes, errorMessage) = await scanner.ScanAsync();
 
     var bundle = new FhirBundle();
 
@@ -174,7 +174,7 @@ app.MapPost("/Device/{id}/$scan", async (string id, [FromServices] ScannerServic
     }
     else
     {
-        // Failure - add error OperationOutcome
+        // Failure - add error OperationOutcome with detailed message
         bundle.Entry.Add(new BundleEntry
         {
             Resource = new FhirOperationOutcome
@@ -185,7 +185,7 @@ app.MapPost("/Device/{id}/$scan", async (string id, [FromServices] ScannerServic
                     {
                         Severity = "error",
                         Code = "exception",
-                        Details = new IssueDetails { Text = $"Scan failed with status code: {status}" }
+                        Details = new IssueDetails { Text = errorMessage + $"Scan failed with status code: {status}" }
                     }
                 }
             }
@@ -218,7 +218,7 @@ app.MapPost("/Device/{id}/$calibrate", async (string id, [FromServices] ScannerS
         }, statusCode: 500);
     }
 
-    int status = await scanner.CalibrateAsync();
+    var (status, errorMessage) = await scanner.CalibrateAsync();
 
     if (status == 0)
     {
@@ -245,7 +245,7 @@ app.MapPost("/Device/{id}/$calibrate", async (string id, [FromServices] ScannerS
                 {
                     Severity = "error",
                     Code = "exception",
-                    Details = new IssueDetails { Text = $"Calibration failed with status code: {status}" }
+                    Details = new IssueDetails { Text = errorMessage ?? $"Calibration failed with status code: {status}" }
                 }
             }
         }, statusCode: 500);
@@ -275,7 +275,7 @@ app.MapPost("/Device/{id}/$eject", async (string id, [FromServices] ScannerServi
         }, statusCode: 500);
     }
 
-    int status = await scanner.EjectAsync();
+    var (status, errorMessage) = await scanner.EjectAsync();
 
     if (status == 0)
     {
@@ -302,7 +302,7 @@ app.MapPost("/Device/{id}/$eject", async (string id, [FromServices] ScannerServi
                 {
                     Severity = "error",
                     Code = "exception",
-                    Details = new IssueDetails { Text = $"Eject failed with status code: {status}" }
+                    Details = new IssueDetails { Text = errorMessage ?? $"Eject failed with status code: {status}" }
                 }
             }
         }, statusCode: 500);
