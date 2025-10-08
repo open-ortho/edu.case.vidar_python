@@ -27,12 +27,17 @@ dotnet build vidar_app.sln --configuration Release
 dotnet build BFD9010.Scanner/BFD9010.Scanner.csproj --configuration Release
 dotnet build BFD9010.FhirApi/BFD9010.FhirApi.csproj --configuration Release
 dotnet build vidar_app/vidar_app.csproj --configuration Release
+
+# Build GUI project (requires publish for executable)
+dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 ```
 
 ### Output Locations
 - CLI: `vidar_app/bin/Release/net8.0/bfd9010.exe`
 - FHIR API: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.exe`
-- GUI: `BFD9010.Gui/bin/Release/net8.0-windows/bfd9010_fhir32.exe`
+- GUI: `BFD9010.Gui/bin/Release/net8.0-windows/publish/bfd9010_fhir32.exe`
+
+**Note:** The GUI project requires `dotnet publish` to generate the executable.
 
 ## Running
 
@@ -52,7 +57,7 @@ The API will start on `http://localhost:5000`
 
 ### GUI Application (Windows only)
 ```bash
-cd BFD9010.Gui/bin/Release/net8.0-windows
+cd BFD9010.Gui/bin/Release/net8.0-windows/publish
 ./bfd9010_fhir32.exe
 ```
 

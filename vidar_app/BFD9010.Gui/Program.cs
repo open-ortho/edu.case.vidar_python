@@ -13,7 +13,6 @@ namespace BFD9010.Gui
         {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRendering(false);
             Application.Run(new MainForm());
         }
     }
