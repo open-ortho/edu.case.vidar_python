@@ -24,9 +24,19 @@ BFD9010/
 │   └── ScanParameters.cs            # Common scan parameter types
 │
 ├── BFD9010.Scanner.Vidar/          # Vidar-specific implementation
+│   # This folder structure is flexible - scanner vendors can organize their code as needed
+│   # as long as they implement IScannerDriver. Current Vidar implementation includes:
 │   ├── VidarDriver.cs               # Implements IScannerDriver
 │   ├── VscsiTypes.cs                # VSCSI-specific types
 │   ├── VscsiMethods.cs              # VSCSI method bindings
+│   ├── Calibrate.cs                 # Calibration logic
+│   ├── Scan.cs                      # Scan logic
+│   ├── Eject.cs                     # Film ejection
+│   ├── Startup.cs                   # Scanner initialization
+│   ├── ScanConfig.cs                # Configuration handling
+│   ├── ScannerData.cs               # Scanner data structures
+│   ├── DigitizeEngine.cs            # Digitization engine
+│   ├── Hardware.cs                  # Hardware detection
 │   └── Vscsi32.dll                  # Native driver library
 │
 ├── BFD9010.Scanner.Xyz/            # Future scanner implementation
@@ -36,13 +46,16 @@ BFD9010/
 ├── BFD9010.Cli/                    # CLI application (scanner-agnostic)
 │   └── Program.cs                   # Uses IScannerDriver
 │
-├── BFD9010.FhirApi/                # FHIR API (scanner-agnostic)
+├── BFD9010.FhirApi/                # FHIR API (consumes IScannerDriver)
+│   ├── Program.cs                   # API endpoints
 │   └── Services/
-│       └── ScannerService.cs        # Uses IScannerDriver
+│       └── ScannerService.cs        # Wraps IScannerDriver
 │
-└── BFD9010.Gui/                    # GUI application (scanner-agnostic)
-    └── MainForm.cs                  # Uses IScannerDriver
+└── BFD9010.Gui/                    # GUI application (entry point for FHIR API)
+    └── MainForm.cs                  # Launches and hosts BFD9010.FhirApi
 ```
+
+**Note:** The GUI is the entry point that launches the FHIR API server. The FHIR API consumes scanner drivers through IScannerDriver. The CLI also consumes scanner drivers directly.
 
 ### Scanner Driver Interface
 
@@ -54,7 +67,7 @@ public interface IScannerDriver
     /// <summary>
     /// Initialize the scanner hardware
     /// </summary>
-    Task<(int status, IScannerCapabilities? capabilities)> InitializeAsync();
+    Task<(int status, IScannerInformation? information)> InitializeAsync();
     
     /// <summary>
     /// Perform a scan operation
@@ -72,12 +85,12 @@ public interface IScannerDriver
     Task<int> EjectAsync();
     
     /// <summary>
-    /// Get scanner capabilities and information
+    /// Get scanner information
     /// </summary>
-    IScannerCapabilities? Capabilities { get; }
+    IScannerInformation? Information { get; }
 }
 
-public interface IScannerCapabilities
+public interface IScannerInformation
 {
     string Manufacturer { get; }
     string Model { get; }
@@ -152,8 +165,8 @@ To migrate the current codebase to support multiple scanners:
 
 ### Phase 3: Update Consumers
 1. Update `BFD9010.Cli` to use `IScannerDriver` interface
-2. Update `BFD9010.FhirApi` to use `IScannerDriver` interface
-3. Update `BFD9010.Gui` to use `IScannerDriver` interface
+2. Update `BFD9010.FhirApi` Services to use `IScannerDriver` interface
+3. Note: `BFD9010.Gui` launches the FHIR API server - it doesn't directly consume scanners
 4. Add scanner selection logic (config or auto-detect)
 
 ### Phase 4: Add New Scanner Support
