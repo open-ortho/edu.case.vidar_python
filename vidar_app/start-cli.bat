@@ -10,8 +10,18 @@ echo.
 REM Change to the directory containing this script
 cd /d "%~dp0"
 
-REM Start the CLI application
-vidar_app\bin\Release\net8.0\bfd9010.exe
+REM Check if CLI executable exists
+if not exist "vidar_app\bin\Release\net8.0\bfd9010.exe" (
+    echo ERROR: CLI executable not found!
+    echo.
+    echo Please run build.bat first to build the application.
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Start the CLI application (pass any command-line arguments)
+vidar_app\bin\Release\net8.0\bfd9010.exe %*
 
 echo.
 echo Application closed.

@@ -10,36 +10,63 @@ echo.
 REM Change to the directory containing this script
 cd /d "%~dp0"
 
-echo Building solution...
+echo [1/3] Cleaning previous build artifacts...
 echo.
-
-REM Build the solution
-dotnet build vidar_app.sln --configuration Release
-
-if %ERRORLEVEL% EQU 0 (
-    echo.
-    echo ================================================
-    echo Build Successful!
-    echo ================================================
-    echo.
-    echo Output locations:
-    echo   CLI: vidar_app\bin\Release\net8.0\bfd9010.exe
-    echo   FHIR API: BFD9010.FhirApi\bin\Release\net8.0\BFD9010.FhirApi.exe
-    echo   GUI: BFD9010.Gui\bin\Release\net8.0-windows\bfd9010_fhir32.exe
-    echo.
-    echo You can now run:
-    echo   - start-cli.bat (for CLI)
-    echo   - start-fhir-api.bat (for API server)
-    echo   - start-gui.bat (for GUI with integrated API)
-    echo.
-) else (
-    echo.
-    echo ================================================
-    echo Build Failed!
-    echo ================================================
-    echo.
-    echo Please check the error messages above.
-    echo.
+dotnet clean vidar_app.sln --configuration Release --verbosity quiet
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Clean failed!
+    goto :error
 )
 
+echo [2/3] Building solution...
+echo.
+dotnet build vidar_app.sln --configuration Release --no-incremental
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Build failed!
+    goto :error
+)
+
+echo.
+echo [3/3] Publishing GUI executable...
+echo.
+dotnet publish BFD9010.Gui\BFD9010.Gui.csproj --configuration Release --no-build
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: GUI publish failed!
+    goto :error
+)
+
+echo.
+echo ================================================
+echo Build Successful!
+echo ================================================
+echo.
+echo Output locations:
+echo   CLI:       vidar_app\bin\Release\net8.0\bfd9010.exe
+echo   GUI:       BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe
+echo   Libraries: BFD9010.Scanner\bin\Release\net8.0\*.dll
+echo              BFD9010.FhirApi\bin\Release\net8.0\*.dll
+echo.
+echo Quick start:
+echo   - start-gui.bat  (GUI with integrated API - recommended)
+echo   - start-cli.bat  (CLI interface)
+echo.
+echo To create distribution package:
+echo   - package.bat
+echo.
+echo To use custom config:
+echo   - bfd9010.exe --config path\to\config.ini
+echo   - bfd9010_fhir32.exe --config path\to\config.ini
+echo.
 pause
+exit /b 0
+
+:error
+echo.
+echo ================================================
+echo Build Failed!
+echo ================================================
+echo.
+echo Please check the error messages above.
+echo.
+pause
+exit /b 1

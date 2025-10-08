@@ -11,7 +11,7 @@ echo.
 echo A small window will appear showing scanner status.
 echo The FHIR API server will start on http://localhost:5000
 echo.
-echo To scan, navigate to: https://wingate.case.edu/bfd9000/
+echo The GUI will display a clickable link to the web application.
 echo.
 echo ================================================
 echo.
@@ -19,8 +19,18 @@ echo.
 REM Change to the directory containing this script
 cd /d "%~dp0"
 
+REM Check if GUI executable exists
+if not exist "BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe" (
+    echo ERROR: GUI executable not found!
+    echo.
+    echo Please run build.bat first to build the application.
+    echo.
+    pause
+    exit /b 1
+)
+
 REM Start the GUI application
-BFD9010.Gui\bin\Release\net8.0-windows\bfd9010_fhir32.exe
+BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe %*
 
 echo.
 echo Application closed.
