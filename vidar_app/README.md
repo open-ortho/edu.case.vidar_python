@@ -1,150 +1,158 @@
-# Vidar App
+# BFD9010 Scanner Software
 
-Vidar App is a .NET 8 console application for interacting with Vidar digitizer/scanner hardware. It provides commands for calibration, ejecting film, and scanning.
+This repository contains the C# implementation of the BFD9010 scanner control software, providing both CLI and GUI interfaces with integrated FHIR API support.
 
-## Prerequisites
+## Project Overview
 
-- Windows OS with x86 32 bit support (required for native DLLs)
-- The Vidar scanner driver / WinUSB binding must be installed on target machines. Typically this is provided by the Vidar driver package (INF/SYS/CAT). The driver must be installed/added (for example with `pnputil /add-driver <path-to-inf> /install`) and administrative privileges are required. On 64-bit Windows a properly signed driver is required for normal operation.
-- `Vscsi32.dll` must be available in the application directory or in your system PATH (the packager attempts to copy this DLL into the release).
+The BFD9010 scanner software is built on .NET 8.0 and provides:
+- **Command-Line Interface (CLI)** - Interactive menu-driven scanner control with optional FHIR API server
+- **Graphical User Interface (GUI)** - Windows Forms application with automatic FHIR API server startup
+- **FHIR REST API** - Shared library providing FHIR-compliant REST API for web-based scanner control
+- **Scanner Library** - Core scanner communication and control functionality
 
-### Getting `Vscsi32.dll`
+## Quick Start
 
-1. **Install Vidar Driver/Software:**
-   - Download and install the official Vidar scanner driver/software package from Vidar or your hardware provider. The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
+### Building the Project
 
-2. **Locate the DLL:**
-   - After installation, you can usually find `Vscsi32.dll` in the Vidar installation directory, `C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll`
-
-3. **Copy the DLL:**
-   - Copy `Vscsi32.dll` to this directory if you are building or running from source.
-
-## Building
-
-### Using Command Line
-
-1. Open a terminal in the `vidar_app` directory.
-2. Run the following command to build the application:
-
-   ```
-   dotnet build
-   ```
-
-### Using Visual Studio
-
-1. Open the solution in Visual Studio 2022 or later.
-2. Select **Build > Build Solution** from the menu.
-
-## Running
-
-After building, you can run the application using one of the following methods:
-
-### Command-line usage
-
-- The application accepts an optional `--config <path>` argument to specify the path to the `scan_config.ini` file.
-  - Example (published EXE): `vidar_app.exe --config "C:\path\to\scan_config.ini"`
-  - Example (dotnet run): `dotnet run -- --config "C:\path\to\scan_config.ini"`
-
-- If `--config` is omitted the application defaults to the original behaviour: it looks for (and if missing creates) `scan_config.ini` next to the executable (same behavior as before).
-
-- Note: the path given to `--config` is used as-is (relative paths are resolved by the process working directory). If you want paths relative to the executable, change the path to an absolute path or update the code to resolve relative to the exe directory.
-
-### Using Visual Studio
-
-- Press **F5** or select **Debug > Start Debugging** to run the app.
-
-### Running the Executable
-
-- Navigate to `bin/Debug/net8.0` or `bin/Release/net8.0` and run `vidar_app.exe`.
-
-## Packaging (create a ZIP release)
-
-A helper script `build-package.bat` is provided to publish the app and create a release ZIP.
-
-How to run the packager:
-
-1. Open Command Prompt (cmd.exe).
-2. Change directory to this `vidar_app` folder (the folder that contains `build-package.bat`).
+1. Ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed
+2. Open a Command Prompt in the project directory (where `vidar_app.sln` is located)
 3. Run:
-
    ```
-   build-package.bat
-   ```
-
-   Notes:
-   - Run the script from `cmd.exe` (not PowerShell) to see full command echoing reliably. If you run it from PowerShell, PowerShell will invoke cmd to execute the batch file, but debugging output is clearer in a dedicated Command Prompt.
-   - The script requires the .NET SDK to be present if you intend to run the `dotnet` build/publish steps locally. The packager will publish a self-contained release for the configured RID (see the script), and it attempts to include `Vscsi32.dll` from either the repo root or the Vidar driver install location.
-
-Where to find the ZIP:
-
-- The produced ZIP file will be placed in the `artifacts` directory under this project folder. The filename format is `vidar_app_release_v<version>.zip` (for example: `artifacts\vidar_app_release_v0.1.0.zip`).
-
-Excluding artifacts from Git:
-
-- You should add `artifacts/` to your `.gitignore` so generated packages are not checked in. If you prefer, add the following line to the repository `.gitignore`:
-
-   ```
-   artifacts/
+   build.bat
    ```
 
-## Usage
+This will build all projects in Release configuration and prepare executables for both CLI and GUI.
 
-When started, the app shows a simple key-driven menu. Press the single letter key shown in brackets to run a command (the program reads a single key press, no Enter required):
+**Output locations:**
+- CLI: `vidar_app\bin\Release\net8.0\bfd9010.exe`
+- GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe`
+- Libraries: `BFD9010.Scanner\bin\Release\net8.0\*.dll` and `BFD9010.FhirApi\bin\Release\net8.0\*.dll`
 
-- `[C]` Calibrate   – Calibrates the digitizer.
-- `[E]` Eject       – Ejects the film from the digitizer.
-- `[S]` Scan        – Initiates a scan using parameters from `scan_config.ini`.
-- `[R]` Restart     – Re-detects and re-initializes the scanner, and reloads configuration from `scan_config.ini`.
-- `[Q]` Quit        – Exit the application.
+### Running the Application
 
-Example: press the `S` key to start a scan with the settings loaded from the config file. If a command fails, the program prints an error code to the console.
+**Option 1: GUI Application (Recommended for Web Integration)**
+```
+start-gui.bat
+```
+- Launches the Windows Forms GUI
+- Automatically starts FHIR API server on http://localhost:5000
+- Displays scanner status in a small always-on-top window
+- Shows a clickable link to the web application (configured via `WebAppUrl` in INI file)
+- Best for production use with web-based scanner control
 
-### Configuration File
+**Option 2: CLI Application**
+```
+start-cli.bat
+```
+- Launches the interactive command-line interface
+- Provides manual control options via keyboard menu:
+  - `[C]` Calibrate - Calibrate the digitizer
+  - `[E]` Eject - Eject the film from the digitizer
+  - `[S]` Scan - Initiate a scan using parameters from scan_config.ini
+  - `[F]` FHIR API - Start FHIR REST API server on http://localhost:5000
+  - `[R]` Restart - Re-detect scanner and reload configuration
+  - `[Q]` Quit - Exit the application
+- Best for testing and manual scanner control
 
-The application uses a configuration file (`scan_config.ini`) to control scan parameters. On first run, if the file doesn't exist, it will be automatically created with default values (original settings from before the 300 DPI changes: 75 DPI, 8-bit depth).
+**Command-line options (both CLI and GUI):**
+```
+bfd9010.exe --config path\to\config.ini
+bfd9010_fhir32.exe --config path\to\config.ini
+```
 
-The configuration file uses a simple INI format:
+### Creating Distribution Packages
 
+To create self-contained ZIP packages for distribution:
+```
+package.bat
+```
+
+This will:
+- Build both CLI and GUI as self-contained executables (no .NET runtime required on target machine)
+- Include all dependencies including Vscsi32.dll scanner driver
+- Create ZIP files in the `artifacts\` directory:
+  - `bfd9010_cli_v<version>.zip` - CLI package
+  - `bfd9010_gui_v<version>.zip` - GUI package
+
+Each package includes:
+- Self-contained executable (no .NET installation required)
+- All dependencies
+- Vscsi32.dll (scanner driver)
+- scan_config.ini (sample configuration)
+
+**Note:** Add `artifacts/` to your `.gitignore` to exclude generated packages from version control.
+
+## Batch File Reference
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| `build.bat` | Builds all projects in Release configuration | After code changes, before running or packaging |
+| `start-cli.bat` | Launches CLI application | For manual scanner control and testing |
+| `start-gui.bat` | Launches GUI application with auto-started API | For production use with web-based scanner control |
+| `package.bat` | Creates distribution ZIP packages | When preparing software for deployment |
+
+## Scanner Configuration
+
+Scanner settings are loaded from `scan_config.ini` in the working directory. If the file doesn't exist, default values will be used and a new file will be created.
+
+You can specify a custom configuration file using the `--config` command-line argument:
+```bash
+bfd9010.exe --config /path/to/custom_config.ini
+bfd9010_fhir32.exe --config C:\Configs\scanner_config.ini
+```
+
+### Configuration File Structure
+
+Example `scan_config.ini`:
 ```ini
-# Vidar Scanner Configuration
 [ScanParameters]
 
 # Bit depth (8 or 16)
-BitDepth = 8
+BitDepth = 16
 
-# DPI resolution (common values: 75, 150, 300)
-DPI = 75
+# DPI resolution (tested DPIs: 75, 150, 300)
+DPI = 300
 
+# Output options
+# OutputPath: directory where image files will be written
+OutputPath = ~\Desktop\VidarScans
+
+# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}
+OutputPrefix = ${DPI}DPI_${BIT}BIT
+
+# Web API settings
+# WebAppUrl: URL of the web application users should navigate to for scanning
+WebAppUrl = https://wingate.case.edu/bfd9000/
+
+# CorsOrigin: CORS origin(s) to allow API access from (comma-separated for multiple)
+CorsOrigin = https://wingate.case.edu
 ```
 
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `BitDepth` | integer | 16 | Scan bit depth (8 or 16) |
+| `DPI` | integer | 300 | Scan resolution in dots per inch (tested: 75, 150, 300) |
+| `OutputPath` | string | `~\Desktop\VidarScans` | Directory for saving scanned images (supports ~ for home directory) |
+| `OutputPrefix` | string | `${DPI}DPI_${BIT}BIT` | Filename prefix template (tokens: ${DPI}, ${BIT}) |
+| `WebAppUrl` | string | `https://wingate.case.edu/bfd9000/` | URL displayed in GUI for users to access web interface |
+| `CorsOrigin` | string | `https://wingate.case.edu` | Allowed CORS origin(s), comma-separated for multiple origins |
+
+### CORS Configuration
+
+The `CorsOrigin` setting controls which web origins can make API requests to the scanner. 
+
+**Single origin:**
+```ini
+CorsOrigin = https://wingate.case.edu
+```
+
+**Multiple origins:**
+```ini
+CorsOrigin = https://wingate.case.edu, https://localhost:3000, https://test.example.com
+```
+
+This is essential for web-based scanner control. The web application at the specified origin(s) can make API calls to `http://localhost:5000`.
+
 **To test different scan settings:**
-
-1. Open `scan_config.ini` in a text editor
-2. Modify the values you want to test (e.g., change `DPI` from 75 to 300)
-3. Save the file
-4. Press `[R]` in the application to restart and reload the configuration
-5. Press `[S]` to scan with the new settings
-
-This streamlined workflow allows you to quickly test different parameter combinations without manually entering values each time.
-
-**Config File Location:** The config file is created in the same directory as the executable (typically `bin/Debug/net8.0/` or `bin/Release/net8.0/`). If you provide `--config <path>` the application will use that file instead.
-
-## Reverse engineering write-up
-
-A write-up describing how the Vidar driver and protocols were reverse engineered is available at `./RE_Writeup.md`. That document outlines the steps, tools, and observations used to understand the `Vscsi32.dll` behavior and the scanner communication.
-
-## Notes
-
-- Ensure `Vscsi32.dll` is present and accessible.
-- Administrative privileges may be required for hardware access and driver installation.
-- For troubleshooting, check console output for error codes.
-
-## Troubleshooting
-
-- If you see errors about missing DLLs, ensure `Vscsi32.dll` is in the same directory as the executable or in your system PATH.
-- If you encounter permission errors, try running the application as administrator.
-- For build issues, verify that .NET 8 SDK is installed and your environment variables are set correctly.
-
-## Support
-
-For further assistance, please refer to the project documentation or contact the repository maintainer.
