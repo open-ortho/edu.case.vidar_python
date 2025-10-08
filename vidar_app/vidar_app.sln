@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BFD9010.Scanner", "BFD9010.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BFD9010.FhirApi", "BFD9010.FhirApi\BFD9010.FhirApi.csproj", "{A59EF3BC-1F7D-4DD1-871D-8C12ABF3C758}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BFD9010.FhirApi.Tests", "BFD9010.FhirApi.Tests\BFD9010.FhirApi.Tests.csproj", "{EC4CBB10-2C97-43C5-BA91-100034D4E096}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{A59EF3BC-1F7D-4DD1-871D-8C12ABF3C758}.Release|x86.Build.0 = Release|x86
 		{A59EF3BC-1F7D-4DD1-871D-8C12ABF3C758}.Release|x64.ActiveCfg = Release|Any CPU
 		{A59EF3BC-1F7D-4DD1-871D-8C12ABF3C758}.Release|x64.Build.0 = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|x86.Build.0 = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Debug|x64.Build.0 = Debug|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|x86.ActiveCfg = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|x86.Build.0 = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|x64.ActiveCfg = Release|Any CPU
+		{EC4CBB10-2C97-43C5-BA91-100034D4E096}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
