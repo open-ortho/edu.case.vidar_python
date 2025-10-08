@@ -123,6 +123,54 @@ curl http://localhost:5000/Device/scanner-001
     {
       "type": { "text": "Optical Resolution" },
       "valueQuantity": [{ "value": 300, "unit": "dpi" }]
+    },
+    {
+      "type": { "text": "Max Width" },
+      "valueQuantity": [{ "value": 14.0, "unit": "inches" }]
+    },
+    {
+      "type": { "text": "Current Bit Depth" },
+      "valueQuantity": [{ "value": 12, "unit": "bits" }]
+    },
+    {
+      "type": { "text": "Max Films" },
+      "valueQuantity": [{ "value": 50, "unit": "films" }]
+    },
+    {
+      "type": { "text": "Dark Enhance" },
+      "valueCodeableConcept": [{ "text": "Enabled" }]
+    },
+    {
+      "type": { "text": "Line Filter" },
+      "valueCodeableConcept": [{ "text": "Standard" }]
+    },
+    {
+      "type": { "text": "Film Backup" },
+      "valueCodeableConcept": [{ "text": "Disabled" }]
+    },
+    {
+      "type": { "text": "Unload Medium" },
+      "valueCodeableConcept": [{ "text": "Auto" }]
+    },
+    {
+      "type": { "text": "Limited Scans" },
+      "valueCodeableConcept": [{ "text": "Unlimited" }]
+    },
+    {
+      "type": { "text": "Line Time" },
+      "valueCodeableConcept": [{ "text": "Standard" }]
+    },
+    {
+      "type": { "text": "Feeder Type" },
+      "valueCodeableConcept": [{ "text": "Automatic" }]
+    },
+    {
+      "type": { "text": "Lamp Type" },
+      "valueCodeableConcept": [{ "text": "LED" }]
+    },
+    {
+      "type": { "text": "Translation Table" },
+      "valueCodeableConcept": [{ "text": "Standard" }]
     }
   ]
 }

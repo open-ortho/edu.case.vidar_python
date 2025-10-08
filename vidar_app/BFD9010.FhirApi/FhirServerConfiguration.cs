@@ -112,6 +112,56 @@ public static class FhirServerConfiguration
                     {
                         Type = new CodeableConcept { Text = "Current Bit Depth" },
                         ValueQuantity = new List<Quantity> { new Quantity { Value = data.currentBitDepth, Unit = "bits" } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Max Films" },
+                        ValueQuantity = new List<Quantity> { new Quantity { Value = data.maxFilms, Unit = "films" } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Dark Enhance" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.darkEnhance } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Line Filter" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lineFilter } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Film Backup" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.filmBackup } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Unload Medium" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.unloadMedium } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Limited Scans" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.limitedScans } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Line Time" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lineTime } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Feeder Type" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.feederType } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Lamp Type" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lampType } }
+                    },
+                    new DeviceProperty
+                    {
+                        Type = new CodeableConcept { Text = "Translation Table" },
+                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.translationTable } }
                     }
                 }
             };
