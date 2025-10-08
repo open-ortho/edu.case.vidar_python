@@ -13,14 +13,14 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Runtime.InteropServices;
-using static vidar_app.Scanner;
-using static vidar_app.VscsiMethods;
-using static vidar_app.VscsiTypes;
-using static vidar_app.VscsiTypes._SCANPARAMETERS;
+using static BFD9010.Scanner.Scanner;
+using static BFD9010.Scanner.VscsiMethods;
+using static BFD9010.Scanner.VscsiTypes;
+using static BFD9010.Scanner.VscsiTypes._SCANPARAMETERS;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Scan
+    public class Scan
     {
         public unsafe static int scan(_DIGITIZERINFO digitizerInfo, ScannerData scanner_data, ScanConfig config)
         {

@@ -1,0 +1,228 @@
+using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using BFD9010.FhirApi;
+using BFD9010.FhirApi.Services;
+using BFD9010.Scanner;
+
+namespace BFD9010.Gui
+{
+    public partial class MainForm : Form
+    {
+        private readonly string? _configPath;
+        private ScannerService? scannerService;
+        private IHost? webHost;
+        private Label statusLabel = null!;
+        private LinkLabel urlLinkLabel = null!;
+        private Label apiLabel = null!;
+
+        public MainForm(string? configPath = null)
+        {
+            _configPath = configPath;
+            InitializeComponent();
+            InitializeUI();
+            _ = StartWebServerAsync();
+        }
+
+        private void InitializeComponent()
+        {
+            this.Text = "BFD9010 Scanner Server";
+            this.Size = new Size(400, 220);
+            this.MinimizeBox = true;
+            this.MaximizeBox = false;
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.TopMost = true;
+        }
+
+        private void InitializeUI()
+        {
+            // Status Label
+            statusLabel = new Label
+            {
+                Text = "Initializing...",
+                Location = new Point(10, 10),
+                Size = new Size(370, 30),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                ForeColor = Color.Orange,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            this.Controls.Add(statusLabel);
+
+            // Message Label (for status/error messages)
+            var messageLabel = new Label
+            {
+                Text = "Starting scanner service...",
+                Location = new Point(10, 50),
+                Size = new Size(370, 60),
+                Font = new Font("Segoe UI", 10F),
+                TextAlign = ContentAlignment.TopCenter
+            };
+            this.Controls.Add(messageLabel);
+
+            // URL Link Label
+            urlLinkLabel = new LinkLabel
+            {
+                Text = "Loading...",
+                Location = new Point(10, 120),
+                Size = new Size(370, 30),
+                Font = new Font("Segoe UI", 11F, FontStyle.Underline),
+                TextAlign = ContentAlignment.MiddleCenter,
+                LinkColor = Color.Blue,
+                VisitedLinkColor = Color.Purple,
+                ActiveLinkColor = Color.Red
+            };
+            urlLinkLabel.LinkClicked += UrlLinkLabel_LinkClicked;
+            this.Controls.Add(urlLinkLabel);
+
+            // API Info Label
+            apiLabel = new Label
+            {
+                Text = "",
+                Location = new Point(10, 160),
+                Size = new Size(370, 40),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.Gray,
+                TextAlign = ContentAlignment.TopCenter
+            };
+            this.Controls.Add(apiLabel);
+        }
+
+        private void UrlLinkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(urlLinkLabel.Tag as string))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = urlLinkLabel.Tag as string,
+                        UseShellExecute = true
+                    });
+                    urlLinkLabel.LinkVisited = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task StartWebServerAsync()
+        {
+            Label? messageLabel = this.Controls.OfType<Label>().FirstOrDefault(l => l.Location.Y == 50);
+            
+            try
+            {
+                // Load configuration to get CORS and URL settings
+                var config = ScanConfig.Load(_configPath);
+
+                // Create web application using shared configuration
+                var builder = WebApplication.CreateBuilder();
+                
+                // Add logging
+                builder.Logging.ClearProviders();
+                builder.Logging.AddConsole();
+                builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+                // Configure services using shared configuration with config
+                FhirServerConfiguration.ConfigureServices(builder, config);
+
+                // Build the app
+                var app = builder.Build();
+
+                // Get scanner service from DI
+                scannerService = app.Services.GetRequiredService<ScannerService>();
+
+                // Configure FHIR endpoints using shared configuration
+                FhirServerConfiguration.ConfigureEndpoints(app);
+
+                // Start the web server in background
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await app.RunAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Invoke((Action)(() =>
+                        {
+                            UpdateStatus("Error", Color.Red);
+                            if (messageLabel != null)
+                                messageLabel.Text = $"Failed to start web server:\n{ex.Message}";
+                        }));
+                    }
+                });
+
+                // Store the host
+                webHost = app as IHost;
+
+                // Initialize scanner using shared configuration
+                await Task.Delay(500); // Give server a moment to start
+                bool initialized = await FhirServerConfiguration.InitializeScannerAsync(app);
+
+                if (initialized)
+                {
+                    UpdateStatus("Ready", Color.Green);
+                    if (messageLabel != null)
+                        messageLabel.Text = "Scanner initialized successfully!";
+                    
+                    // Set the clickable link from config
+                    string webUrl = config.WebAppUrl ?? "https://wingate.case.edu/bfd9000/";
+                    urlLinkLabel.Text = $"Click here to scan: {webUrl}";
+                    urlLinkLabel.Tag = webUrl;
+                    
+                    // Show API info
+                    apiLabel.Text = "API available at http://localhost:5000";
+                }
+                else
+                {
+                    UpdateStatus("Error", Color.Red);
+                    if (messageLabel != null)
+                        messageLabel.Text = "Scanner initialization failed\n\nPlease check the scanner connection.";
+                    urlLinkLabel.Text = "Scanner not ready";
+                    urlLinkLabel.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error", Color.Red);
+                if (messageLabel != null)
+                    messageLabel.Text = $"Failed to start:\n{ex.Message}";
+                urlLinkLabel.Text = "Service failed to start";
+                urlLinkLabel.Enabled = false;
+            }
+        }
+
+        private void UpdateStatus(string status, Color color)
+        {
+            if (statusLabel.InvokeRequired)
+            {
+                statusLabel.Invoke((Action)(() => UpdateStatus(status, color)));
+                return;
+            }
+
+            statusLabel.Text = status;
+            statusLabel.ForeColor = color;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            
+            // Stop web server
+            if (webHost != null)
+            {
+                webHost.StopAsync().Wait(TimeSpan.FromSeconds(5));
+                webHost.Dispose();
+            }
+        }
+    }
+}

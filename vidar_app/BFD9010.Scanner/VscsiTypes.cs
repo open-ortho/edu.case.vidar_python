@@ -14,7 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
     public class VscsiTypes
     {

@@ -1,8 +1,8 @@
-﻿using static vidar_app.VscsiTypes;
+﻿using static BFD9010.Scanner.VscsiTypes;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Hardware
+    public class Hardware
     {
         internal unsafe static uint LocateHardware(VscsiTypes._HARDWAREINFO HwInfo)
         {

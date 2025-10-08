@@ -9,9 +9,9 @@
  * Target framework: .NET 8
  */
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Eject
+    public class Eject
     {
         public static int eject(VscsiTypes._DIGITIZERINFO dIGITIZERINFO)
         {

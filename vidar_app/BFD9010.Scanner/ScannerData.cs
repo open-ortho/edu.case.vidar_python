@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Scanner
+    public class Scanner
     {
         public struct ScannerData
         {

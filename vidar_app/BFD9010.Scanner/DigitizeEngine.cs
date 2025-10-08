@@ -11,11 +11,11 @@
  * Target framework: .NET 8
  */
 
-using static vidar_app.VscsiTypes;
+using static BFD9010.Scanner.VscsiTypes;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class DigitizeEngine
+    public class DigitizeEngine
     {
         public static int ErrorCode = 0;
 

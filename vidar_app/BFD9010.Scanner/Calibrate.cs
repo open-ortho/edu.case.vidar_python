@@ -9,9 +9,9 @@
  * Target framework: .NET 8
  */
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Calibrate
+    public class Calibrate
     {
         public static int calibrate()
         {

@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security;
-using static vidar_app.VscsiTypes;
+using static BFD9010.Scanner.VscsiTypes;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
     unsafe public static class VscsiMethods
     {
@@ -27,6 +27,6 @@ namespace vidar_app
 
         [DllImport("Vscsi32.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [SuppressUnmanagedCodeSecurity]
-        internal static extern short getVidarError(int P_0, ref _VIDARERRORINFO P_1, ref ushort P_2);
+        public static extern short getVidarError(int P_0, ref _VIDARERRORINFO P_1, ref ushort P_2);
     }
 }

@@ -12,12 +12,12 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
-using static vidar_app.VscsiTypes;
-using static vidar_app.Scanner;
+using static BFD9010.Scanner.VscsiTypes;
+using static BFD9010.Scanner.Scanner;
 
-namespace vidar_app
+namespace BFD9010.Scanner
 {
-    internal class Startup
+    public class Startup
     {
         public static unsafe int InitializeDigitizer(ref _DIGITIZERINFO dIGITIZERINFO, ref ScannerData scanner_data)
         {
