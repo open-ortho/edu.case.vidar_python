@@ -26,6 +26,8 @@ public class ScannerService
 
     public ScannerData? ScannerData => _scannerData;
 
+    public ScanConfig ScanConfig => _scanConfig;
+
     /// <summary>
     /// Initialize the scanner
     /// </summary>

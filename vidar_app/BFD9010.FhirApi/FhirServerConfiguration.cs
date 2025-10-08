@@ -1,5 +1,6 @@
 using BFD9010.FhirApi.Models;
 using BFD9010.FhirApi.Services;
+using BFD9010.Scanner;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,19 +18,23 @@ public static class FhirServerConfiguration
     /// <summary>
     /// Configure services for the FHIR API server
     /// </summary>
-    public static void ConfigureServices(WebApplicationBuilder builder)
+    public static void ConfigureServices(WebApplicationBuilder builder, ScanConfig? config = null)
     {
         // Add services
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddSingleton<ScannerService>();
 
-        // Configure CORS for wingate.case.edu
+        // Get CORS origins from config or use default
+        string corsOrigins = config?.CorsOrigin ?? "https://wingate.case.edu";
+        var allowedOrigins = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Configure CORS
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("WingatePolicy", policy =>
             {
-                policy.WithOrigins("https://wingate.case.edu")
+                policy.WithOrigins(allowedOrigins)
                       .AllowAnyMethod()
                       .AllowAnyHeader();
             });

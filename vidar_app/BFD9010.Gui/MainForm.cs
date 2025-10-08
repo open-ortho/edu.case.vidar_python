@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -8,18 +9,22 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using BFD9010.FhirApi;
 using BFD9010.FhirApi.Services;
+using BFD9010.Scanner;
 
 namespace BFD9010.Gui
 {
     public partial class MainForm : Form
     {
+        private readonly string? _configPath;
         private ScannerService? scannerService;
         private IHost? webHost;
         private Label statusLabel = null!;
-        private Label messageLabel = null!;
+        private LinkLabel urlLinkLabel = null!;
+        private Label apiLabel = null!;
 
-        public MainForm()
+        public MainForm(string? configPath = null)
         {
+            _configPath = configPath;
             InitializeComponent();
             InitializeUI();
             _ = StartWebServerAsync();
@@ -28,7 +33,7 @@ namespace BFD9010.Gui
         private void InitializeComponent()
         {
             this.Text = "BFD9010 Scanner Server";
-            this.Size = new Size(400, 200);
+            this.Size = new Size(400, 220);
             this.MinimizeBox = true;
             this.MaximizeBox = false;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -50,22 +55,74 @@ namespace BFD9010.Gui
             };
             this.Controls.Add(statusLabel);
 
-            // Message Label
-            messageLabel = new Label
+            // Message Label (for status/error messages)
+            var messageLabel = new Label
             {
                 Text = "Starting scanner service...",
                 Location = new Point(10, 50),
-                Size = new Size(370, 100),
+                Size = new Size(370, 60),
                 Font = new Font("Segoe UI", 10F),
                 TextAlign = ContentAlignment.TopCenter
             };
             this.Controls.Add(messageLabel);
+
+            // URL Link Label
+            urlLinkLabel = new LinkLabel
+            {
+                Text = "Loading...",
+                Location = new Point(10, 120),
+                Size = new Size(370, 30),
+                Font = new Font("Segoe UI", 11F, FontStyle.Underline),
+                TextAlign = ContentAlignment.MiddleCenter,
+                LinkColor = Color.Blue,
+                VisitedLinkColor = Color.Purple,
+                ActiveLinkColor = Color.Red
+            };
+            urlLinkLabel.LinkClicked += UrlLinkLabel_LinkClicked;
+            this.Controls.Add(urlLinkLabel);
+
+            // API Info Label
+            apiLabel = new Label
+            {
+                Text = "",
+                Location = new Point(10, 160),
+                Size = new Size(370, 40),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.Gray,
+                TextAlign = ContentAlignment.TopCenter
+            };
+            this.Controls.Add(apiLabel);
+        }
+
+        private void UrlLinkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(urlLinkLabel.Tag as string))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = urlLinkLabel.Tag as string,
+                        UseShellExecute = true
+                    });
+                    urlLinkLabel.LinkVisited = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async Task StartWebServerAsync()
         {
+            Label? messageLabel = this.Controls.OfType<Label>().FirstOrDefault(l => l.Location.Y == 50);
+            
             try
             {
+                // Load configuration to get CORS and URL settings
+                var config = ScanConfig.Load(_configPath);
+
                 // Create web application using shared configuration
                 var builder = WebApplication.CreateBuilder();
                 
@@ -74,8 +131,8 @@ namespace BFD9010.Gui
                 builder.Logging.AddConsole();
                 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-                // Configure services using shared configuration
-                FhirServerConfiguration.ConfigureServices(builder);
+                // Configure services using shared configuration with config
+                FhirServerConfiguration.ConfigureServices(builder, config);
 
                 // Build the app
                 var app = builder.Build();
@@ -98,7 +155,8 @@ namespace BFD9010.Gui
                         this.Invoke((Action)(() =>
                         {
                             UpdateStatus("Error", Color.Red);
-                            messageLabel.Text = $"Failed to start web server:\n{ex.Message}";
+                            if (messageLabel != null)
+                                messageLabel.Text = $"Failed to start web server:\n{ex.Message}";
                         }));
                     }
                 });
@@ -113,21 +171,33 @@ namespace BFD9010.Gui
                 if (initialized)
                 {
                     UpdateStatus("Ready", Color.Green);
-                    messageLabel.Text = $"Scanner initialized successfully!\n\n" +
-                                       $"Go to https://wingate.case.edu/bfd9000/ to scan\n\n" +
-                                       $"API available at http://localhost:5000";
+                    if (messageLabel != null)
+                        messageLabel.Text = "Scanner initialized successfully!";
+                    
+                    // Set the clickable link from config
+                    string webUrl = config.WebAppUrl ?? "https://wingate.case.edu/bfd9000/";
+                    urlLinkLabel.Text = $"Click here to scan: {webUrl}";
+                    urlLinkLabel.Tag = webUrl;
+                    
+                    // Show API info
+                    apiLabel.Text = "API available at http://localhost:5000";
                 }
                 else
                 {
                     UpdateStatus("Error", Color.Red);
-                    messageLabel.Text = $"Scanner initialization failed\n\n" +
-                                       $"Please check the scanner connection.";
+                    if (messageLabel != null)
+                        messageLabel.Text = "Scanner initialization failed\n\nPlease check the scanner connection.";
+                    urlLinkLabel.Text = "Scanner not ready";
+                    urlLinkLabel.Enabled = false;
                 }
             }
             catch (Exception ex)
             {
                 UpdateStatus("Error", Color.Red);
-                messageLabel.Text = $"Failed to start:\n{ex.Message}";
+                if (messageLabel != null)
+                    messageLabel.Text = $"Failed to start:\n{ex.Message}";
+                urlLinkLabel.Text = "Service failed to start";
+                urlLinkLabel.Enabled = false;
             }
         }
 

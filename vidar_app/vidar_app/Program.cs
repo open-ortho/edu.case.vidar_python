@@ -87,7 +87,7 @@ async Task<bool> RunAppAsync()
                 }
                 break;
             case ConsoleKey.F:
-                await StartFhirApiServerAsync();
+                await StartFhirApiServerAsync(configPath);
                 break;
             case ConsoleKey.R:
                 Console.WriteLine("Restarting, re-detecting scanner, and reloading configuration...");
@@ -103,7 +103,7 @@ async Task<bool> RunAppAsync()
     }
 }
 
-async Task StartFhirApiServerAsync()
+async Task StartFhirApiServerAsync(string? configPath)
 {
     Console.WriteLine("\n=================================================================");
     Console.WriteLine("Starting FHIR API Server...");
@@ -111,6 +111,9 @@ async Task StartFhirApiServerAsync()
 
     try
     {
+        // Load configuration to get CORS settings
+        var config = ScanConfig.Load(configPath);
+
         // Create web application using shared configuration
         var builder = WebApplication.CreateBuilder();
 
@@ -119,8 +122,8 @@ async Task StartFhirApiServerAsync()
         builder.Logging.AddConsole();
         builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-        // Configure services using shared configuration
-        FhirServerConfiguration.ConfigureServices(builder);
+        // Configure services using shared configuration with config
+        FhirServerConfiguration.ConfigureServices(builder, config);
 
         // Build the app
         var app = builder.Build();
@@ -142,6 +145,7 @@ async Task StartFhirApiServerAsync()
         }
 
         Console.WriteLine("\n✓ Scanner initialized successfully!");
+        Console.WriteLine($"\nCORS configured for: {config.CorsOrigin}");
         Console.WriteLine("\n=================================================================");
         Console.WriteLine("FHIR API Server is running on http://localhost:5000");
         Console.WriteLine("=================================================================");
@@ -150,6 +154,7 @@ async Task StartFhirApiServerAsync()
         Console.WriteLine("  POST /Device/{id}/$scan   - Perform scan");
         Console.WriteLine("  POST /Device/{id}/$calibrate - Calibrate scanner");
         Console.WriteLine("  POST /Device/{id}/$eject  - Eject film");
+        Console.WriteLine($"\nWeb application: {config.WebAppUrl}");
         Console.WriteLine("\nPress Ctrl+C to stop the server and return to menu...");
         Console.WriteLine("=================================================================\n");
 

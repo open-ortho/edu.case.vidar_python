@@ -39,6 +39,12 @@ namespace BFD9010.Scanner
         // OutputPrefix: filename prefix template. Use ${DPI} and ${BIT} tokens.
         public string OutputPrefix { get; set; } = "${DPI}DPI_${BIT}BIT";
 
+        // Web API settings
+        // WebAppUrl: URL of the web application that users should navigate to
+        public string WebAppUrl { get; set; } = "https://wingate.case.edu/bfd9000/";
+        // CorsOrigin: CORS origin(s) to allow (comma-separated for multiple origins)
+        public string CorsOrigin { get; set; } = "https://wingate.case.edu";
+
         /// <summary>
         /// Loads configuration from file. If file doesn't exist, creates it with defaults.
         /// If configPath is null, uses default location next to the executable.
@@ -191,6 +197,13 @@ namespace BFD9010.Scanner
             sb.AppendLine("");
             sb.AppendLine("# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}");
             sb.AppendLine($"OutputPrefix = {OutputPrefix}");
+            sb.AppendLine("");
+            sb.AppendLine("# Web API settings");
+            sb.AppendLine("# WebAppUrl: URL of the web application users should navigate to for scanning");
+            sb.AppendLine($"WebAppUrl = {WebAppUrl}");
+            sb.AppendLine("");
+            sb.AppendLine("# CorsOrigin: CORS origin(s) to allow API access from (comma-separated for multiple)");
+            sb.AppendLine($"CorsOrigin = {CorsOrigin}");
 
             File.WriteAllText(path, sb.ToString());
             Console.WriteLine($"Configuration saved to: {path}");
@@ -263,6 +276,12 @@ namespace BFD9010.Scanner
                         break;
                     case "OutputPrefix":
                         OutputPrefix = value;
+                        break;
+                    case "WebAppUrl":
+                        WebAppUrl = value;
+                        break;
+                    case "CorsOrigin":
+                        CorsOrigin = value;
                         break;
                     default:
                         Console.WriteLine($"Warning: Unknown config key: {key}");

@@ -52,7 +52,7 @@ dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 ### CLI Application
 ```bash
 cd vidar_app/bin/Release/net8.0
-./bfd9010.exe
+./bfd9010.exe [--config path/to/config.ini]
 ```
 
 The CLI provides these commands:
@@ -63,359 +63,85 @@ The CLI provides these commands:
 - **[R]estart** - Re-detect scanner and reload configuration
 - **[Q]uit** - Exit the application
 
+**Command-line options:**
+- `--config <path>` - Specify a custom configuration file path (default: `scan_config.ini` in executable directory)
+
 ### GUI Application (Windows only)
 ```bash
 cd BFD9010.Gui/bin/Release/net8.0-windows/publish
-./bfd9010_fhir32.exe
+./bfd9010_fhir32.exe [--config path/to/config.ini]
 ```
 
 The GUI will:
 - Initialize the scanner on startup
 - Start the FHIR API server on port 5000
 - Display scanner status in a small always-on-top window
-- Show the message: "Go to https://wingate.case.edu/bfd9000/ to scan"
+- Show a clickable link to the web application (configured via `WebAppUrl` in INI file)
+- Display API endpoint information
 
-## FHIR API Endpoints
-
-### Base URL
-```
-http://localhost:5000
-```
-
-### 1. Get Device Information
-**Endpoint:** `GET /Device/{id}`
-
-Returns scanner information as a FHIR Device resource.
-
-**Parameters:**
-- `id` - Device identifier (any string, logged for future multi-scanner support)
-
-**Response:** FHIR Device resource
-
-**Example Request:**
-```bash
-curl http://localhost:5000/Device/scanner-001
-```
-
-**Example Response:**
-```json
-{
-  "resourceType": "Device",
-  "id": "scanner-001",
-  "manufacturer": "Vidar Systems Corporation",
-  "modelNumber": "VXR-16 DosimetryPRO",
-  "serialNumber": "ABC123",
-  "version": [
-    {
-      "type": { "text": "Firmware" },
-      "value": "2.01"
-    },
-    {
-      "type": { "text": "Hardware" },
-      "value": "3"
-    }
-  ],
-  "property": [
-    {
-      "type": { "text": "Current Resolution" },
-      "valueQuantity": [{ "value": 75, "unit": "dpi" }]
-    },
-    {
-      "type": { "text": "Optical Resolution" },
-      "valueQuantity": [{ "value": 300, "unit": "dpi" }]
-    },
-    {
-      "type": { "text": "Max Width" },
-      "valueQuantity": [{ "value": 14.0, "unit": "inches" }]
-    },
-    {
-      "type": { "text": "Current Bit Depth" },
-      "valueQuantity": [{ "value": 12, "unit": "bits" }]
-    },
-    {
-      "type": { "text": "Max Films" },
-      "valueQuantity": [{ "value": 50, "unit": "films" }]
-    },
-    {
-      "type": { "text": "Dark Enhance" },
-      "valueCodeableConcept": [{ "text": "Enabled" }]
-    },
-    {
-      "type": { "text": "Line Filter" },
-      "valueCodeableConcept": [{ "text": "Standard" }]
-    },
-    {
-      "type": { "text": "Film Backup" },
-      "valueCodeableConcept": [{ "text": "Disabled" }]
-    },
-    {
-      "type": { "text": "Unload Medium" },
-      "valueCodeableConcept": [{ "text": "Auto" }]
-    },
-    {
-      "type": { "text": "Limited Scans" },
-      "valueCodeableConcept": [{ "text": "Unlimited" }]
-    },
-    {
-      "type": { "text": "Line Time" },
-      "valueCodeableConcept": [{ "text": "Standard" }]
-    },
-    {
-      "type": { "text": "Feeder Type" },
-      "valueCodeableConcept": [{ "text": "Automatic" }]
-    },
-    {
-      "type": { "text": "Lamp Type" },
-      "valueCodeableConcept": [{ "text": "LED" }]
-    },
-    {
-      "type": { "text": "Translation Table" },
-      "valueCodeableConcept": [{ "text": "Standard" }]
-    }
-  ]
-}
-```
-
-### 2. Scan Operation
-**Endpoint:** `POST /Device/{id}/$scan`
-
-Performs a scan and returns the image as a FHIR Bundle containing a Binary resource (base64-encoded PNG) and an OperationOutcome.
-
-**Parameters:**
-- `id` - Device identifier (any string)
-
-**Response:** FHIR Bundle with Binary and OperationOutcome resources
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:5000/Device/scanner-001/\$scan
-```
-
-**Example Response (Success):**
-```json
-{
-  "resourceType": "Bundle",
-  "type": "collection",
-  "entry": [
-    {
-      "resource": {
-        "resourceType": "Binary",
-        "contentType": "image/png",
-        "data": "iVBORw0KGgoAAAANSUhEUgAA..."
-      }
-    },
-    {
-      "resource": {
-        "resourceType": "OperationOutcome",
-        "issue": [
-          {
-            "severity": "information",
-            "code": "informational",
-            "details": {
-              "text": "Scan completed successfully"
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-**Example Response (Error):**
-```json
-{
-  "resourceType": "Bundle",
-  "type": "collection",
-  "entry": [
-    {
-      "resource": {
-        "resourceType": "OperationOutcome",
-        "issue": [
-          {
-            "severity": "error",
-            "code": "exception",
-            "details": {
-              "text": "Scan failed with status code: 8"
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-### 3. Calibrate Operation
-**Endpoint:** `POST /Device/{id}/$calibrate`
-
-Calibrates the scanner.
-
-**Parameters:**
-- `id` - Device identifier (any string)
-
-**Response:** FHIR OperationOutcome
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:5000/Device/scanner-001/\$calibrate
-```
-
-**Example Response:**
-```json
-{
-  "resourceType": "OperationOutcome",
-  "issue": [
-    {
-      "severity": "information",
-      "code": "informational",
-      "details": {
-        "text": "Calibration completed successfully"
-      }
-    }
-  ]
-}
-```
-
-### 4. Eject Film Operation
-**Endpoint:** `POST /Device/{id}/$eject`
-
-Ejects the film from the scanner.
-
-**Parameters:**
-- `id` - Device identifier (any string)
-
-**Response:** FHIR OperationOutcome
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:5000/Device/scanner-001/\$eject
-```
-
-**Example Response:**
-```json
-{
-  "resourceType": "OperationOutcome",
-  "issue": [
-    {
-      "severity": "information",
-      "code": "informational",
-      "details": {
-        "text": "Film ejected successfully"
-      }
-    }
-  ]
-}
-```
-
-## CORS Configuration
-
-The API is configured to allow requests from:
-- `https://wingate.case.edu`
-
-This allows the web application at wingate.case.edu to call the local API.
+**Command-line options:**
+- `--config <path>` - Specify a custom configuration file path (default: `scan_config.ini` in executable directory)
 
 ## Scanner Configuration
 
-Scanner settings are loaded from `scan_config.ini` in the working directory. If the file doesn't exist, default values will be used.
+Scanner settings are loaded from `scan_config.ini` in the working directory. If the file doesn't exist, default values will be used and a new file will be created.
+
+You can specify a custom configuration file using the `--config` command-line argument:
+```bash
+./bfd9010.exe --config /path/to/custom_config.ini
+./bfd9010_fhir32.exe --config C:\Configs\scanner_config.ini
+```
+
+### Configuration File Structure
 
 Example `scan_config.ini`:
 ```ini
 [ScanParameters]
-Offset0_BitDepth=12
-Offset2_DPI_X=75
-# ... additional parameters
+
+# Bit depth (8 or 16)
+BitDepth = 16
+
+# DPI resolution (tested DPIs: 75, 150, 300)
+DPI = 300
+
+# Output options
+# OutputPath: directory where image files will be written
+OutputPath = ~\Desktop\VidarScans
+
+# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}
+OutputPrefix = ${DPI}DPI_${BIT}BIT
+
+# Web API settings
+# WebAppUrl: URL of the web application users should navigate to for scanning
+WebAppUrl = https://wingate.case.edu/bfd9000/
+
+# CorsOrigin: CORS origin(s) to allow API access from (comma-separated for multiple)
+CorsOrigin = https://wingate.case.edu
 ```
 
-## Image Output
+### Configuration Options
 
-Images are returned as:
-- **Format:** PNG
-- **Encoding:** Base64 (in FHIR Binary resource)
-- **Bit Depth:** Configurable (8-bit or 16-bit grayscale)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `BitDepth` | integer | 16 | Scan bit depth (8 or 16) |
+| `DPI` | integer | 300 | Scan resolution in dots per inch (tested: 75, 150, 300) |
+| `OutputPath` | string | `~\Desktop\VidarScans` | Directory for saving scanned images (supports ~ for home directory) |
+| `OutputPrefix` | string | `${DPI}DPI_${BIT}BIT` | Filename prefix template (tokens: ${DPI}, ${BIT}) |
+| `WebAppUrl` | string | `https://wingate.case.edu/bfd9000/` | URL displayed in GUI for users to access web interface |
+| `CorsOrigin` | string | `https://wingate.case.edu` | Allowed CORS origin(s), comma-separated for multiple origins |
 
-## Error Handling
+### CORS Configuration
 
-All errors are returned as FHIR OperationOutcome resources with appropriate severity levels:
-- `information` - Successful operation
-- `error` - Operation failed
-- `fatal` - Critical error
+The `CorsOrigin` setting controls which web origins can make API requests to the scanner. 
 
-HTTP status codes:
-- `200 OK` - Successful operation
-- `500 Internal Server Error` - Operation failed
-
-## Swagger/OpenAPI
-
-When running in development mode, Swagger UI is available at:
-```
-http://localhost:5000/swagger
+**Single origin:**
+```ini
+CorsOrigin = https://wingate.case.edu
 ```
 
-This provides interactive API documentation.
-
-## Integration with wingate.case.edu
-
-The expected workflow is:
-
-1. User runs either:
-   - The **CLI application** and selects `[F]HIR API` option, OR
-   - The **GUI application** (which auto-starts the API)
-2. The application initializes the scanner and starts the API on `http://localhost:5000`
-3. User navigates to `https://wingate.case.edu/bfd9000/` in their browser
-4. The web application makes requests to the local API to control the scanner
-5. Scanned images are returned as base64-encoded PNG data in FHIR Bundle responses
-
-## Code Architecture
-
-### Shared Configuration Pattern
-
-All FHIR API functionality is centralized in `BFD9010.FhirApi/FhirServerConfiguration.cs`:
-
-```csharp
-public static class FhirServerConfiguration
-{
-    // Configure DI services (ScannerService, CORS, etc.)
-    public static void ConfigureServices(WebApplicationBuilder builder);
-    
-    // Register all FHIR endpoints (/Device/{id}, /$scan, etc.)
-    public static void ConfigureEndpoints(WebApplication app);
-    
-    // Initialize scanner on startup
-    public static async Task<bool> InitializeScannerAsync(WebApplication app);
-}
+**Multiple origins:**
+```ini
+CorsOrigin = https://wingate.case.edu, https://localhost:3000, https://test.example.com
 ```
 
-Both the CLI and GUI applications use these shared methods to ensure consistent behavior.
-
-## Future Enhancements
-
-- Support for multiple scanners
-- WebSocket notifications for scan progress
-- Additional image formats (TIFF, DICOM)
-- Authentication/authorization
-- Database storage for scan history
-- Network deployment (currently localhost only)
-
-## Troubleshooting
-
-### Scanner Not Detected
-- Ensure the scanner is powered on and connected via USB
-- Check that the Vscsi32.dll is in the application directory
-- Try running the CLI application first to test scanner connectivity
-
-### CORS Errors
-- Verify you're accessing from `https://wingate.case.edu`
-- Check browser console for CORS error details
-- Ensure the API is running on `http://localhost:5000`
-
-### Build Errors on Linux
-- The GUI project (BFD9010.Gui) requires Windows
-- Remove it from the solution if building on Linux:
-  ```bash
-  dotnet sln remove BFD9010.Gui/BFD9010.Gui.csproj
-  ```
-
-## License
-
-See the main repository LICENSE file.
+This is essential for web-based scanner control. The web application at the specified origin(s) can make API calls to `http://localhost:5000`.
