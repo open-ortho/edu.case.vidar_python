@@ -3,12 +3,10 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using BFD9010.FhirApi;
 using BFD9010.FhirApi.Services;
 
 namespace BFD9010.Gui
@@ -68,7 +66,7 @@ namespace BFD9010.Gui
         {
             try
             {
-                // Create web application
+                // Create web application using shared configuration
                 var builder = WebApplication.CreateBuilder();
                 
                 // Add logging
@@ -76,8 +74,8 @@ namespace BFD9010.Gui
                 builder.Logging.AddConsole();
                 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-                // Add services
-                builder.Services.AddSingleton<ScannerService>();
+                // Configure services using shared configuration
+                FhirServerConfiguration.ConfigureServices(builder);
 
                 // Build the app
                 var app = builder.Build();
@@ -85,8 +83,8 @@ namespace BFD9010.Gui
                 // Get scanner service from DI
                 scannerService = app.Services.GetRequiredService<ScannerService>();
 
-                // Configure FHIR endpoints
-                ConfigureFhirEndpoints(app);
+                // Configure FHIR endpoints using shared configuration
+                FhirServerConfiguration.ConfigureEndpoints(app);
 
                 // Start the web server in background
                 _ = Task.Run(async () =>
@@ -108,11 +106,11 @@ namespace BFD9010.Gui
                 // Store the host
                 webHost = app as IHost;
 
-                // Initialize scanner
+                // Initialize scanner using shared configuration
                 await Task.Delay(500); // Give server a moment to start
-                int initStatus = await scannerService.InitializeAsync();
+                bool initialized = await FhirServerConfiguration.InitializeScannerAsync(app);
 
-                if (initStatus == 0)
+                if (initialized)
                 {
                     UpdateStatus("Ready", Color.Green);
                     messageLabel.Text = $"Scanner initialized successfully!\n\n" +
@@ -122,7 +120,7 @@ namespace BFD9010.Gui
                 else
                 {
                     UpdateStatus("Error", Color.Red);
-                    messageLabel.Text = $"Scanner initialization failed (code: {initStatus})\n\n" +
+                    messageLabel.Text = $"Scanner initialization failed\n\n" +
                                        $"Please check the scanner connection.";
                 }
             }
@@ -131,52 +129,6 @@ namespace BFD9010.Gui
                 UpdateStatus("Error", Color.Red);
                 messageLabel.Text = $"Failed to start:\n{ex.Message}";
             }
-        }
-
-        private void ConfigureFhirEndpoints(WebApplication app)
-        {
-            // Register FHIR endpoints using the scannerService instance
-            app.MapGet("/Device/{id}", (string id) => 
-            {
-                if (scannerService == null || !scannerService.IsInitialized)
-                {
-                    return Results.Problem("Scanner not initialized");
-                }
-                return Results.Ok(new { message = "Device endpoint", id });
-            });
-
-            app.MapPost("/Device/{id}/$scan", async (string id) =>
-            {
-                if (scannerService == null || !scannerService.IsInitialized)
-                {
-                    return Results.Problem("Scanner not initialized");
-                }
-
-                this.Invoke((Action)(() => UpdateStatus("Scanning...", Color.Blue)));
-
-                var scanResult = await scannerService.ScanAsync();
-                var status = scanResult.status;
-                var imageBytes = scanResult.imageBytes;
-
-                this.Invoke((Action)(() => UpdateStatus("Ready", Color.Green)));
-
-                if (status == 0 && imageBytes != null)
-                {
-                    return Results.Ok(new
-                    {
-                        resourceType = "Bundle",
-                        type = "collection",
-                        entry = new[]
-                        {
-                            new { resource = new { resourceType = "Binary", contentType = "image/png", data = Convert.ToBase64String(imageBytes) } }
-                        }
-                    });
-                }
-                else
-                {
-                    return Results.Problem($"Scan failed with code {status}");
-                }
-            });
         }
 
         private void UpdateStatus(string status, Color color)

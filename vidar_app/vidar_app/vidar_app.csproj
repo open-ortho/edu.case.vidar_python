@@ -16,6 +16,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BFD9010.Scanner\BFD9010.Scanner.csproj" />
+    <ProjectReference Include="..\BFD9010.FhirApi\BFD9010.FhirApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,11 @@
 ﻿using System.Reflection;
 using System.Diagnostics;
 using BFD9010.Scanner;
+using BFD9010.FhirApi;
+using BFD9010.FhirApi.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using static BFD9010.Scanner.Scanner;
 
 // Parse command-line args for optional --config <path>
@@ -22,7 +27,7 @@ string appVersion = GetAssemblyVersion() ?? "unknown";
 while (true)
 {
     // Run the scanner initialization and command menu.
-    bool restartRequested = RunApp();
+    bool restartRequested = await RunAppAsync();
     if (!restartRequested)
     {
         break; // Quit the application
@@ -31,7 +36,7 @@ while (true)
 
 // Runs the scanner initialization and command menu.
 // Returns true if restart is requested, false if quit.
-bool RunApp()
+async Task<bool> RunAppAsync()
 {
     Console.WriteLine("Looking for Scanner...");
 
@@ -58,6 +63,7 @@ bool RunApp()
         Console.WriteLine("  [C]alibrate  - Calibrate the digitizer");
         Console.WriteLine("  [E]ject      - Eject the film from the digitizer");
         Console.WriteLine("  [S]can       - Initiate a scan using parameters from scan_config.ini");
+        Console.WriteLine("  [F]HIR API   - Start FHIR REST API server on http://localhost:5000");
         Console.WriteLine("  [R]estart    - Re-detect scanner and reload configuration");
         Console.WriteLine("  [Q]uit       - Exit the application");
         Console.WriteLine("-------------------------------------------------------------");
@@ -80,6 +86,9 @@ bool RunApp()
                     Console.WriteLine($"ERROR: Scan failed with status code: {scanStatus}");
                 }
                 break;
+            case ConsoleKey.F:
+                await StartFhirApiServerAsync();
+                break;
             case ConsoleKey.R:
                 Console.WriteLine("Restarting, re-detecting scanner, and reloading configuration...");
                 return true; // Signal restart
@@ -91,6 +100,67 @@ bool RunApp()
                 Console.WriteLine("Unknown Command");
                 break;
         }
+    }
+}
+
+async Task StartFhirApiServerAsync()
+{
+    Console.WriteLine("\n=================================================================");
+    Console.WriteLine("Starting FHIR API Server...");
+    Console.WriteLine("=================================================================");
+
+    try
+    {
+        // Create web application using shared configuration
+        var builder = WebApplication.CreateBuilder();
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+        // Configure services using shared configuration
+        FhirServerConfiguration.ConfigureServices(builder);
+
+        // Build the app
+        var app = builder.Build();
+
+        // Configure FHIR endpoints using shared configuration
+        FhirServerConfiguration.ConfigureEndpoints(app);
+
+        Console.WriteLine("\nInitializing scanner for FHIR API...");
+
+        // Initialize scanner using shared configuration
+        bool initialized = await FhirServerConfiguration.InitializeScannerAsync(app);
+
+        if (!initialized)
+        {
+            Console.WriteLine("ERROR: Failed to initialize scanner for FHIR API");
+            Console.WriteLine("Press any key to return to menu...");
+            Console.ReadKey(true);
+            return;
+        }
+
+        Console.WriteLine("\n✓ Scanner initialized successfully!");
+        Console.WriteLine("\n=================================================================");
+        Console.WriteLine("FHIR API Server is running on http://localhost:5000");
+        Console.WriteLine("=================================================================");
+        Console.WriteLine("\nAvailable endpoints:");
+        Console.WriteLine("  GET  /Device/{id}         - Get scanner information");
+        Console.WriteLine("  POST /Device/{id}/$scan   - Perform scan");
+        Console.WriteLine("  POST /Device/{id}/$calibrate - Calibrate scanner");
+        Console.WriteLine("  POST /Device/{id}/$eject  - Eject film");
+        Console.WriteLine("\nPress Ctrl+C to stop the server and return to menu...");
+        Console.WriteLine("=================================================================\n");
+
+        // Run the server (blocks until Ctrl+C)
+        await app.RunAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"\nERROR: Failed to start FHIR API server: {ex.Message}");
+        Console.WriteLine("\nPress any key to return to menu...");
+        Console.ReadKey(true);
     }
 }
 

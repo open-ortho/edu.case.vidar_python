@@ -1,4 +1,5 @@
 using BFD9010.Scanner;
+using Microsoft.Extensions.Logging;
 using static BFD9010.Scanner.Scanner;
 using static BFD9010.Scanner.VscsiTypes;
 

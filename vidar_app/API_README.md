@@ -1,15 +1,23 @@
 # BFD9010 FHIR API
 
-This directory contains the FHIR-compliant REST API for the BFD9010 scanner system.
+This directory contains the FHIR-compliant REST API library for the BFD9010 scanner system.
 
 ## Architecture
 
-The project is organized into three main components:
+The project is organized into these components:
 
 1. **BFD9010.Scanner** - Shared library containing all scanner operations
-2. **bfd9010** - Command-line interface application
-3. **BFD9010.FhirApi** - FHIR REST API server
+2. **bfd9010** (vidar_app) - Command-line interface application with FHIR API server option
+3. **BFD9010.FhirApi** - Shared FHIR REST API library (no standalone executable)
 4. **BFD9010.Gui** - Windows Forms GUI application (Windows only)
+
+### Architecture Changes
+
+The BFD9010.FhirApi project is now a **class library** that provides shared FHIR API functionality. It is used by:
+- **CLI application** (vidar_app) - via the `[F]HIR API` command
+- **GUI application** (BFD9010.Gui) - automatically started on launch
+
+This ensures consistent FHIR API behavior across all entry points without code duplication.
 
 ## Building
 
@@ -34,10 +42,10 @@ dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 
 ### Output Locations
 - CLI: `vidar_app/bin/Release/net8.0/bfd9010.exe`
-- FHIR API: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.exe`
 - GUI: `BFD9010.Gui/bin/Release/net8.0-windows/publish/bfd9010_fhir32.exe`
+- FHIR API Library: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.dll`
 
-**Note:** The GUI project requires `dotnet publish` to generate the executable.
+**Note:** The GUI project requires `dotnet publish` to generate the executable. The FHIR API is now a library (DLL) only.
 
 ## Running
 
@@ -47,13 +55,13 @@ cd vidar_app/bin/Release/net8.0
 ./bfd9010.exe
 ```
 
-### FHIR API Server
-```bash
-cd BFD9010.FhirApi/bin/Release/net8.0
-./BFD9010.FhirApi.exe
-```
-
-The API will start on `http://localhost:5000`
+The CLI provides these commands:
+- **[C]alibrate** - Calibrate the digitizer
+- **[E]ject** - Eject the film from the digitizer
+- **[S]can** - Initiate a scan using parameters from scan_config.ini
+- **[F]HIR API** - Start FHIR REST API server on http://localhost:5000
+- **[R]estart** - Re-detect scanner and reload configuration
+- **[Q]uit** - Exit the application
 
 ### GUI Application (Windows only)
 ```bash
@@ -302,11 +310,35 @@ This provides interactive API documentation.
 
 The expected workflow is:
 
-1. User runs the BFD9010 GUI application (or FHIR API server) on their local machine
+1. User runs either:
+   - The **CLI application** and selects `[F]HIR API` option, OR
+   - The **GUI application** (which auto-starts the API)
 2. The application initializes the scanner and starts the API on `http://localhost:5000`
 3. User navigates to `https://wingate.case.edu/bfd9000/` in their browser
 4. The web application makes requests to the local API to control the scanner
 5. Scanned images are returned as base64-encoded PNG data in FHIR Bundle responses
+
+## Code Architecture
+
+### Shared Configuration Pattern
+
+All FHIR API functionality is centralized in `BFD9010.FhirApi/FhirServerConfiguration.cs`:
+
+```csharp
+public static class FhirServerConfiguration
+{
+    // Configure DI services (ScannerService, CORS, etc.)
+    public static void ConfigureServices(WebApplicationBuilder builder);
+    
+    // Register all FHIR endpoints (/Device/{id}, /$scan, etc.)
+    public static void ConfigureEndpoints(WebApplication app);
+    
+    // Initialize scanner on startup
+    public static async Task<bool> InitializeScannerAsync(WebApplication app);
+}
+```
+
+Both the CLI and GUI applications use these shared methods to ensure consistent behavior.
 
 ## Future Enhancements
 
