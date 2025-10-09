@@ -55,6 +55,8 @@ Standalone FHIR REST API server (can run without GUI).
 - `POST /Device/{id}/$calibrate` - Calibrate scanner
 - `POST /Device/{id}/$eject` - Eject film
 
+See [FHIR Device Resource](https://hl7.org/fhir/device.html) for detailed documentation of the FHIR standard for the Device.
+
 See [API README](vidar_app/API_README.md) for detailed documentation.
 
 ## Project History
