@@ -1,0 +1,6 @@
+@BFD9010.FhirApi_HostAddress = http://localhost:5023
+
+GET {{BFD9010.FhirApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
