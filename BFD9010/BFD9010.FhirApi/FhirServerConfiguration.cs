@@ -40,9 +40,20 @@ public static class FhirServerConfiguration
         {
             options.AddPolicy("WingatePolicy", policy =>
             {
-                policy.WithOrigins(allowedOrigins)
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                // In development, allow any origin including file:// protocol
+                if (builder.Environment.IsDevelopment())
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                }
+                else
+                {
+                    // In production, use configured origins
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                }
             });
         });
     }
