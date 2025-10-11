@@ -9,9 +9,13 @@
     <AssemblyName>bfd9010_fhir32</AssemblyName>
     <Platforms>AnyCPU;x86</Platforms>
     <PlatformTarget>x86</PlatformTarget>
-    <Version>0.2.0-dev</Version>
-    <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.png">
+      <Link>Resources\BFD9000_logo_white.png</Link>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BFD9010.Scanner\BFD9010.Scanner.csproj" />
