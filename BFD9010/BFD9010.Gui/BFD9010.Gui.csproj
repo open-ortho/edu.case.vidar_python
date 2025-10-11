@@ -9,8 +9,6 @@
     <AssemblyName>bfd9010_fhir32</AssemblyName>
     <Platforms>AnyCPU;x86</Platforms>
     <PlatformTarget>x86</PlatformTarget>
-    <Version>0.2.0-dev</Version>
-    <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>

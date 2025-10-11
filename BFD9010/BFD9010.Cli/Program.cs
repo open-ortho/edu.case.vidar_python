@@ -176,13 +176,29 @@ static string? GetAssemblyVersion()
 
     // Prefer AssemblyInformationalVersion
     var infoAttr = entry.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-    if (!string.IsNullOrWhiteSpace(infoAttr)) return infoAttr;
+    if (!string.IsNullOrWhiteSpace(infoAttr))
+    {
+        // Remove build metadata (everything after '+')
+        var plusIndex = infoAttr.IndexOf('+');
+        if (plusIndex >= 0)
+            infoAttr = infoAttr.Substring(0, plusIndex);
+        
+        return infoAttr;
+    }
 
     // Next prefer product/file version
     try
     {
         var fileVer = FileVersionInfo.GetVersionInfo(entry.Location).ProductVersion;
-        if (!string.IsNullOrWhiteSpace(fileVer)) return fileVer;
+        if (!string.IsNullOrWhiteSpace(fileVer))
+        {
+            // Remove build metadata from file version too
+            var plusIndex = fileVer.IndexOf('+');
+            if (plusIndex >= 0)
+                fileVer = fileVer.Substring(0, plusIndex);
+            
+            return fileVer;
+        }
     }
     catch { }
 

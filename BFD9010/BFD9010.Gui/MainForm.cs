@@ -76,13 +76,25 @@ namespace BFD9010.Gui
             var projectNameLabel = new Label
             {
                 Text = "BFD9010: An HL7 FHIR API for scanners",
-                Location = new Point(10, 120),
+                Location = new Point(10, 100),
                 Size = new Size(370, 25),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 102, 204),
                 TextAlign = ContentAlignment.MiddleCenter
             };
             this.Controls.Add(projectNameLabel);
+
+            // Version Label
+            var versionLabel = new Label
+            {
+                Text = $"Version {GetVersionString()}",
+                Location = new Point(10, 125),
+                Size = new Size(370, 20),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.Gray,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            this.Controls.Add(versionLabel);
 
             // Status Label
             statusLabel = new Label
@@ -240,6 +252,22 @@ namespace BFD9010.Gui
                 urlLinkLabel.Text = "Service failed to start";
                 urlLinkLabel.Enabled = false;
             }
+        }
+
+        private static string GetVersionString()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var infoVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            
+            if (string.IsNullOrWhiteSpace(infoVersion))
+                return "Unknown";
+            
+            // Remove build metadata (everything after '+')
+            var plusIndex = infoVersion.IndexOf('+');
+            if (plusIndex >= 0)
+                infoVersion = infoVersion.Substring(0, plusIndex);
+            
+            return infoVersion;
         }
 
         private void UpdateStatus(string status, Color color)
