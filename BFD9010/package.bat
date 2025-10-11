@@ -18,16 +18,12 @@ set "DLLSRC=C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll"
 REM Ensure artifacts directory exists
 if not exist "%ARTIFACTS%" mkdir "%ARTIFACTS%"
 
-REM Extract version from CLI project
-set "PROJ=BFD9010.Cli\BFD9010.Cli.csproj"
-set VER=
-for /f "tokens=3 delims=<>" %%v in ('findstr /i "<Version>" %PROJ%') do (
-    set "VER=%%v"
-)
-REM Remove spaces
-set VER_TRIMMED=!VER: =!
-if not defined VER_TRIMMED (
-    echo ERROR: Version string not found in %PROJ%
+REM Extract version from Directory.Build.props using PowerShell XML parsing
+set "PROPFILE=Directory.Build.props"
+for /f "delims=" %%v in ('powershell -NoProfile -Command "[xml]$xml = Get-Content '%PROPFILE%'; $xml.Project.PropertyGroup.Version"') do set "VER_TRIMMED=%%v"
+
+if "!VER_TRIMMED!"=="" (
+    echo ERROR: Version string not found in %PROPFILE%
     exit /b 1
 )
 
@@ -91,11 +87,11 @@ if exist "%CLI_ZIP%" del /f "%CLI_ZIP%"
 if exist "%GUI_ZIP%" del /f "%GUI_ZIP%"
 
 echo Creating CLI package...
-powershell Compress-Archive -Path "%CLI_PUBDIR%\*" -DestinationPath "%CLI_ZIP%"
+powershell -Command "Compress-Archive -Path '%CLI_PUBDIR%\*' -DestinationPath '%CLI_ZIP%' -Force"
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo Creating GUI package...
-powershell Compress-Archive -Path "%GUI_PUBDIR%\*" -DestinationPath "%GUI_ZIP%"
+powershell -Command "Compress-Archive -Path '%GUI_PUBDIR%\*' -DestinationPath '%GUI_ZIP%' -Force"
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo.
