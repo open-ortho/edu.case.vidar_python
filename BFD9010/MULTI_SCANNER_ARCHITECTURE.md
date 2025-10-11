@@ -5,7 +5,7 @@
 The current BFD9010 system is designed to work with a single scanner type (Vidar). The architecture consists of:
 
 - **BFD9010.Scanner** - Shared library containing all Vidar scanner operations
-- **BFD9010.Cli** (vidar_app) - Command-line interface
+- **BFD9010.Cli** - Command-line interface
 - **BFD9010.FhirApi** - FHIR REST API server
 - **BFD9010.Gui** - Windows Forms GUI application
 

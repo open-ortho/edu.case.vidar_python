@@ -12,7 +12,7 @@ cd /d "%~dp0"
 
 echo [1/3] Cleaning previous build artifacts...
 echo.
-dotnet clean vidar_app.sln --configuration Release --verbosity quiet
+dotnet clean BFD9010.sln --configuration Release --verbosity quiet
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Clean failed!
     goto :error
@@ -20,7 +20,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo [2/3] Building solution...
 echo.
-dotnet build vidar_app.sln --configuration Release --no-incremental
+dotnet build BFD9010.sln --configuration Release --no-incremental
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Build failed!
     goto :error
@@ -41,7 +41,7 @@ echo Build Successful!
 echo ================================================
 echo.
 echo Output locations:
-echo   CLI:       vidar_app\bin\Release\net8.0\bfd9010.exe
+echo   CLI:       BFD9010.Cli\bin\Release\net8.0\bfd9010.exe
 echo   GUI:       BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe
 echo   Libraries: BFD9010.Scanner\bin\Release\net8.0\*.dll
 echo              BFD9010.FhirApi\bin\Release\net8.0\*.dll

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vidar_app", "vidar_app\vidar_app.csproj", "{6A721463-B168-4988-BD8B-440FD92924D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BFD9010.Cli", "BFD9010.Cli\BFD9010.Cli.csproj", "{6A721463-B168-4988-BD8B-440FD92924D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BFD9010.Scanner", "BFD9010.Scanner\BFD9010.Scanner.csproj", "{80366B8A-FCC9-43C5-9524-0B26B09138E2}"
 EndProject

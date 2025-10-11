@@ -16,7 +16,7 @@ The BFD9010 scanner software is built on .NET 8.0 and provides:
    - The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
 
 1. Ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed
-2. Open a Command Prompt in the project directory (where `vidar_app.sln` is located)
+2. Open a Command Prompt in the project directory (where `BFD9010.sln` is located)
 3. Run:
    ```
    build.bat
@@ -25,7 +25,7 @@ This will build all projects in Release configuration and prepare executables fo
    - Copy `Vscsi32.dll` to this directory.
 
 **Output locations:**
-- CLI: `vidar_app\bin\Release\net8.0\bfd9010.exe`
+- CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010.exe`
 - GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe`
 - Libraries: `BFD9010.Scanner\bin\Release\net8.0\*.dll` and `BFD9010.FhirApi\bin\Release\net8.0\*.dll`
 

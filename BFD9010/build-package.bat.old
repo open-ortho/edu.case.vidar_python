@@ -1,8 +1,8 @@
 @echo off
 REM Build and publish the app
 setlocal enabledelayedexpansion
-set PROJ=vidar_app\vidar_app.csproj
-set PUBDIR=vidar_app\bin\Release\net8.0\win-x86\publish
+set PROJ=BFD9010.Cli\BFD9010.Cli.csproj
+set PUBDIR=BFD9010.Cli\bin\Release\net8.0\win-x86\publish
 set DLL=Vscsi32.dll
 set "DLLSRC=C:\Program Files (x86)\VIDAR\Driver\Vscsi32.dll"
 set "ARTIFACTS=artifacts"
@@ -29,10 +29,10 @@ if not defined VER_TRIMMED (
     exit /b 1
 )
 
-set "ZIPNAME=vidar_app_release_v!VER_TRIMMED!.zip"
+set "ZIPNAME=bfd9010_cli_release_v!VER_TRIMMED!.zip"
 set "ZIPPATH=%ARTIFACTS%\!ZIPNAME!"
 REM Check for valid zip file name - use goto to avoid multiline-if parsing issues
-if "!ZIPNAME!"=="vidar_app_release_v.zip" goto :ZIP_ERROR
+if "!ZIPNAME!"=="bfd9010_cli_release_v.zip" goto :ZIP_ERROR
 
 REM Build and publish
 call dotnet publish %PROJ% -c Release -r win-x86 --self-contained true
