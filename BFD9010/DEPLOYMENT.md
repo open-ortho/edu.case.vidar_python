@@ -48,7 +48,7 @@ This guide covers how to deploy and test the BFD9010 scanner software on a Windo
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-gui.bat
 ```
 
@@ -68,7 +68,7 @@ BFD9010.Gui\bin\Release\net8.0-windows\bfd9010_fhir32.exe
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-fhir-api.bat
 ```
 
@@ -88,7 +88,7 @@ BFD9010.FhirApi\bin\Release\net8.0\BFD9010.FhirApi.exe
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-cli.bat
 ```
 

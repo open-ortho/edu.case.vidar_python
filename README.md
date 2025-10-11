@@ -16,7 +16,7 @@ Tools to control the Vidar Dosimetry Pro scanner for the BFD-9000 project. This 
 
 ### For Developers
 
-See the [API README](vidar_app/API_README.md) for detailed documentation on:
+See the [API README](BFD9010/API_README.md) for detailed documentation on:
 - Building from source
 - FHIR API endpoints
 - Integration details
@@ -57,7 +57,7 @@ Standalone FHIR REST API server (can run without GUI).
 
 See [FHIR Device Resource](https://hl7.org/fhir/device.html) for detailed documentation of the FHIR standard for the Device.
 
-See [API README](vidar_app/API_README.md) for detailed documentation.
+See [API README](BFD9010/API_README.md) for detailed documentation.
 
 ## Project History
 
@@ -83,7 +83,7 @@ This is how packet capture was performed for the Vidar Info operation:
 8. Start the Vidar Info app.
 9. Wait until it returns data from the scanner.
 
-For more details on the reverse engineering process, see [RE_Writeup.md](vidar_app/RE_Writeup.md).
+For more details on the reverse engineering process, see [RE_Writeup.md](BFD9010/RE_Writeup.md).
 
 ## Legacy Code
 
