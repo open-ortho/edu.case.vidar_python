@@ -94,7 +94,7 @@ start-cli.bat
 
 Or directly:
 ```batch
-vidar_app\bin\Release\net8.0\bfd9010.exe
+BFD9010.Cli\bin\Release\net8.0\bfd9010.exe
 ```
 
 ## Testing the API
@@ -330,7 +330,7 @@ bfd9010.exe > scanner.log 2>&1
    ```
 
 2. Gather files:
-   - `vidar_app/bin/Release/net8.0/*` (bfd9010.exe and dependencies)
+   - `BFD9010.Cli/bin/Release/net8.0/*` (bfd9010.exe and dependencies)
    - `BFD9010.FhirApi/bin/Release/net8.0/*` (BFD9010.FhirApi.exe and dependencies)
    - `BFD9010.Gui/bin/Release/net8.0-windows/*` (bfd9010_fhir32.exe and dependencies)
    - Helper scripts (build.bat, start-*.bat)

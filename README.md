@@ -27,7 +27,7 @@ See the [API README](vidar_app/API_README.md) for detailed documentation on:
 ### 1. bfd9010 (CLI)
 Command-line interface for direct scanner control.
 ```bash
-cd vidar_app/bin/Release/net8.0
+cd BFD9010.Cli/bin/Release/net8.0
 ./bfd9010.exe
 ```
 
@@ -89,7 +89,7 @@ For more details on the reverse engineering process, see [RE_Writeup.md](vidar_a
 
 ### .NET Code
 
-.NET code in `vidar_app`. This is a console app that uses the `Vscsi32.dll` library to control the scanner. This is the most functional code so far.
+.NET code in `BFD9010.Cli`. This is a console app that uses the `Vscsi32.dll` library to control the scanner. This is the most functional code so far.
 
 ## Format
 

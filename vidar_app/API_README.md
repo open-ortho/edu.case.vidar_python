@@ -7,14 +7,14 @@ This directory contains the FHIR-compliant REST API library for the BFD9010 scan
 The project is organized into these components:
 
 1. **BFD9010.Scanner** - Shared library containing all scanner operations
-2. **bfd9010** (vidar_app) - Command-line interface application with FHIR API server option
+2. **bfd9010** (BFD9010.Cli) - Command-line interface application with FHIR API server option
 3. **BFD9010.FhirApi** - Shared FHIR REST API library (no standalone executable)
 4. **BFD9010.Gui** - Windows Forms GUI application (Windows only)
 
 ### Architecture Changes
 
 The BFD9010.FhirApi project is now a **class library** that provides shared FHIR API functionality. It is used by:
-- **CLI application** (vidar_app) - via the `[F]HIR API` command
+- **CLI application** (BFD9010.Cli) - via the `[F]HIR API` command
 - **GUI application** (BFD9010.Gui) - automatically started on launch
 
 This ensures consistent FHIR API behavior across all entry points without code duplication.
@@ -34,14 +34,14 @@ dotnet build vidar_app.sln --configuration Release
 # Build individual projects
 dotnet build BFD9010.Scanner/BFD9010.Scanner.csproj --configuration Release
 dotnet build BFD9010.FhirApi/BFD9010.FhirApi.csproj --configuration Release
-dotnet build vidar_app/vidar_app.csproj --configuration Release
+dotnet build BFD9010.Cli/BFD9010.Cli.csproj --configuration Release
 
 # Build GUI project (requires publish for executable)
 dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 ```
 
 ### Output Locations
-- CLI: `vidar_app/bin/Release/net8.0/bfd9010.exe`
+- CLI: `BFD9010.Cli/bin/Release/net8.0/bfd9010.exe`
 - GUI: `BFD9010.Gui/bin/Release/net8.0-windows/publish/bfd9010_fhir32.exe`
 - FHIR API Library: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.dll`
 
@@ -51,7 +51,7 @@ dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 
 ### CLI Application
 ```bash
-cd vidar_app/bin/Release/net8.0
+cd BFD9010.Cli/bin/Release/net8.0
 ./bfd9010.exe [--config path/to/config.ini]
 ```
 

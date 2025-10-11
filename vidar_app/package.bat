@@ -19,7 +19,7 @@ REM Ensure artifacts directory exists
 if not exist "%ARTIFACTS%" mkdir "%ARTIFACTS%"
 
 REM Extract version from CLI project
-set "PROJ=vidar_app\vidar_app.csproj"
+set "PROJ=BFD9010.Cli\BFD9010.Cli.csproj"
 set VER=
 for /f "tokens=3 delims=<>" %%v in ('findstr /i "<Version>" %PROJ%') do (
     set "VER=%%v"
@@ -46,7 +46,7 @@ dotnet build vidar_app.sln --configuration Release --no-incremental
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo [3/5] Publishing CLI (self-contained)...
-dotnet publish vidar_app\vidar_app.csproj -c Release -r win-x86 --self-contained true
+dotnet publish BFD9010.Cli\BFD9010.Cli.csproj -c Release -r win-x86 --self-contained true
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo [4/5] Publishing GUI (self-contained)...
@@ -58,7 +58,7 @@ REM Package CLI
 REM ==============================================
 echo [5/5] Creating distribution packages...
 echo.
-set "CLI_PUBDIR=vidar_app\bin\Release\net8.0\win-x86\publish"
+set "CLI_PUBDIR=BFD9010.Cli\bin\Release\net8.0\win-x86\publish"
 set "GUI_PUBDIR=BFD9010.Gui\bin\Release\net8.0-windows\win-x86\publish"
 
 REM Copy Vscsi32.dll to CLI publish directory
