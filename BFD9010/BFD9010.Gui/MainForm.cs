@@ -63,17 +63,7 @@ namespace BFD9010.Gui
                     if (stream != null)
                     {
                         logoPictureBox.Image = Image.FromStream(stream);
-                        // Invert colors for white background (logo is designed for dark background)
-                        // Create a dark background panel for the logo
-                        var logoPanel = new Panel
-                        {
-                            Location = new Point(50, 10),
-                            Size = new Size(300, 100),
-                            BackColor = Color.FromArgb(30, 30, 30)
-                        };
-                        logoPictureBox.Location = new Point(50, 10);
-                        logoPanel.Controls.Add(logoPictureBox);
-                        this.Controls.Add(logoPanel);
+                        this.Controls.Add(logoPictureBox);
                     }
                 }
             }
