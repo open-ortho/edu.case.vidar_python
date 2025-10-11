@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>bfd9010_fhir32</AssemblyName>
+    <Platforms>AnyCPU;x86</Platforms>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.png">
+      <Link>Resources\BFD9000_logo_white.png</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BFD9010.Scanner\BFD9010.Scanner.csproj" />
+    <ProjectReference Include="..\BFD9010.FhirApi\BFD9010.FhirApi.csproj" />
+  </ItemGroup>
+
+</Project>
