@@ -70,6 +70,11 @@ public static class FhirServerConfiguration
             {
                 var errorOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scanner not initialized</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -90,7 +95,17 @@ public static class FhirServerConfiguration
                 Id = id,
                 Manufacturer = "Vidar Systems Corporation",
                 ModelNumber = data.modelName,
-                SerialNumber = data.serialNumber
+                SerialNumber = data.serialNumber,
+                Text = new Narrative
+                {
+                    Status = Narrative.NarrativeStatus.Generated,
+                    Div = $"<div xmlns=\"http://www.w3.org/1999/xhtml\"><p><b>Scanner Device</b></p>" +
+                          $"<p>Manufacturer: Vidar Systems Corporation</p>" +
+                          $"<p>Model: {data.modelName}</p>" +
+                          $"<p>Serial Number: {data.serialNumber}</p>" +
+                          $"<p>Firmware: {data.firmwareVersionNumber}</p>" +
+                          $"<p>Resolution: {data.currentResolution} dpi</p></div>"
+                }
             };
 
             // Add firmware version
@@ -234,6 +249,11 @@ public static class FhirServerConfiguration
             {
                 var errorOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scanner not initialized</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -249,10 +269,10 @@ public static class FhirServerConfiguration
                 {
                     Type = Bundle.BundleType.Collection
                 };
-                errorBundle.Entry.Add(new Bundle.EntryComponent
-                {
+                errorBundle.Entry.Add(new Bundle.EntryComponent 
+                { 
                     FullUrl = $"urn:uuid:{Guid.NewGuid()}",
-                    Resource = errorOutcome
+                    Resource = errorOutcome 
                 });
 
                 return Results.Content(_fhirSerializer.SerializeToString(errorBundle), "application/fhir+json", statusCode: 500);
@@ -274,15 +294,20 @@ public static class FhirServerConfiguration
                     ContentType = "image/png",
                     Data = imageBytes
                 };
-                bundle.Entry.Add(new Bundle.EntryComponent
-                {
+                bundle.Entry.Add(new Bundle.EntryComponent 
+                { 
                     FullUrl = $"urn:uuid:{Guid.NewGuid()}",
-                    Resource = binary
+                    Resource = binary 
                 });
 
                 // Add successful OperationOutcome
                 var successOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scan completed successfully</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -293,10 +318,10 @@ public static class FhirServerConfiguration
                         }
                     }
                 };
-                bundle.Entry.Add(new Bundle.EntryComponent
-                {
+                bundle.Entry.Add(new Bundle.EntryComponent 
+                { 
                     FullUrl = $"urn:uuid:{Guid.NewGuid()}",
-                    Resource = successOutcome
+                    Resource = successOutcome 
                 });
 
                 return Results.Content(_fhirSerializer.SerializeToString(bundle), "application/fhir+json");
@@ -306,6 +331,11 @@ public static class FhirServerConfiguration
                 // Failure - add error OperationOutcome with detailed message
                 var failureOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = $"<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scan failed: {errorMessage ?? $"Status code {status}"}</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -316,10 +346,10 @@ public static class FhirServerConfiguration
                         }
                     }
                 };
-                bundle.Entry.Add(new Bundle.EntryComponent
-                {
+                bundle.Entry.Add(new Bundle.EntryComponent 
+                { 
                     FullUrl = $"urn:uuid:{Guid.NewGuid()}",
-                    Resource = failureOutcome
+                    Resource = failureOutcome 
                 });
 
                 return Results.Content(_fhirSerializer.SerializeToString(bundle), "application/fhir+json", statusCode: 500);
@@ -337,6 +367,11 @@ public static class FhirServerConfiguration
             {
                 var errorOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scanner not initialized</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -360,6 +395,11 @@ public static class FhirServerConfiguration
             {
                 outcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Calibration completed successfully</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -375,6 +415,11 @@ public static class FhirServerConfiguration
             {
                 outcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = $"<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Calibration failed: {errorMessage ?? $"Status code {status}"}</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -402,6 +447,11 @@ public static class FhirServerConfiguration
             {
                 var errorOutcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Scanner not initialized</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -425,6 +475,11 @@ public static class FhirServerConfiguration
             {
                 outcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Film ejected successfully</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
@@ -440,6 +495,11 @@ public static class FhirServerConfiguration
             {
                 outcome = new OperationOutcome
                 {
+                    Text = new Narrative
+                    {
+                        Status = Narrative.NarrativeStatus.Generated,
+                        Div = $"<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Eject failed: {errorMessage ?? $"Status code {status}"}</p></div>"
+                    },
                     Issue = new List<OperationOutcome.IssueComponent>
                     {
                         new OperationOutcome.IssueComponent
