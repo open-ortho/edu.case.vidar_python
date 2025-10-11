@@ -110,8 +110,8 @@ async Task StartFhirApiServerAsync(string? configPath)
         // Load configuration to display info
         var config = ScanConfig.Load(configPath);
 
-        // Create and start the server host
-        using var serverHost = new FhirServerHost(configPath);
+        // Create and start the server host (use await using for async disposal)
+        await using var serverHost = new FhirServerHost(configPath);
         
         Console.WriteLine("\nInitializing scanner for FHIR API...");
         bool initialized = await serverHost.StartAsync();
@@ -155,7 +155,7 @@ async Task StartFhirApiServerAsync(string? configPath)
             Console.WriteLine("\nShutting down server...");
         }
 
-        // Server will be automatically stopped and disposed when exiting the using block
+        // Server will be automatically stopped and disposed asynchronously when exiting the await using block
     }
     catch (Exception ex)
     {

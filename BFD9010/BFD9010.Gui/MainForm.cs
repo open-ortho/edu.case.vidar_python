@@ -233,8 +233,22 @@ namespace BFD9010.Gui
         {
             base.OnFormClosing(e);
             
-            // Stop and dispose the server host (fast shutdown)
-            _serverHost?.Dispose();
+            // Stop the server synchronously (cancels immediately without waiting)
+            // This is safe in OnFormClosing since cancellation is instant
+            _serverHost?.Stop();
+            
+            // Note: We call Stop() instead of Dispose() to avoid blocking the UI thread.
+            // The actual disposal will happen when the form is disposed.
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Dispose the server host when the form is disposed
+                _serverHost?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

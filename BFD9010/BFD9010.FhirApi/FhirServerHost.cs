@@ -8,12 +8,13 @@ namespace BFD9010.FhirApi;
 /// <summary>
 /// Manages the lifecycle of the FHIR API server for both CLI and GUI applications
 /// </summary>
-public class FhirServerHost : IDisposable
+public class FhirServerHost : IDisposable, IAsyncDisposable
 {
     private IHost? _webHost;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _serverTask;
     private readonly string? _configPath;
+    private bool _disposed;
 
     public FhirServerHost(string? configPath = null)
     {
@@ -79,21 +80,76 @@ public class FhirServerHost : IDisposable
     /// </summary>
     public void Stop()
     {
+        if (_disposed)
+            return;
+
         // Cancel the server task
         _cancellationTokenSource?.Cancel();
 
-        // The server should stop almost immediately due to the cancellation token
-        // No need to wait with StopAsync since the cancellation will handle it
-        _serverTask?.Wait(TimeSpan.FromMilliseconds(500));
+        // Don't use Wait() as it can cause deadlocks
+        // The cancellation token will handle stopping the server
     }
 
     /// <summary>
-    /// Dispose of resources
+    /// Stop the FHIR API server asynchronously
+    /// </summary>
+    public async Task StopAsync()
+    {
+        if (_disposed)
+            return;
+
+        // Cancel the server task
+        _cancellationTokenSource?.Cancel();
+
+        // Wait for the server task to complete
+        if (_serverTask != null)
+        {
+            try
+            {
+                await _serverTask.WaitAsync(TimeSpan.FromMilliseconds(500));
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when stopping the server
+            }
+            catch (TimeoutException)
+            {
+                // Server didn't stop in time, but we've cancelled it
+            }
+        }
+    }
+
+    /// <summary>
+    /// Dispose of resources asynchronously (preferred method)
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+            return;
+
+        await StopAsync();
+        
+        _cancellationTokenSource?.Dispose();
+        _webHost?.Dispose();
+        
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Dispose of resources synchronously
     /// </summary>
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
         Stop();
+        
         _cancellationTokenSource?.Dispose();
         _webHost?.Dispose();
+        
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
