@@ -10,6 +10,7 @@ namespace BFD9010.Gui
         private readonly string? _configPath;
         private FhirServerHost? _serverHost;
         private Label statusLabel = null!;
+        private Label messageLabel = null!;
         private LinkLabel urlLinkLabel = null!;
         private Label apiLabel = null!;
 
@@ -99,7 +100,7 @@ namespace BFD9010.Gui
             this.Controls.Add(statusLabel);
 
             // Message Label (for status/error messages)
-            var messageLabel = new Label
+            messageLabel = new Label
             {
                 Text = "Starting scanner service...",
                 Location = new Point(10, 195),
@@ -159,8 +160,6 @@ namespace BFD9010.Gui
 
         private async Task StartWebServerAsync()
         {
-            Label? messageLabel = this.Controls.OfType<Label>().FirstOrDefault(l => l.Location.Y == 195);
-            
             try
             {
                 // Load configuration to display the web URL
@@ -173,8 +172,7 @@ namespace BFD9010.Gui
                 if (initialized)
                 {
                     UpdateStatus("Ready", Color.Green);
-                    if (messageLabel != null)
-                        messageLabel.Text = "Scanner initialized successfully!";
+                    messageLabel.Text = "Scanner initialized successfully!";
                     
                     // Set the clickable link from config
                     string webUrl = config.WebAppUrl ?? "https://wingate.case.edu/bfd9000/";
@@ -187,8 +185,7 @@ namespace BFD9010.Gui
                 else
                 {
                     UpdateStatus("Error", Color.Red);
-                    if (messageLabel != null)
-                        messageLabel.Text = "Scanner initialization failed\n\nPlease check the scanner connection.";
+                    messageLabel.Text = "Scanner initialization failed\n\nPlease check the scanner connection.";
                     urlLinkLabel.Text = "Scanner not ready";
                     urlLinkLabel.Enabled = false;
                 }
@@ -196,8 +193,7 @@ namespace BFD9010.Gui
             catch (Exception ex)
             {
                 UpdateStatus("Error", Color.Red);
-                if (messageLabel != null)
-                    messageLabel.Text = $"Failed to start:\n{ex.Message}";
+                messageLabel.Text = $"Failed to start:\n{ex.Message}";
                 urlLinkLabel.Text = "Service failed to start";
                 urlLinkLabel.Enabled = false;
             }
