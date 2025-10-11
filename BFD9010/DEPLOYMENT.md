@@ -31,7 +31,7 @@ This guide covers how to deploy and test the BFD9010 scanner software on a Windo
 
 1. **Clone** the repository
 2. **Install** .NET 8.0 SDK
-3. **Build** using `build.bat` or `dotnet build vidar_app.sln --configuration Release`
+3. **Build** using `build.bat` or `dotnet build BFD9010.sln --configuration Release`
 4. **Run** one of the applications using the start scripts
 
 ## Deployment Options
@@ -48,7 +48,7 @@ This guide covers how to deploy and test the BFD9010 scanner software on a Windo
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-gui.bat
 ```
 
@@ -68,7 +68,7 @@ BFD9010.Gui\bin\Release\net8.0-windows\bfd9010_fhir32.exe
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-fhir-api.bat
 ```
 
@@ -88,13 +88,13 @@ BFD9010.FhirApi\bin\Release\net8.0\BFD9010.FhirApi.exe
 
 **How to Run:**
 ```batch
-cd C:\BFD9010\vidar_app
+cd C:\BFD9010\BFD9010
 start-cli.bat
 ```
 
 Or directly:
 ```batch
-vidar_app\bin\Release\net8.0\bfd9010.exe
+BFD9010.Cli\bin\Release\net8.0\bfd9010.exe
 ```
 
 ## Testing the API
@@ -330,7 +330,7 @@ bfd9010.exe > scanner.log 2>&1
    ```
 
 2. Gather files:
-   - `vidar_app/bin/Release/net8.0/*` (bfd9010.exe and dependencies)
+   - `BFD9010.Cli/bin/Release/net8.0/*` (bfd9010.exe and dependencies)
    - `BFD9010.FhirApi/bin/Release/net8.0/*` (BFD9010.FhirApi.exe and dependencies)
    - `BFD9010.Gui/bin/Release/net8.0-windows/*` (bfd9010_fhir32.exe and dependencies)
    - Helper scripts (build.bat, start-*.bat)
