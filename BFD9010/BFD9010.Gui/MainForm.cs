@@ -1,24 +1,14 @@
-using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using BFD9010.FhirApi;
-using BFD9010.FhirApi.Services;
 using BFD9010.Scanner;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace BFD9010.Gui
 {
     public partial class MainForm : Form
     {
         private readonly string? _configPath;
-        private ScannerService? scannerService;
-        private IHost? webHost;
+        private FhirServerHost? _serverHost;
         private Label statusLabel = null!;
         private LinkLabel urlLinkLabel = null!;
         private Label apiLabel = null!;
@@ -173,53 +163,12 @@ namespace BFD9010.Gui
             
             try
             {
-                // Load configuration to get CORS and URL settings
+                // Load configuration to display the web URL
                 var config = ScanConfig.Load(_configPath);
 
-                // Create web application using shared configuration
-                var builder = WebApplication.CreateBuilder();
-                
-                // Add logging
-                builder.Logging.ClearProviders();
-                builder.Logging.AddConsole();
-                builder.Logging.SetMinimumLevel(LogLevel.Information);
-
-                // Configure services using shared configuration with config
-                FhirServerConfiguration.ConfigureServices(builder, config);
-
-                // Build the app
-                var app = builder.Build();
-
-                // Get scanner service from DI
-                scannerService = app.Services.GetRequiredService<ScannerService>();
-
-                // Configure FHIR endpoints using shared configuration
-                FhirServerConfiguration.ConfigureEndpoints(app);
-
-                // Start the web server in background
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await app.RunAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Invoke((Action)(() =>
-                        {
-                            UpdateStatus("Error", Color.Red);
-                            if (messageLabel != null)
-                                messageLabel.Text = $"Failed to start web server:\n{ex.Message}";
-                        }));
-                    }
-                });
-
-                // Store the host
-                webHost = app as IHost;
-
-                // Initialize scanner using shared configuration
-                await Task.Delay(500); // Give server a moment to start
-                bool initialized = await FhirServerConfiguration.InitializeScannerAsync(app);
+                // Create and start the server host
+                _serverHost = new FhirServerHost(_configPath);
+                bool initialized = await _serverHost.StartAsync();
 
                 if (initialized)
                 {
@@ -286,12 +235,8 @@ namespace BFD9010.Gui
         {
             base.OnFormClosing(e);
             
-            // Stop web server
-            if (webHost != null)
-            {
-                webHost.StopAsync().Wait(TimeSpan.FromSeconds(5));
-                webHost.Dispose();
-            }
+            // Stop and dispose the server host (fast shutdown)
+            _serverHost?.Dispose();
         }
     }
 }
