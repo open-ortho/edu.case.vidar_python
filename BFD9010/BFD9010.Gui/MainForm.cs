@@ -58,9 +58,10 @@ namespace BFD9010.Gui
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // If logo fails to load, just skip it
+                // If logo fails to load, just skip it, but log the error for debugging
+                Debug.WriteLine($"Failed to load logo: {ex.Message}\n{ex.StackTrace}");
             }
 
             // Project Name Label
