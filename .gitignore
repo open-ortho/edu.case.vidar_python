@@ -20,6 +20,7 @@ obj/
 *.dbmdl
 *.dbproj.schemaview
 *.jfm
+*.old
 
 # Visual Studio files
 .vs/
