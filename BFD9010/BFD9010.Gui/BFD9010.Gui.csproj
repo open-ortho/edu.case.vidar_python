@@ -14,6 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.png">
+      <Link>Resources\BFD9000_logo_white.png</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BFD9010.Scanner\BFD9010.Scanner.csproj" />
     <ProjectReference Include="..\BFD9010.FhirApi\BFD9010.FhirApi.csproj" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Builder;
@@ -33,21 +34,71 @@ namespace BFD9010.Gui
         private void InitializeComponent()
         {
             this.Text = "BFD9010 Scanner Server";
-            this.Size = new Size(400, 220);
+            this.Size = new Size(400, 350);
             this.MinimizeBox = true;
             this.MaximizeBox = false;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
+            this.BackColor = Color.White;
         }
 
         private void InitializeUI()
         {
+            // Logo PictureBox
+            var logoPictureBox = new PictureBox
+            {
+                Location = new Point(100, 10),
+                Size = new Size(200, 80),
+                SizeMode = PictureBoxSizeMode.Zoom
+            };
+            
+            // Load the embedded logo image
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "BFD9010.Gui.Resources.BFD9000_logo_white.png";
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        logoPictureBox.Image = Image.FromStream(stream);
+                        // Invert colors for white background (logo is designed for dark background)
+                        // Create a dark background panel for the logo
+                        var logoPanel = new Panel
+                        {
+                            Location = new Point(50, 10),
+                            Size = new Size(300, 100),
+                            BackColor = Color.FromArgb(30, 30, 30)
+                        };
+                        logoPictureBox.Location = new Point(50, 10);
+                        logoPanel.Controls.Add(logoPictureBox);
+                        this.Controls.Add(logoPanel);
+                    }
+                }
+            }
+            catch
+            {
+                // If logo fails to load, just skip it
+            }
+
+            // Project Name Label
+            var projectNameLabel = new Label
+            {
+                Text = "BFD9010: An HL7 FHIR API for scanners",
+                Location = new Point(10, 120),
+                Size = new Size(370, 25),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 102, 204),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            this.Controls.Add(projectNameLabel);
+
             // Status Label
             statusLabel = new Label
             {
                 Text = "Initializing...",
-                Location = new Point(10, 10),
+                Location = new Point(10, 155),
                 Size = new Size(370, 30),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = Color.Orange,
@@ -59,7 +110,7 @@ namespace BFD9010.Gui
             var messageLabel = new Label
             {
                 Text = "Starting scanner service...",
-                Location = new Point(10, 50),
+                Location = new Point(10, 195),
                 Size = new Size(370, 60),
                 Font = new Font("Segoe UI", 10F),
                 TextAlign = ContentAlignment.TopCenter
@@ -70,7 +121,7 @@ namespace BFD9010.Gui
             urlLinkLabel = new LinkLabel
             {
                 Text = "Loading...",
-                Location = new Point(10, 120),
+                Location = new Point(10, 265),
                 Size = new Size(370, 30),
                 Font = new Font("Segoe UI", 11F, FontStyle.Underline),
                 TextAlign = ContentAlignment.MiddleCenter,
@@ -85,7 +136,7 @@ namespace BFD9010.Gui
             apiLabel = new Label
             {
                 Text = "",
-                Location = new Point(10, 160),
+                Location = new Point(10, 305),
                 Size = new Size(370, 40),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.Gray,
@@ -116,7 +167,7 @@ namespace BFD9010.Gui
 
         private async Task StartWebServerAsync()
         {
-            Label? messageLabel = this.Controls.OfType<Label>().FirstOrDefault(l => l.Location.Y == 50);
+            Label? messageLabel = this.Controls.OfType<Label>().FirstOrDefault(l => l.Location.Y == 195);
             
             try
             {
