@@ -1,6 +1,7 @@
-using BFD9010.FhirApi.Models;
 using BFD9010.FhirApi.Services;
 using BFD9010.Scanner;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,11 @@ namespace BFD9010.FhirApi;
 /// </summary>
 public static class FhirServerConfiguration
 {
+    private static readonly FhirJsonSerializer _fhirSerializer = new(new SerializerSettings
+    {
+        Pretty = true
+    });
+
     /// <summary>
     /// Configure services for the FHIR API server
     /// </summary>
@@ -62,116 +68,159 @@ public static class FhirServerConfiguration
 
             if (!scanner.IsInitialized || scanner.ScannerData == null)
             {
-                return Results.Json(new FhirOperationOutcome
+                var errorOutcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "not-found",
-                            Details = new IssueDetails { Text = "Scanner not initialized" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Details = new CodeableConcept { Text = "Scanner not initialized" }
                         }
                     }
-                }, statusCode: 500);
+                };
+
+                return Results.Content(_fhirSerializer.SerializeToString(errorOutcome), "application/fhir+json", statusCode: 500);
             }
 
             var data = scanner.ScannerData.Value;
-            var device = new FhirDevice
+            var device = new Device
             {
                 Id = id,
                 Manufacturer = "Vidar Systems Corporation",
                 ModelNumber = data.modelName,
-                SerialNumber = data.serialNumber,
-                Version = new List<DeviceVersion>
-                {
-                    new DeviceVersion
-                    {
-                        Type = new CodeableConcept { Text = "Firmware" },
-                        Value = data.firmwareVersionNumber
-                    },
-                    new DeviceVersion
-                    {
-                        Type = new CodeableConcept { Text = "Hardware" },
-                        Value = data.hardwareVersionNumber.ToString()
-                    }
-                },
-                Property = new List<DeviceProperty>
-                {
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Current Resolution" },
-                        ValueQuantity = new List<Quantity> { new Quantity { Value = data.currentResolution, Unit = "dpi" } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Optical Resolution" },
-                        ValueQuantity = new List<Quantity> { new Quantity { Value = data.opticalResolution, Unit = "dpi" } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Max Width" },
-                        ValueQuantity = new List<Quantity> { new Quantity { Value = (decimal)data.maxWidthInInches, Unit = "inches" } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Current Bit Depth" },
-                        ValueQuantity = new List<Quantity> { new Quantity { Value = data.currentBitDepth, Unit = "bits" } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Max Films" },
-                        ValueQuantity = new List<Quantity> { new Quantity { Value = data.maxFilms, Unit = "films" } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Dark Enhance" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.darkEnhance } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Line Filter" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lineFilter } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Film Backup" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.filmBackup } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Unload Medium" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.unloadMedium } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Limited Scans" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.limitedScans } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Line Time" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lineTime } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Feeder Type" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.feederType } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Lamp Type" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.lampType } }
-                    },
-                    new DeviceProperty
-                    {
-                        Type = new CodeableConcept { Text = "Translation Table" },
-                        ValueCodeableConcept = new List<CodeableConcept> { new CodeableConcept { Text = data.translationTable } }
-                    }
-                }
+                SerialNumber = data.serialNumber
             };
 
-            return Results.Json(device);
+            // Add firmware version
+            device.Version.Add(new Device.VersionComponent
+            {
+                Type = new CodeableConcept { Text = "Firmware" },
+                Value = data.firmwareVersionNumber
+            });
+
+            // Add hardware version
+            device.Version.Add(new Device.VersionComponent
+            {
+                Type = new CodeableConcept { Text = "Hardware" },
+                Value = data.hardwareVersionNumber.ToString()
+            });
+
+            // Add properties with quantities
+            device.Property.Add(new Device.PropertyComponent
+            {
+                Type = new CodeableConcept { Text = "Current Resolution" },
+                Value = new Quantity((decimal)data.currentResolution, "dpi")
+            });
+
+            device.Property.Add(new Device.PropertyComponent
+            {
+                Type = new CodeableConcept { Text = "Optical Resolution" },
+                Value = new Quantity((decimal)data.opticalResolution, "dpi")
+            });
+
+            device.Property.Add(new Device.PropertyComponent
+            {
+                Type = new CodeableConcept { Text = "Max Width" },
+                Value = new Quantity((decimal)data.maxWidthInInches, "[in_us]")
+            });
+
+            device.Property.Add(new Device.PropertyComponent
+            {
+                Type = new CodeableConcept { Text = "Current Bit Depth" },
+                Value = new Quantity(data.currentBitDepth, "bits")
+            });
+
+            device.Property.Add(new Device.PropertyComponent
+            {
+                Type = new CodeableConcept { Text = "Max Films" },
+                Value = new Quantity(data.maxFilms, "films")
+            });
+
+            // Add string properties only if they have values
+            if (!string.IsNullOrEmpty(data.darkEnhance))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Dark Enhance" },
+                    Value = new CodeableConcept { Text = data.darkEnhance }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.lineFilter))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Line Filter" },
+                    Value = new CodeableConcept { Text = data.lineFilter }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.filmBackup))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Film Backup" },
+                    Value = new CodeableConcept { Text = data.filmBackup }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.unloadMedium))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Unload Medium" },
+                    Value = new CodeableConcept { Text = data.unloadMedium }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.limitedScans))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Limited Scans" },
+                    Value = new CodeableConcept { Text = data.limitedScans }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.lineTime))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Line Time" },
+                    Value = new CodeableConcept { Text = data.lineTime }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.feederType))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Feeder Type" },
+                    Value = new CodeableConcept { Text = data.feederType }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.lampType))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Lamp Type" },
+                    Value = new CodeableConcept { Text = data.lampType }
+                });
+            }
+
+            if (!string.IsNullOrEmpty(data.translationTable))
+            {
+                device.Property.Add(new Device.PropertyComponent
+                {
+                    Type = new CodeableConcept { Text = "Translation Table" },
+                    Value = new CodeableConcept { Text = data.translationTable }
+                });
+            }
+
+            return Results.Content(_fhirSerializer.SerializeToString(device), "application/fhir+json");
         })
         .WithName("GetDevice")
         .WithOpenApi();
@@ -183,84 +232,97 @@ public static class FhirServerConfiguration
 
             if (!scanner.IsInitialized)
             {
-                var errorOutcome = new FhirOperationOutcome
+                var errorOutcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "not-found",
-                            Details = new IssueDetails { Text = "Scanner not initialized" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Details = new CodeableConcept { Text = "Scanner not initialized" }
                         }
                     }
                 };
 
-                return Results.Json(new FhirBundle
+                var errorBundle = new Bundle
                 {
-                    Entry = new List<BundleEntry>
-                    {
-                        new BundleEntry { Resource = errorOutcome }
-                    }
-                }, statusCode: 500);
+                    Type = Bundle.BundleType.Collection
+                };
+                errorBundle.Entry.Add(new Bundle.EntryComponent
+                {
+                    FullUrl = $"urn:uuid:{Guid.NewGuid()}",
+                    Resource = errorOutcome
+                });
+
+                return Results.Content(_fhirSerializer.SerializeToString(errorBundle), "application/fhir+json", statusCode: 500);
             }
 
             // Perform the scan
             var (status, imageBytes, errorMessage) = await scanner.ScanAsync();
 
-            var bundle = new FhirBundle();
+            var bundle = new Bundle
+            {
+                Type = Bundle.BundleType.Collection
+            };
 
             if (status == 0 && imageBytes != null)
             {
                 // Success - add Binary resource with base64-encoded image
-                bundle.Entry.Add(new BundleEntry
+                var binary = new Binary
                 {
-                    Resource = new FhirBinary
-                    {
-                        ContentType = "image/png",
-                        Data = Convert.ToBase64String(imageBytes)
-                    }
+                    ContentType = "image/png",
+                    Data = imageBytes
+                };
+                bundle.Entry.Add(new Bundle.EntryComponent
+                {
+                    FullUrl = $"urn:uuid:{Guid.NewGuid()}",
+                    Resource = binary
                 });
 
                 // Add successful OperationOutcome
-                bundle.Entry.Add(new BundleEntry
+                var successOutcome = new OperationOutcome
                 {
-                    Resource = new FhirOperationOutcome
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        Issue = new List<OperationOutcomeIssue>
+                        new OperationOutcome.IssueComponent
                         {
-                            new OperationOutcomeIssue
-                            {
-                                Severity = "information",
-                                Code = "informational",
-                                Details = new IssueDetails { Text = "Scan completed successfully" }
-                            }
+                            Severity = OperationOutcome.IssueSeverity.Information,
+                            Code = OperationOutcome.IssueType.Informational,
+                            Details = new CodeableConcept { Text = "Scan completed successfully" }
                         }
                     }
+                };
+                bundle.Entry.Add(new Bundle.EntryComponent
+                {
+                    FullUrl = $"urn:uuid:{Guid.NewGuid()}",
+                    Resource = successOutcome
                 });
 
-                return Results.Json(bundle);
+                return Results.Content(_fhirSerializer.SerializeToString(bundle), "application/fhir+json");
             }
             else
             {
                 // Failure - add error OperationOutcome with detailed message
-                bundle.Entry.Add(new BundleEntry
+                var failureOutcome = new OperationOutcome
                 {
-                    Resource = new FhirOperationOutcome
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        Issue = new List<OperationOutcomeIssue>
+                        new OperationOutcome.IssueComponent
                         {
-                            new OperationOutcomeIssue
-                            {
-                                Severity = "error",
-                                Code = "exception",
-                                Details = new IssueDetails { Text = errorMessage ?? $"Scan failed with status code: {status}" }
-                            }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Exception,
+                            Details = new CodeableConcept { Text = errorMessage ?? $"Scan failed with status code: {status}" }
                         }
                     }
+                };
+                bundle.Entry.Add(new Bundle.EntryComponent
+                {
+                    FullUrl = $"urn:uuid:{Guid.NewGuid()}",
+                    Resource = failureOutcome
                 });
 
-                return Results.Json(bundle, statusCode: 500);
+                return Results.Content(_fhirSerializer.SerializeToString(bundle), "application/fhir+json", statusCode: 500);
             }
         })
         .WithName("ScanDevice")
@@ -273,52 +335,60 @@ public static class FhirServerConfiguration
 
             if (!scanner.IsInitialized)
             {
-                return Results.Json(new FhirOperationOutcome
+                var errorOutcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "not-found",
-                            Details = new IssueDetails { Text = "Scanner not initialized" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Details = new CodeableConcept { Text = "Scanner not initialized" }
                         }
                     }
-                }, statusCode: 500);
+                };
+
+                return Results.Content(_fhirSerializer.SerializeToString(errorOutcome), "application/fhir+json", statusCode: 500);
             }
 
             var (status, errorMessage) = await scanner.CalibrateAsync();
 
+            OperationOutcome outcome;
+            int statusCode = 200;
+
             if (status == 0)
             {
-                return Results.Json(new FhirOperationOutcome
+                outcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "information",
-                            Code = "informational",
-                            Details = new IssueDetails { Text = "Calibration completed successfully" }
+                            Severity = OperationOutcome.IssueSeverity.Information,
+                            Code = OperationOutcome.IssueType.Informational,
+                            Details = new CodeableConcept { Text = "Calibration completed successfully" }
                         }
                     }
-                });
+                };
             }
             else
             {
-                return Results.Json(new FhirOperationOutcome
+                outcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "exception",
-                            Details = new IssueDetails { Text = errorMessage ?? $"Calibration failed with status code: {status}" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Exception,
+                            Details = new CodeableConcept { Text = errorMessage ?? $"Calibration failed with status code: {status}" }
                         }
                     }
-                }, statusCode: 500);
+                };
+                statusCode = 500;
             }
+
+            return Results.Content(_fhirSerializer.SerializeToString(outcome), "application/fhir+json", statusCode: statusCode);
         })
         .WithName("CalibrateDevice")
         .WithOpenApi();
@@ -330,52 +400,60 @@ public static class FhirServerConfiguration
 
             if (!scanner.IsInitialized)
             {
-                return Results.Json(new FhirOperationOutcome
+                var errorOutcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "not-found",
-                            Details = new IssueDetails { Text = "Scanner not initialized" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.NotFound,
+                            Details = new CodeableConcept { Text = "Scanner not initialized" }
                         }
                     }
-                }, statusCode: 500);
+                };
+
+                return Results.Content(_fhirSerializer.SerializeToString(errorOutcome), "application/fhir+json", statusCode: 500);
             }
 
             var (status, errorMessage) = await scanner.EjectAsync();
 
+            OperationOutcome outcome;
+            int statusCode = 200;
+
             if (status == 0)
             {
-                return Results.Json(new FhirOperationOutcome
+                outcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "information",
-                            Code = "informational",
-                            Details = new IssueDetails { Text = "Film ejected successfully" }
+                            Severity = OperationOutcome.IssueSeverity.Information,
+                            Code = OperationOutcome.IssueType.Informational,
+                            Details = new CodeableConcept { Text = "Film ejected successfully" }
                         }
                     }
-                });
+                };
             }
             else
             {
-                return Results.Json(new FhirOperationOutcome
+                outcome = new OperationOutcome
                 {
-                    Issue = new List<OperationOutcomeIssue>
+                    Issue = new List<OperationOutcome.IssueComponent>
                     {
-                        new OperationOutcomeIssue
+                        new OperationOutcome.IssueComponent
                         {
-                            Severity = "error",
-                            Code = "exception",
-                            Details = new IssueDetails { Text = errorMessage ?? $"Eject failed with status code: {status}" }
+                            Severity = OperationOutcome.IssueSeverity.Error,
+                            Code = OperationOutcome.IssueType.Exception,
+                            Details = new CodeableConcept { Text = errorMessage ?? $"Eject failed with status code: {status}" }
                         }
                     }
-                }, statusCode: 500);
+                };
+                statusCode = 500;
             }
+
+            return Results.Content(_fhirSerializer.SerializeToString(outcome), "application/fhir+json", statusCode: statusCode);
         })
         .WithName("EjectFilm")
         .WithOpenApi();

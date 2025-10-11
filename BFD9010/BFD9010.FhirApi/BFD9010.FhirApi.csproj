@@ -21,4 +21,8 @@
     <ProjectReference Include="..\BFD9010.Scanner\BFD9010.Scanner.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>

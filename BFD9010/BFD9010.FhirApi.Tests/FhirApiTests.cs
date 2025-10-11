@@ -1,16 +1,10 @@
 using Xunit;
 using Moq;
 using BFD9010.FhirApi.Services;
-using BFD9010.FhirApi.Models;
 using Microsoft.Extensions.Logging;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using System.Text.Json;
-using Newtonsoft.Json.Linq;
-using FhirCodeableConcept = Hl7.Fhir.Model.CodeableConcept;
-using FhirQuantity = Hl7.Fhir.Model.Quantity;
-using ApiCodeableConcept = BFD9010.FhirApi.Models.CodeableConcept;
-using ApiQuantity = BFD9010.FhirApi.Models.Quantity;
 
 namespace BFD9010.FhirApi.Tests;
 
@@ -20,41 +14,43 @@ namespace BFD9010.FhirApi.Tests;
 public class FhirApiTests
 {
     private readonly Mock<ILogger<ScannerService>> _mockLogger;
+    private readonly FhirJsonSerializer _serializer;
+    private readonly FhirJsonParser _parser;
     
     public FhirApiTests()
     {
         _mockLogger = new Mock<ILogger<ScannerService>>();
+        _serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        _parser = new FhirJsonParser();
     }
 
     [Fact]
     public void FhirBundle_ShouldHaveCorrectResourceType()
     {
         // Arrange
-        var bundle = new FhirBundle
+        var bundle = new Bundle
         {
-            ResourceType = "Bundle",
-            Type = "collection"
+            Type = Bundle.BundleType.Collection
         };
 
         // Act & Assert
-        Assert.Equal("Bundle", bundle.ResourceType);
-        Assert.Equal("collection", bundle.Type);
+        Assert.Equal("Bundle", bundle.TypeName.ToString());
+        Assert.Equal(Bundle.BundleType.Collection, bundle.Type);
     }
 
     [Fact]
     public void FhirBinary_ShouldHaveCorrectStructure()
     {
         // Arrange
-        var testData = Convert.ToBase64String(new byte[] { 0x89, 0x50, 0x4E, 0x47 }); // PNG header
-        var binary = new FhirBinary
+        var testData = new byte[] { 0x89, 0x50, 0x4E, 0x47 }; // PNG header
+        var binary = new Binary
         {
-            ResourceType = "Binary",
             ContentType = "image/png",
             Data = testData
         };
 
         // Act & Assert
-        Assert.Equal("Binary", binary.ResourceType);
+        Assert.Equal("Binary", binary.TypeName.ToString());
         Assert.Equal("image/png", binary.ContentType);
         Assert.Equal(testData, binary.Data);
     }
@@ -63,25 +59,24 @@ public class FhirApiTests
     public void FhirOperationOutcome_Success_ShouldHaveInformationSeverity()
     {
         // Arrange
-        var outcome = new FhirOperationOutcome
+        var outcome = new OperationOutcome
         {
-            ResourceType = "OperationOutcome",
-            Issue = new List<OperationOutcomeIssue>
+            Issue = new List<OperationOutcome.IssueComponent>
             {
-                new OperationOutcomeIssue
+                new OperationOutcome.IssueComponent
                 {
-                    Severity = "information",
-                    Code = "informational",
-                    Details = new IssueDetails { Text = "Scan completed successfully" }
+                    Severity = OperationOutcome.IssueSeverity.Information,
+                    Code = OperationOutcome.IssueType.Informational,
+                    Details = new CodeableConcept { Text = "Scan completed successfully" }
                 }
             }
         };
 
         // Act & Assert
-        Assert.Equal("OperationOutcome", outcome.ResourceType);
+        Assert.Equal("OperationOutcome", outcome.TypeName.ToString());
         Assert.Single(outcome.Issue);
-        Assert.Equal("information", outcome.Issue[0].Severity);
-        Assert.Equal("informational", outcome.Issue[0].Code);
+        Assert.Equal(OperationOutcome.IssueSeverity.Information, outcome.Issue[0].Severity);
+        Assert.Equal(OperationOutcome.IssueType.Informational, outcome.Issue[0].Code);
         Assert.Equal("Scan completed successfully", outcome.Issue[0].Details.Text);
     }
 
@@ -89,54 +84,50 @@ public class FhirApiTests
     public void FhirOperationOutcome_Error_ShouldHaveErrorSeverity()
     {
         // Arrange
-        var outcome = new FhirOperationOutcome
+        var outcome = new OperationOutcome
         {
-            ResourceType = "OperationOutcome",
-            Issue = new List<OperationOutcomeIssue>
+            Issue = new List<OperationOutcome.IssueComponent>
             {
-                new OperationOutcomeIssue
+                new OperationOutcome.IssueComponent
                 {
-                    Severity = "error",
-                    Code = "exception",
-                    Details = new IssueDetails { Text = "Scan failed" }
+                    Severity = OperationOutcome.IssueSeverity.Error,
+                    Code = OperationOutcome.IssueType.Exception,
+                    Details = new CodeableConcept { Text = "Scan failed" }
                 }
             }
         };
 
         // Act & Assert
-        Assert.Equal("error", outcome.Issue[0].Severity);
-        Assert.Equal("exception", outcome.Issue[0].Code);
+        Assert.Equal(OperationOutcome.IssueSeverity.Error, outcome.Issue[0].Severity);
+        Assert.Equal(OperationOutcome.IssueType.Exception, outcome.Issue[0].Code);
     }
 
     [Fact]
     public void FhirDevice_ShouldContainRequiredFields()
     {
         // Arrange
-        var device = new FhirDevice
+        var device = new Device
         {
-            ResourceType = "Device",
             Id = "scanner-001",
             Manufacturer = "Vidar Systems Corporation",
             ModelNumber = "VXR-16 DosimetryPRO",
-            SerialNumber = "ABC123",
-            Version = new List<DeviceVersion>
-            {
-                new DeviceVersion
-                {
-                    Type = new ApiCodeableConcept { Text = "Firmware" },
-                    Value = "2.01"
-                }
-            }
+            SerialNumber = "ABC123"
         };
 
+        device.Version.Add(new Device.VersionComponent
+        {
+            Type = new CodeableConcept { Text = "Firmware" },
+            Value = "2.01"
+        });
+
         // Act & Assert
-        Assert.Equal("Device", device.ResourceType);
+        Assert.Equal("Device", device.TypeName.ToString());
         Assert.Equal("scanner-001", device.Id);
         Assert.Equal("Vidar Systems Corporation", device.Manufacturer);
         Assert.Equal("VXR-16 DosimetryPRO", device.ModelNumber);
         Assert.Equal("ABC123", device.SerialNumber);
         Assert.Single(device.Version);
-        Assert.Equal("Firmware", device.Version[0].Type?.Text);
+        Assert.Equal("Firmware", device.Version[0].Type.Text);
         Assert.Equal("2.01", device.Version[0].Value);
     }
 
@@ -144,71 +135,63 @@ public class FhirApiTests
     public void ScanBundle_ShouldContainBinaryAndOperationOutcome()
     {
         // Arrange
-        var testImageData = Convert.ToBase64String(new byte[] { 0x89, 0x50, 0x4E, 0x47 });
-        var bundle = new FhirBundle
+        var testImageData = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+        var bundle = new Bundle
         {
-            ResourceType = "Bundle",
-            Type = "collection",
-            Entry = new List<BundleEntry>
+            Type = Bundle.BundleType.Collection
+        };
+
+        bundle.Entry.Add(new Bundle.EntryComponent
+        {
+            Resource = new Binary
             {
-                new BundleEntry
+                ContentType = "image/png",
+                Data = testImageData
+            }
+        });
+
+        bundle.Entry.Add(new Bundle.EntryComponent
+        {
+            Resource = new OperationOutcome
+            {
+                Issue = new List<OperationOutcome.IssueComponent>
                 {
-                    Resource = new FhirBinary
+                    new OperationOutcome.IssueComponent
                     {
-                        ResourceType = "Binary",
-                        ContentType = "image/png",
-                        Data = testImageData
-                    }
-                },
-                new BundleEntry
-                {
-                    Resource = new FhirOperationOutcome
-                    {
-                        ResourceType = "OperationOutcome",
-                        Issue = new List<OperationOutcomeIssue>
-                        {
-                            new OperationOutcomeIssue
-                            {
-                                Severity = "information",
-                                Code = "informational",
-                                Details = new IssueDetails { Text = "Scan completed successfully" }
-                            }
-                        }
+                        Severity = OperationOutcome.IssueSeverity.Information,
+                        Code = OperationOutcome.IssueType.Informational,
+                        Details = new CodeableConcept { Text = "Scan completed successfully" }
                     }
                 }
             }
-        };
+        });
 
         // Act & Assert
         Assert.Equal(2, bundle.Entry.Count);
-        Assert.IsType<FhirBinary>(bundle.Entry[0].Resource);
-        Assert.IsType<FhirOperationOutcome>(bundle.Entry[1].Resource);
+        Assert.IsType<Binary>(bundle.Entry[0].Resource);
+        Assert.IsType<OperationOutcome>(bundle.Entry[1].Resource);
     }
 
     [Fact]
     public void FhirBundle_WhenSerialized_ShouldBeValidJson()
     {
         // Arrange
-        var bundle = new FhirBundle
+        var bundle = new Bundle
         {
-            ResourceType = "Bundle",
-            Type = "collection",
-            Entry = new List<BundleEntry>
-            {
-                new BundleEntry
-                {
-                    Resource = new FhirBinary
-                    {
-                        ResourceType = "Binary",
-                        ContentType = "image/png",
-                        Data = "dGVzdA=="
-                    }
-                }
-            }
+            Type = Bundle.BundleType.Collection
         };
 
+        bundle.Entry.Add(new Bundle.EntryComponent
+        {
+            Resource = new Binary
+            {
+                ContentType = "image/png",
+                Data = new byte[] { 0x74, 0x65, 0x73, 0x74 } // "test"
+            }
+        });
+
         // Act
-        var json = JsonSerializer.Serialize(bundle);
+        var json = _serializer.SerializeToString(bundle);
         var parsed = JsonDocument.Parse(json);
 
         // Assert
@@ -222,113 +205,98 @@ public class FhirApiTests
     {
         // Arrange
         var originalData = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }; // PNG signature
-        var base64Data = Convert.ToBase64String(originalData);
 
-        var binary = new FhirBinary
+        var binary = new Binary
         {
-            ResourceType = "Binary",
             ContentType = "image/png",
-            Data = base64Data
+            Data = originalData
         };
 
-        // Act
-        var decodedData = Convert.FromBase64String(binary.Data!);
+        // Act - serialize and deserialize
+        var json = _serializer.SerializeToString(binary);
+        var deserialized = _parser.Parse<Binary>(json);
 
         // Assert
-        Assert.Equal(originalData, decodedData);
+        Assert.Equal(originalData, deserialized.Data);
     }
 
     [Fact]
     public void FhirDevice_Properties_ShouldSupportQuantity()
     {
         // Arrange
-        var device = new FhirDevice
+        var device = new Device();
+        
+        device.Property.Add(new Device.PropertyComponent
         {
-            ResourceType = "Device",
-            Property = new List<DeviceProperty>
-            {
-                new DeviceProperty
-                {
-                    Type = new ApiCodeableConcept { Text = "Resolution" },
-                    ValueQuantity = new List<ApiQuantity>
-                    {
-                        new ApiQuantity { Value = 300, Unit = "dpi" }
-                    }
-                }
-            }
-        };
+            Type = new CodeableConcept { Text = "Resolution" },
+            Value = new Quantity(300, "dpi")
+        });
 
         // Act & Assert
         Assert.Single(device.Property);
-        Assert.Equal("Resolution", device.Property[0].Type?.Text);
-        Assert.Single(device.Property[0].ValueQuantity);
-        Assert.Equal(300, device.Property[0].ValueQuantity[0].Value);
-        Assert.Equal("dpi", device.Property[0].ValueQuantity[0].Unit);
+        Assert.Equal("Resolution", device.Property[0].Type.Text);
+        Assert.NotNull(device.Property[0].Value);
+        Assert.IsType<Quantity>(device.Property[0].Value);
+        var quantity = (Quantity)device.Property[0].Value;
+        Assert.Equal(300, quantity.Value);
+        Assert.Equal("dpi", quantity.Unit);
     }
 
     [Fact]
     public void OperationOutcome_ShouldSupportMultipleIssues()
     {
         // Arrange
-        var outcome = new FhirOperationOutcome
+        var outcome = new OperationOutcome();
+        
+        outcome.Issue.Add(new OperationOutcome.IssueComponent
         {
-            ResourceType = "OperationOutcome",
-            Issue = new List<OperationOutcomeIssue>
-            {
-                new OperationOutcomeIssue
-                {
-                    Severity = "warning",
-                    Code = "processing",
-                    Details = new IssueDetails { Text = "Calibration recommended" }
-                },
-                new OperationOutcomeIssue
-                {
-                    Severity = "information",
-                    Code = "informational",
-                    Details = new IssueDetails { Text = "Scan completed" }
-                }
-            }
-        };
+            Severity = OperationOutcome.IssueSeverity.Warning,
+            Code = OperationOutcome.IssueType.Processing,
+            Details = new CodeableConcept { Text = "Calibration recommended" }
+        });
+
+        outcome.Issue.Add(new OperationOutcome.IssueComponent
+        {
+            Severity = OperationOutcome.IssueSeverity.Information,
+            Code = OperationOutcome.IssueType.Informational,
+            Details = new CodeableConcept { Text = "Scan completed" }
+        });
 
         // Act & Assert
         Assert.Equal(2, outcome.Issue.Count);
-        Assert.Equal("warning", outcome.Issue[0].Severity);
-        Assert.Equal("information", outcome.Issue[1].Severity);
+        Assert.Equal(OperationOutcome.IssueSeverity.Warning, outcome.Issue[0].Severity);
+        Assert.Equal(OperationOutcome.IssueSeverity.Information, outcome.Issue[1].Severity);
     }
 
     [Fact]
     public void FhirBundle_ErrorScenario_ShouldOnlyContainOperationOutcome()
     {
         // Arrange
-        var bundle = new FhirBundle
+        var bundle = new Bundle
         {
-            ResourceType = "Bundle",
-            Type = "collection",
-            Entry = new List<BundleEntry>
+            Type = Bundle.BundleType.Collection
+        };
+
+        bundle.Entry.Add(new Bundle.EntryComponent
+        {
+            Resource = new OperationOutcome
             {
-                new BundleEntry
+                Issue = new List<OperationOutcome.IssueComponent>
                 {
-                    Resource = new FhirOperationOutcome
+                    new OperationOutcome.IssueComponent
                     {
-                        ResourceType = "OperationOutcome",
-                        Issue = new List<OperationOutcomeIssue>
-                        {
-                            new OperationOutcomeIssue
-                            {
-                                Severity = "error",
-                                Code = "exception",
-                                Details = new IssueDetails { Text = "Scanner not initialized" }
-                            }
-                        }
+                        Severity = OperationOutcome.IssueSeverity.Error,
+                        Code = OperationOutcome.IssueType.Exception,
+                        Details = new CodeableConcept { Text = "Scanner not initialized" }
                     }
                 }
             }
-        };
+        });
 
         // Act & Assert
         Assert.Single(bundle.Entry);
-        Assert.IsType<FhirOperationOutcome>(bundle.Entry[0].Resource);
-        var outcome = (FhirOperationOutcome)bundle.Entry[0].Resource!;
-        Assert.Equal("error", outcome.Issue[0].Severity);
+        Assert.IsType<OperationOutcome>(bundle.Entry[0].Resource);
+        var outcome = (OperationOutcome)bundle.Entry[0].Resource;
+        Assert.Equal(OperationOutcome.IssueSeverity.Error, outcome.Issue[0].Severity);
     }
 }
