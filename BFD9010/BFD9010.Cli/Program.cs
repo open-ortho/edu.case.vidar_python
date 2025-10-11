@@ -1,11 +1,7 @@
-﻿using System.Reflection;
-using System.Diagnostics;
+﻿using BFD9010.FhirApi;
 using BFD9010.Scanner;
-using BFD9010.FhirApi;
-using BFD9010.FhirApi.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Reflection;
 using static BFD9010.Scanner.Scanner;
 
 // Parse command-line args for optional --config <path>
@@ -111,30 +107,14 @@ async Task StartFhirApiServerAsync(string? configPath)
 
     try
     {
-        // Load configuration to get CORS settings
+        // Load configuration to display info
         var config = ScanConfig.Load(configPath);
 
-        // Create web application using shared configuration
-        var builder = WebApplication.CreateBuilder();
-
-        // Configure logging
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-        builder.Logging.SetMinimumLevel(LogLevel.Information);
-
-        // Configure services using shared configuration with config
-        FhirServerConfiguration.ConfigureServices(builder, config);
-
-        // Build the app
-        var app = builder.Build();
-
-        // Configure FHIR endpoints using shared configuration
-        FhirServerConfiguration.ConfigureEndpoints(app);
-
+        // Create and start the server host (use await using for async disposal)
+        await using var serverHost = new FhirServerHost(configPath);
+        
         Console.WriteLine("\nInitializing scanner for FHIR API...");
-
-        // Initialize scanner using shared configuration
-        bool initialized = await FhirServerConfiguration.InitializeScannerAsync(app);
+        bool initialized = await serverHost.StartAsync();
 
         if (!initialized)
         {
@@ -158,8 +138,24 @@ async Task StartFhirApiServerAsync(string? configPath)
         Console.WriteLine("\nPress Ctrl+C to stop the server and return to menu...");
         Console.WriteLine("=================================================================\n");
 
-        // Run the server (blocks until Ctrl+C)
-        await app.RunAsync();
+        // Wait for Ctrl+C
+        var cancellationSource = new CancellationTokenSource();
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true;
+            cancellationSource.Cancel();
+        };
+
+        try
+        {
+            await Task.Delay(Timeout.Infinite, cancellationSource.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine("\nShutting down server...");
+        }
+
+        // Server will be automatically stopped and disposed asynchronously when exiting the await using block
     }
     catch (Exception ex)
     {
@@ -176,13 +172,29 @@ static string? GetAssemblyVersion()
 
     // Prefer AssemblyInformationalVersion
     var infoAttr = entry.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-    if (!string.IsNullOrWhiteSpace(infoAttr)) return infoAttr;
+    if (!string.IsNullOrWhiteSpace(infoAttr))
+    {
+        // Remove build metadata (everything after '+')
+        var plusIndex = infoAttr.IndexOf('+');
+        if (plusIndex >= 0)
+            infoAttr = infoAttr.Substring(0, plusIndex);
+        
+        return infoAttr;
+    }
 
     // Next prefer product/file version
     try
     {
         var fileVer = FileVersionInfo.GetVersionInfo(entry.Location).ProductVersion;
-        if (!string.IsNullOrWhiteSpace(fileVer)) return fileVer;
+        if (!string.IsNullOrWhiteSpace(fileVer))
+        {
+            // Remove build metadata from file version too
+            var plusIndex = fileVer.IndexOf('+');
+            if (plusIndex >= 0)
+                fileVer = fileVer.Substring(0, plusIndex);
+            
+            return fileVer;
+        }
     }
     catch { }
 

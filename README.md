@@ -1,6 +1,11 @@
-# BFD9010 Scanner Software
+<img src="./documentation/images/BFD9000_logo_white.png" alt="BFD9010" width="300">
 
-Tools to control the Vidar Dosimetry Pro scanner for the BFD-9000 project. This software reverse-engineers the USB protocol to enable direct control of the scanner.
+# BFD9010: An HL7 FHIR API for Scanners
+
+This tools was originally created to control the Vidar Dosimetry Pro scanner for the BFD-9000 project. However, it has been repurposed so that it can be easily re-used with any scanner by just writing scanner drivers for it.
+
+
+This software reverse-engineers the USB protocol to enable direct control of the scanner.
 
 ## Quick Start
 
