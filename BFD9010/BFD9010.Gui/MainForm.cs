@@ -7,6 +7,8 @@ namespace BFD9010.Gui
 {
     public partial class MainForm : Form
     {
+        private const string LogoResourceName = "BFD9010.Gui.Resources.BFD9000_logo_white.png";
+        
         private readonly string? _configPath;
         private FhirServerHost? _serverHost;
         private Label statusLabel = null!;
@@ -48,8 +50,7 @@ namespace BFD9010.Gui
             try
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                var resourceName = "BFD9010.Gui.Resources.BFD9000_logo_white.png";
-                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                using (var stream = assembly.GetManifestResourceStream(LogoResourceName))
                 {
                     if (stream != null)
                     {
