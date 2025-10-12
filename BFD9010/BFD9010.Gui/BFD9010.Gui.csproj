@@ -9,7 +9,15 @@
     <AssemblyName>bfd9010_fhir32</AssemblyName>
     <Platforms>AnyCPU;x86</Platforms>
     <PlatformTarget>x86</PlatformTarget>
+    <ApplicationIcon>..\..\documentation\images\BFD9000_logo_white.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\documentation\images\BFD9000_logo_white.ico">
+      <Link>BFD9000_logo_white.ico</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.png">

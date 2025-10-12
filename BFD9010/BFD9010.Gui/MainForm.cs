@@ -34,6 +34,20 @@ namespace BFD9010.Gui
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
             this.BackColor = Color.White;
+            
+            // Set the form icon
+            try
+            {
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BFD9000_logo_white.ico");
+                if (File.Exists(iconPath))
+                {
+                    this.Icon = new Icon(iconPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load icon: {ex.Message}");
+            }
         }
 
         private void InitializeUI()
