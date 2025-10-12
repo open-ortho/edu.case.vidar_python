@@ -75,9 +75,177 @@ This will:
   - `bfd9010_cli_v<version>.zip` - CLI package
   - `bfd9010_gui_v<version>.zip` - GUI package
 
-- Press **F5** or select **Debug > Start Debugging** to run the app.
-
 **Note:** Add `artifacts/` to your `.gitignore` to exclude generated packages from version control.
+
+## Development vs Production Workflows
+
+Understanding the difference between development and production builds is essential for effective development and deployment.
+
+### Development Mode (For Developers)
+
+**Use development mode when:**
+- Writing and testing code
+- Debugging issues
+- Testing API changes with local HTML files
+- Iterating quickly without full builds
+
+**How to run in development mode:**
+
+1. **Using dotnet run** (recommended):
+   ```bash
+   cd BFD9010.Cli
+   dotnet run
+   ```
+   or
+   ```bash
+   cd BFD9010.Gui
+   dotnet run
+   ```
+
+2. **Using Visual Studio**:
+   - Open `BFD9010.sln`
+   - Set `BFD9010.Cli` or `BFD9010.Gui` as the startup project
+   - Press **F5** to run with debugging, or **Ctrl+F5** to run without debugging
+
+**Development mode features:**
+- Environment is set to `Development` (via `launchSettings.json`)
+- CORS allows **any origin** (including `file://` protocol for local HTML testing)
+- Swagger UI is enabled at `http://localhost:5000/swagger`
+- Detailed error messages and logging
+- Hot reload capabilities (when using dotnet watch)
+- No need for self-contained publishing
+
+**Benefits:**
+- ? Fast iteration - changes compile quickly
+- ? Easy debugging with breakpoints
+- ? Test HTML files directly from disk (`file://`)
+- ? Detailed logs and error information
+- ? Swagger documentation available
+
+### Production Mode (For Deployment)
+
+**Use production mode when:**
+- Creating packages for end users
+- Deploying to production environments
+- Building final releases
+- Testing deployment scenarios
+
+**How to build for production:**
+
+1. **Build only** (faster, requires .NET runtime on target):
+   ```bash
+   build.bat
+   ```
+   - Builds in Release configuration
+   - Outputs to `bin\Release\net8.0\` folders
+   - Requires .NET 8.0 Runtime on target machine
+
+2. **Package for distribution** (recommended):
+   ```bash
+   package.bat
+   ```
+   - Builds self-contained executables
+   - Includes .NET runtime (no installation needed)
+   - Bundles all dependencies including `Vscsi32.dll`
+   - Creates versioned ZIP files in `artifacts\` directory
+   - Ready for distribution to end users
+
+**How to run production builds:**
+
+After building with `build.bat`:
+```bash
+start-cli.bat
+```
+or
+```bash
+start-gui.bat
+```
+
+After packaging with `package.bat`:
+- Extract the ZIP file from `artifacts\` directory
+- Run the executable directly (no installation needed)
+
+**Production mode features:**
+- Environment is set to `Production`
+- CORS restricted to configured origins only (see `scan_config.ini`)
+- Swagger UI disabled for security
+- Optimized binaries with better performance
+- Self-contained deployment (when using `package.bat`)
+
+**Benefits:**
+- ? Enhanced security (CORS restrictions, no Swagger)
+- ? Optimized performance
+- ? Self-contained packages (no .NET installation required)
+- ? Versioned releases
+- ? Ready for end-user deployment
+
+### Key Differences Summary
+
+| Aspect | Development | Production |
+|--------|-------------|------------|
+| **Environment** | `Development` | `Production` |
+| **CORS Policy** | Allow any origin (incl. `file://`) | Restricted to configured origins |
+| **Swagger UI** | ? Enabled | ? Disabled |
+| **Error Details** | Verbose | Minimal |
+| **Build Command** | `dotnet run` | `build.bat` or `package.bat` |
+| **Run Command** | `dotnet run` or F5 | `start-cli.bat` / `start-gui.bat` |
+| **.NET Runtime** | Uses installed SDK | Included (with `package.bat`) |
+| **CORS Testing** | Can use local HTML files | Requires proper web server |
+
+### Workflow Examples
+
+**Typical Development Workflow:**
+```bash
+# 1. Make code changes in your editor/IDE
+# 2. Run in development mode
+cd BFD9010.Cli
+dotnet run
+
+# 3. Test with browser (file:// or http://localhost)
+# 4. Iterate - make changes and re-run
+```
+
+**Typical Production Workflow:**
+```bash
+# 1. Finalize and test all code changes
+# 2. Update version in Directory.Build.props
+# 3. Build and package
+package.bat
+
+# 4. Test the production package
+cd artifacts
+# Extract bfd9010_cli_v1.0.0.zip or bfd9010_gui_v1.0.0.zip
+# Run the extracted executable
+
+# 5. Distribute ZIP file to end users
+```
+
+### Testing Web Integration
+
+**In Development:**
+```bash
+# 1. Start the API server in development mode
+cd BFD9010.Cli
+dotnet run
+
+# 2. Open test_scanner_api.html directly in browser
+# File can be opened via file:// protocol - CORS will allow it
+```
+
+**In Production:**
+```bash
+# 1. Package the application
+package.bat
+
+# 2. Configure CORS in scan_config.ini
+CorsOrigin = https://yourdomain.com
+
+# 3. Start the production build
+start-gui.bat
+
+# 4. Access from configured web origin only
+# file:// protocol will NOT work in production
+```
 
 ## Batch File Reference
 
@@ -97,8 +265,8 @@ You can specify a custom configuration file using the `--config` command-line ar
 bfd9010.exe --config /path/to/custom_config.ini
 bfd9010_fhir32.exe --config C:\Configs\scanner_config.ini
 ```
+
 ### Configuration File Structure
-- The produced ZIP file will be placed in the `artifacts` directory under this project folder. The filename format is `vidar_app_release_v<version>.zip` (for example: `artifacts\vidar_app_release_v0.1.0.zip`).
 
 Example `scan_config.ini`:
 ```ini
@@ -137,8 +305,8 @@ CorsOrigin = https://wingate.case.edu
 | `CorsOrigin` | string | `https://wingate.case.edu` | Allowed CORS origin(s), comma-separated for multiple origins |
 
 ### CORS Configuration
+
 The `CorsOrigin` setting controls which web origins can make API requests to the scanner. 
-- For troubleshooting, check console output for error codes.
 
 **Single origin:**
 ```ini
@@ -150,6 +318,6 @@ CorsOrigin = https://wingate.case.edu
 CorsOrigin = https://wingate.case.edu, https://localhost:3000, https://test.example.com
 ```
 
-This is essential for web-based scanner control. The web application at the specified origin(s) can make API calls to `http://localhost:5000`.
+**Note:** In Development mode, CORS restrictions are relaxed to allow any origin for easier testing. In Production mode, only configured origins are allowed.
 
-**To test different scan settings:**
+This is essential for web-based scanner control. The web application at the specified origin(s) can make API calls to `http://localhost:5000`.
