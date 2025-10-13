@@ -50,7 +50,7 @@ dotnet publish BFD9010.Gui\BFD9010.Gui.csproj -c Release -r win-x86 --self-conta
 if %ERRORLEVEL% NEQ 0 goto :error
 
 REM ==============================================
-REM Package CLI
+REM Package CLI and GUI
 REM ==============================================
 echo [5/5] Creating distribution packages...
 echo.
@@ -75,9 +75,10 @@ if exist "%DLL%" (
     echo WARNING: Vscsi32.dll not found. Package may not work without it.
 )
 
-REM Copy sample config to both packages
-copy scan_config.ini "%CLI_PUBDIR%\"
-copy scan_config.ini "%GUI_PUBDIR%\"
+REM Remove any scan_config.ini files from publish directories
+REM This ensures packages use default settings (16-bit, 300 DPI)
+if exist "%CLI_PUBDIR%\scan_config.ini" del /f "%CLI_PUBDIR%\scan_config.ini"
+if exist "%GUI_PUBDIR%\scan_config.ini" del /f "%GUI_PUBDIR%\scan_config.ini"
 
 REM Create ZIP packages
 set "CLI_ZIP=%ARTIFACTS%\bfd9010_cli_v!VER_TRIMMED!.zip"
@@ -107,7 +108,13 @@ echo Each package includes:
 echo   - Executable (self-contained, no .NET required)
 echo   - All dependencies
 echo   - Vscsi32.dll (scanner driver)
-echo   - scan_config.ini (sample configuration)
+echo   - BFD9000_logo_white.ico (application icon)
+echo.
+echo NOTE: scan_config.ini is NOT included in packages.
+echo       On first run, a default config will be created with:
+echo       - BitDepth: 16
+echo       - DPI: 300
+echo       Users can then customize settings as needed.
 echo.
 pause
 endlocal
