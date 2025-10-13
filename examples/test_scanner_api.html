@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BFD9010 Scanner Control</title>
+    <title>BFD9000 Scanner Control</title>
     <style>
         * {
             margin: 0;
@@ -113,6 +113,10 @@
             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
         }
 
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
         .status {
             padding: 15px;
             border-radius: 8px;
@@ -145,7 +149,6 @@
         .device-info {
             background: #f8f9fa;
             padding: 20px;
-           
             border-radius: 8px;
             margin-top: 20px;
             display: none;
@@ -193,7 +196,6 @@
 
         .scan-result h3 {
             color: #333;
-           
             margin-bottom: 10px;
         }
 
@@ -222,7 +224,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>BFD9010 Scanner Control</h1>
+        <h1>BFD9000 Scanner Control</h1>
         <p class="subtitle">FHIR API Interface for Vidar Film Scanner</p>
 
         <!-- Configuration Section -->
@@ -237,6 +239,7 @@
                 </div>
                 <div style="flex: 1;">
                     <label for="ageMonths">Age (Months):</label>
+                    <input type="number" id="ageMonths" min="0" max="11" placeholder="6
                     <input type="number" id="ageMonths" min="0" max="11" placeholder="6" oninput="updateFilenamePreview()">
                 </div>
             </div>
@@ -260,8 +263,8 @@
             </select>
         </div>
 
-        <!-- Filename Preview -->
-        <div id="filenamePreview" style="margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #dc3545;">
+        <!-- Filename
+        <div id="filenamePreview" style="margin-bottom: 15px;
             Please enter a valid Subject ID (B0001-B9999)
         </div>
 
@@ -270,6 +273,9 @@
 
         <!-- Control Buttons -->
         <div class="button-group">
+            <button onclick="downloadInstaller()" class="download-btn full-width">
+                Download BFD9010
+            </button>
             <button onclick="getDeviceInfo()">
                 Device Info
             </button>
@@ -374,6 +380,7 @@
             html += `<tr><td>Model:</td><td>${device.modelNumber || 'N/A'}</td></tr>`;
             html += `<tr><td>Serial Number:</td><td>${device.serialNumber || 'N/A'}</td></tr>`;
             
+            // Display version
             // Display version information
             if (device.version && device.version.length > 0) {
                 device.version.forEach(v => {
