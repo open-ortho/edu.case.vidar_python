@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 20;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -30,7 +30,7 @@
             padding: 30px;
         }
 
-        h1
+        h1 {
             color: #333;
             margin-bottom: 10px;
             font-size: 28px;
@@ -44,6 +44,7 @@
 
         .config-section {
             background: #f8f9fa;
+            padding: 20px;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -57,7 +58,8 @@
             font-size: 13px;
         }
 
-        .config-section input {
+        .config-section input,
+        .config-section select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -142,6 +144,7 @@
 
         .device-info {
             background: #f8f9fa;
+            padding: 20px;
            
             border-radius: 8px;
             margin-top: 20px;
@@ -189,12 +192,14 @@
         }
 
         .scan-result h3 {
+            color: #333;
            
             margin-bottom: 10px;
         }
 
         .spinner {
             border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
            
             border-radius: 50%;
             width: 24px;
@@ -223,18 +228,31 @@
 
         <!-- Configuration Section -->
         <div class="config-section">
-            <label for="apiUrl">API Server URL:</label>
-            <input type="text" id="apiUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+            <label for="subjectId">Subject ID:</label>
+            <input type="text" id="subjectId" placeholder="B0001" pattern="B\d{4}" title="Subject ID should be B followed by 4 digits (e.g., B0001)">
             
-            <label for="deviceId">Device ID:</label>
-            <input type="text" id="deviceId" value="scanner-001" placeholder="scanner-001">
-        </div>
-
-        <!-- Download Link -->
-        <div class="button-group">
-            <button class="download-btn" onclick="downloadInstaller()">
-                Download BFD9010
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="ageYears">Age (Years):</label>
+                    <input type="number" id="ageYears" min="0" max="150" placeholder="25">
+                </div>
+                <div style="flex: 1;">
+                    <label for="ageMonths">Age (Months):</label>
+                    <input type="number" id="ageMonths" min="0" max="11" placeholder="6">
+                </div>
+            </div>
+            
+            <label for="imageType">Image Type:</label>
+            <select id="imageType">
+                <option value="L">Lateral</option>
+                <option value="F">Frontal</option>
+            </select>
+            
+            <label for="sex">Sex:</label>
+            <select id="sex">
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+            </select>
         </div>
 
         <!-- Status Messages -->
@@ -264,8 +282,9 @@
     </div>
 
     <script>
-        const API_BASE = () => document.getElementById('apiUrl').value;
-        const DEVICE_ID = () => document.getElementById('deviceId').value;
+        // Hardcoded values
+        const API_BASE = "http://localhost:5000";
+        const DEVICE_ID = "scanner-001";
 
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('status');
@@ -315,7 +334,7 @@
             document.getElementById('deviceInfo').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/fhir+json'
@@ -382,7 +401,7 @@
             document.getElementById('scanResult').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$scan`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$scan`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -401,7 +420,7 @@
 
                 // Find Binary resource with image data
                 const binaryEntry = bundle.entry?.find(e => e.resource?.resourceType === 'Binary');
-                const outcomeEntry = bundle.entry?.find(e => e.resource?.resourceType === 'OperationOutcome');
+                const outcomeEntry = bundle.entry?.find
                 
                 if (binaryEntry && binaryEntry.resource.data) {
                     displayScanResult(binaryEntry.resource);
@@ -427,20 +446,39 @@
             let html = '<h3>Scan Result</h3>';
             html += `<img src="${imageData}" alt="Scanned Image">`;
             html += `<p style="margin-top: 10px; color: #666; font-size: 13px;">Content Type: ${binary.contentType}</p>`;
-            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;">Download Image</button>`;
+            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;
+        }">Download Image</button>`;
             
             resultDiv.innerHTML = html;
             resultDiv.style.display = 'block';
         }
 
         function downloadImage(dataUrl) {
+            // Get form values
+            const subjectId = document.getElementById('subjectId').value;
+            const imageType = document.getElementById('imageType').value;
+            const sex = document.getElementById('sex').value;
+            const years = parseInt(document.getElementById('ageYears').value) || 0;
+            const months = parseInt(document.getElementById('ageMonths').value) || 0;
+            
+            // Validate required fields
+            if (!subjectId || !subjectId.match(/^B\d{4}$/)) {
+                showStatus('Please enter a valid Subject ID (B followed by 4 digits)', 'error');
+                return;
+            }
+            
+            // Format filename according to pattern: B0001LF25y06.png
+            const yearsStr = years.toString().padStart(2, '0');
+            const monthsStr = months.toString().padStart(2, '0');
+            const filename = `${subjectId}${imageType}${sex}${yearsStr}y${monthsStr}m.png`;
+            
             const link = document.createElement('a');
             link.href = dataUrl;
-            link.download = `scan_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showStatus('Image downloaded successfully', 'success');
+            showStatus(`Image downloaded as ${filename}`, 'success');
         }
 
         async function calibrate() {
@@ -449,7 +487,7 @@
             showStatus('Starting calibration... Please wait.', 'info');
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$calibrate`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$calibrate`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -477,7 +515,7 @@
             showStatus('Ejecting film... Please wait.', 'info');
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$eject`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$eject`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -498,11 +536,6 @@
                 hideLoading();
             }
         }
-
-        // Test connection on page load
-        window.addEventListener('load', () => {
-            showStatus('Ready to connect. Click "Device Info" to test connection.', 'info');
-        });
     </script>
 </body>
 </html>
