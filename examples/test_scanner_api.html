@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             padding: 20px;
             display: flex;
@@ -30,7 +30,7 @@
             padding: 30px;
         }
 
-        h1 {
+        h1
             color: #333;
             margin-bottom: 10px;
             font-size: 28px;
@@ -74,7 +74,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             border: none;
             padding: 14px 24px;
@@ -83,12 +83,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
         }
 
         button:active {
@@ -103,12 +103,12 @@
         }
 
         .download-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         }
 
         .download-btn:hover {
-            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
         }
 
         .status {
@@ -142,7 +142,7 @@
 
         .device-info {
             background: #f8f9fa;
-            padding: 20px;
+           
             border-radius: 8px;
             margin-top: 20px;
             display: none;
@@ -189,13 +189,13 @@
         }
 
         .scan-result h3 {
-            color: #333;
+           
             margin-bottom: 10px;
         }
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+           
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -218,7 +218,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>?? BFD9010 Scanner Control</h1>
+        <h1>BFD9010 Scanner Control</h1>
         <p class="subtitle">FHIR API Interface for Vidar Film Scanner</p>
 
         <!-- Configuration Section -->
@@ -233,7 +233,7 @@
         <!-- Download Link -->
         <div class="button-group">
             <button class="download-btn" onclick="downloadInstaller()">
-                ?? Download Scanner Software
+                Download BFD9010
             </button>
         </div>
 
@@ -243,16 +243,16 @@
         <!-- Control Buttons -->
         <div class="button-group">
             <button onclick="getDeviceInfo()">
-                ?? Device Info
+                Device Info
             </button>
             <button onclick="performScan()">
-                ?? Scan
+                Scan
             </button>
             <button onclick="calibrate()">
-                ?? Calibrate
+                Calibrate
             </button>
             <button onclick="eject()">
-                ?? Eject Film
+                Eject Film
             </button>
         </div>
 
@@ -293,11 +293,19 @@
         }
 
         function downloadInstaller() {
-            showStatus('Downloading latest scanner software...', 'info');
-            // Replace with your actual download URL or GitHub release URL
-            const downloadUrl = 'https://github.com/open-ortho/edu.case.BFD9010/releases/latest';
-            window.open(downloadUrl, '_blank');
-            showStatus('Opening download page in new tab', 'success');
+            showStatus('Downloading BFD9010...', 'info');
+            // Download the ZIP file directly
+            const downloadUrl = 'https://wingate.case.edu/static/bfd9010/bfd9010_gui_latest.zip';
+            
+            // Create a temporary link element to trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'bfd9010_gui_latest.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showStatus('Download started', 'success');
         }
 
         async function getDeviceInfo() {
@@ -419,7 +427,7 @@
             let html = '<h3>Scan Result</h3>';
             html += `<img src="${imageData}" alt="Scanned Image">`;
             html += `<p style="margin-top: 10px; color: #666; font-size: 13px;">Content Type: ${binary.contentType}</p>`;
-            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;">?? Download Image</button>`;
+            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;">Download Image</button>`;
             
             resultDiv.innerHTML = html;
             resultDiv.style.display = 'block';
