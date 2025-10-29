@@ -230,7 +230,7 @@
         <!-- Configuration Section -->
         <div class="config-section">
             <label for="subjectId">Subject ID:</label>
-            <input type="text" id="subjectId" placeholder="B0001" pattern="B\d{4}" title="Subject ID should be B followed by 4 digits (B0001-B5887)" oninput="updateFilenamePreview()">
+            <input type="text" id="subjectId" placeholder="B0001" pattern="[A-Z]\d{4}" title="Subject ID should be capital letter followed by 4 digits (B0001-B5887, R0001-R0099)" oninput="updateFilenamePreview()">
             
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
@@ -253,6 +253,10 @@
                 <option value="H">Hand & Wrist</option>
                 <option value="K">Knee</option>
                 <option value="P">Pelvis</option>
+                <option value="OB">Oblique</option>
+                <option value="PX">Panoramic</option>
+                <option value="MD">Occlusal Mandibular</option>
+                <option value="MX">Occlusal Maxillary</option>
             </select>
             
             <label for="sex">Sex:</label>
@@ -264,7 +268,6 @@
 
         <!-- Filename Preview -->
         <div id="filenamePreview" style="margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #dc3545;">
-            Please enter a valid Subject ID (B0001-B9999)
         </div>
 
         <!-- Status Messages -->
@@ -300,6 +303,8 @@
         // Hardcoded values
         const API_BASE = "http://localhost:5000";
         const DEVICE_ID = "scanner-001";
+
+        const subjectIdPattern = document.getElementById('subjectId').getAttribute('pattern');
 
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('status');
@@ -476,12 +481,7 @@
             const months = parseInt(document.getElementById('ageMonths').value) || 0;
             
             // Validate Subject ID format and range
-            if (!subjectId || !subjectId.match(/^B\d{4}$/)) {
-                return null;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
+            if (subjectIdParseStatus(subjectId)) {
                 return null;
             }
             
@@ -491,26 +491,35 @@
             return `${subjectId}${imageType}${sex}${yearsStr}y${monthsStr}m.png`;
         }
 
+        // returns null if good, otherwise returns the string for the error message
+        function subjectIdParseStatus(subjectId) {
+            if (!subjectId) {
+                return 'Please enter a subject ID';
+            }
+            if (!subjectId.match(`^${subjectIdPattern}$`)) {
+                return 'Subject ID must be a capital letter (B, R) followed by 4 digits';
+            }
+            const subjectNumber = parseInt(subjectId.substring(1));
+            if (subjectId[0] === 'B') {
+                if (subjectNumber < 1 || subjectNumber > 5887) {
+                    return 'Subject ID must be between B0001 and B5887';
+                } else return null;
+            } else if (subjectId[0] === 'R') {
+                if (subjectNumber < 1 || subjectNumber > 99) {
+                    return 'Subject ID must be between R0001 and R0099';
+                } else return null;
+            }
+            return 'Unrecognized letter! Subject ID must be in the form B0001-B5887 or R0001-R0099';
+        }
+
         function updateFilenamePreview() {
             const subjectId = document.getElementById('subjectId').value;
             const filename = generateFilename();
             const previewElement = document.getElementById('filenamePreview');
             
-            if (!subjectId) {
-                previewElement.textContent = 'Please enter a Subject ID';
-                previewElement.style.color = '#dc3545';
-                return;
-            }
-            
-            if (!subjectId.match(/^B\d{4}$/)) {
-                previewElement.textContent = 'Subject ID must be B followed by 4 digits';
-                previewElement.style.color = '#dc3545';
-                return;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
-                previewElement.textContent = 'Subject ID must be between B0001 and B5887';
+            let errStatus = subjectIdParseStatus(subjectId);
+            if (errStatus !== null) {
+                previewElement.textContent = errStatus;
                 previewElement.style.color = '#dc3545';
                 return;
             }
@@ -526,30 +535,21 @@
         }
 
         function validateFilename(filename) {
-            // Remove .png extension for validation
-            const baseFilename = filename.replace('.png', '');
-            // Regex pattern: ^(?P<patient_id>B\d{4})(?P<image_type>[A-Z0-9]+)(?P<sex>[MFOU])(?P<years>\d{2,3})y(?P<months>\d{2})m$
-            const regex = /^(B\d{4})([A-Z0-9]+)([MFOU])(\d{2,3})y(\d{2})m$/;
-            return regex.test(baseFilename);
+            const regex = new RegExp(`^(${subjectIdPattern})([A-Z]{1,2})([MF])(\\d{2,3})y(\\d{2})m\.png$`);
+            const execRes = regex.exec(filename);
+            if (!execRes) {
+                return false;
+            }
+            return true;
         }
 
         function downloadImage(dataUrl) {
             const subjectId = document.getElementById('subjectId').value;
             const filename = generateFilename();
             
-            if (!subjectId) {
-                showStatus('Please enter a Subject ID', 'error');
-                return;
-            }
-            
-            if (!subjectId.match(/^B\d{4}$/)) {
-                showStatus('Subject ID must be B followed by 4 digits', 'error');
-                return;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
-                showStatus('Subject ID must be between B0001 and B5887', 'error');
+            const errStatus = subjectIdParseStatus(subjectId);
+            if (errStatus !== null) {
+                showStatus(errStatus, 'error');
                 return;
             }
             
