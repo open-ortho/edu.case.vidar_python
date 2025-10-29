@@ -230,7 +230,7 @@
         <!-- Configuration Section -->
         <div class="config-section">
             <label for="subjectId">Subject ID:</label>
-            <input type="text" id="subjectId" placeholder="B0001" pattern="[A-Z]\d{4}" title="Subject ID should be capital letter followed by 4 digits (B0001-B5887, R0000-R0099)" oninput="updateFilenamePreview()">
+            <input type="text" id="subjectId" placeholder="B0001" pattern="[A-Z]\d{4}" title="Subject ID should be capital letter followed by 4 digits (B0001-B5887, R0001-R0099)" oninput="updateFilenamePreview()">
             
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
@@ -545,8 +545,7 @@
             if (!execRes) {
                 return false;
             }
-            const [_filename, subjectId, imageType, gender, year, month] = execRes;
-            return subjectId !== undefined && imageType !== undefined && gender !== undefined && year !== undefined && month !== undefined;
+            return true;
         }
 
         function downloadImage(dataUrl) {
