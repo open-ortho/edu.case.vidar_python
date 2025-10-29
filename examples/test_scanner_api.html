@@ -481,12 +481,7 @@
             const months = parseInt(document.getElementById('ageMonths').value) || 0;
             
             // Validate Subject ID format and range
-            if (!subjectId || !subjectId.match(`^${subjectIdPattern}$`)) {
-                return null;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
+            if (subjectIdParseStatus(subjectId)) {
                 return null;
             }
             
