@@ -58,6 +58,65 @@
             font-size: 13px;
         }
 
+        .label-with-help {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #495057;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: help;
+            position: relative;
+        }
+
+        .help-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            white-space: pre-line;
+            font-size: 12px;
+            line-height: 1.4;
+            min-width: 220px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .help-icon::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .help-icon:hover::after,
+        .help-icon:hover::before {
+            opacity: 1;
+        }
+
         .config-section input,
         .config-section select {
             width: 100%;
@@ -229,8 +288,11 @@
 
         <!-- Configuration Section -->
         <div class="config-section">
-            <label for="subjectId">Subject ID:</label>
-            <input type="text" id="subjectId" placeholder="B0001" pattern="B\d{4}" title="Subject ID should be B followed by 4 digits (B0001-B5887)" oninput="updateFilenamePreview()">
+            <div class="label-with-help">
+                <label for="subjectId">Subject ID:</label>
+                <span class="help-icon" id="subjectIdHelp" data-tooltip="">?</span>
+            </div>
+            <input type="text" id="subjectId" placeholder="B0001" oninput="updateFilenamePreview()">
             
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
@@ -264,7 +326,7 @@
 
         <!-- Filename Preview -->
         <div id="filenamePreview" style="margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #dc3545;">
-            Please enter a valid Subject ID (B0001-B9999)
+            Please enter a Subject ID
         </div>
 
         <!-- Status Messages -->
@@ -300,6 +362,28 @@
         // Hardcoded values
         const API_BASE = "http://localhost:5000";
         const DEVICE_ID = "scanner-001";
+
+        const ALLOWED_SUBJECT_ID_TYPES = [
+            {
+                label: 'B####',
+                regex: /^B\d{4}$/,
+                min: 1,
+                max: 5887,
+                description: 'Bolton Collection (B0001-B5887)'
+            },
+            {
+                label: 'R###',
+                regex: /^R\d{3}$/,
+                min: 1,
+                max: 99,
+                description: 'Richardson Collection (R001-R099)'
+            },
+            {
+                label: 'L########',
+                regex: /^L\d{8}$/,
+                description: 'Lancaster Collection (L followed by 8 digits)'
+            }
+        ];
 
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('status');
@@ -340,6 +424,41 @@
             document.body.removeChild(link);
             
             showStatus('Download started', 'success');
+        }
+
+        function getSubjectIdHelpText() {
+            const lines = ['Allowed Subject IDs:'];
+            ALLOWED_SUBJECT_ID_TYPES.forEach(type => {
+                lines.push(`- ${type.label}: ${type.description}`);
+            });
+            return lines.join('\n');
+        }
+
+        function getSubjectIdValidation(subjectId) {
+            if (!subjectId) {
+                return { isValid: false, message: 'Please enter a Subject ID' };
+            }
+
+            for (const type of ALLOWED_SUBJECT_ID_TYPES) {
+                if (type.regex.test(subjectId)) {
+                    if (typeof type.min === 'number' && typeof type.max === 'number') {
+                        const subjectNumber = parseInt(subjectId.substring(1), 10);
+                        if (subjectNumber < type.min || subjectNumber > type.max) {
+                            return {
+                                isValid: false,
+                                message: `${type.description} only`
+                            };
+                        }
+                    }
+
+                    return { isValid: true, message: '' };
+                }
+            }
+
+            return {
+                isValid: false,
+                message: 'Subject ID must match an allowed format'
+            };
         }
 
         async function getDeviceInfo() {
@@ -475,17 +594,12 @@
             const years = parseInt(document.getElementById('ageYears').value) || 0;
             const months = parseInt(document.getElementById('ageMonths').value) || 0;
             
-            // Validate Subject ID format and range
-            if (!subjectId || !subjectId.match(/^B\d{4}$/)) {
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
                 return null;
             }
             
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
-                return null;
-            }
-            
-            // Format filename according to pattern: B0001L025y06m.png
+            // Format filename according to pattern: <SubjectID><ImageType><Sex><Years>y<Months>m.png
             const yearsStr = years.toString().padStart(2, '0');
             const monthsStr = months.toString().padStart(2, '0');
             return `${subjectId}${imageType}${sex}${yearsStr}y${monthsStr}m.png`;
@@ -501,16 +615,10 @@
                 previewElement.style.color = '#dc3545';
                 return;
             }
-            
-            if (!subjectId.match(/^B\d{4}$/)) {
-                previewElement.textContent = 'Subject ID must be B followed by 4 digits';
-                previewElement.style.color = '#dc3545';
-                return;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
-                previewElement.textContent = 'Subject ID must be between B0001 and B5887';
+
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
+                previewElement.textContent = validation.message || 'Subject ID is invalid';
                 previewElement.style.color = '#dc3545';
                 return;
             }
@@ -528,8 +636,8 @@
         function validateFilename(filename) {
             // Remove .png extension for validation
             const baseFilename = filename.replace('.png', '');
-            // Regex pattern: ^(?P<patient_id>B\d{4})(?P<image_type>[A-Z0-9]+)(?P<sex>[MFOU])(?P<years>\d{2,3})y(?P<months>\d{2})m$
-            const regex = /^(B\d{4})([A-Z0-9]+)([MFOU])(\d{2,3})y(\d{2})m$/;
+            // Regex pattern: ^(?P<patient_id>(B\d{4}|R\d{3}|L\d{8}))(?P<image_type>[A-Z0-9]+)(?P<sex>[MFOU])(?P<years>\d{2,3})y(?P<months>\d{2})m$
+            const regex = /^(B\d{4}|R\d{3}|L\d{8})([A-Z0-9]+)([MFOU])(\d{2,3})y(\d{2})m$/;
             return regex.test(baseFilename);
         }
 
@@ -541,15 +649,10 @@
                 showStatus('Please enter a Subject ID', 'error');
                 return;
             }
-            
-            if (!subjectId.match(/^B\d{4}$/)) {
-                showStatus('Subject ID must be B followed by 4 digits', 'error');
-                return;
-            }
-            
-            const subjectNumber = parseInt(subjectId.substring(1));
-            if (subjectNumber < 1 || subjectNumber > 5887) {
-                showStatus('Subject ID must be between B0001 and B5887', 'error');
+
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
+                showStatus(validation.message || 'Subject ID is invalid', 'error');
                 return;
             }
             
@@ -627,6 +730,14 @@
                 hideLoading();
             }
         }
+
+        window.addEventListener('load', () => {
+            const subjectIdHelp = document.getElementById('subjectIdHelp');
+            if (subjectIdHelp) {
+                subjectIdHelp.dataset.tooltip = getSubjectIdHelpText();
+            }
+            updateFilenamePreview();
+        });
     </script>
 </body>
 </html>
