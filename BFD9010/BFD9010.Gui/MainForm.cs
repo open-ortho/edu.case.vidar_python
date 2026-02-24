@@ -37,6 +37,8 @@ namespace BFD9010.Gui
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
             this.BackColor = Color.White;
+            this.Opacity = 0;
+            this.ShowInTaskbar = false;
             
             // Set the form icon
             try
@@ -228,6 +230,7 @@ namespace BFD9010.Gui
 
                 if (initialized)
                 {
+                    ShowUi();
                     UpdateStatus("Ready", Color.Green);
                     messageLabel.Text = "Scanner initialized successfully!";
                     
@@ -256,6 +259,18 @@ namespace BFD9010.Gui
                 urlLinkLabel.Enabled = false;
                 ShowStartupError(ex.Message);
             }
+        }
+
+        private void ShowUi()
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)ShowUi);
+                return;
+            }
+
+            this.ShowInTaskbar = true;
+            this.Opacity = 1;
         }
 
         private void ShowStartupError(string details)
