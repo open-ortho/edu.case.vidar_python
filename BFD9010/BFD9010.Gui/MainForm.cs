@@ -4,6 +4,7 @@ using BFD9010.Scanner;
 using System.Diagnostics;
 using System.Reflection;
 
+// GUI status window for scanner and FHIR API server.
 namespace BFD9010.Gui
 {
     public partial class MainForm : Form

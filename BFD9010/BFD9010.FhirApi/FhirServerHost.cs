@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+// Hosts the FHIR API web server and exposes the shared ScannerService instance.
 namespace BFD9010.FhirApi;
 
 /// <summary>

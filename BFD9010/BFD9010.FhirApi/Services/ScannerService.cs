@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using static BFD9010.Scanner.Scanner;
 using static BFD9010.Scanner.VscsiTypes;
 
+// Provides scanner operations, status transitions, and recovery behavior.
 namespace BFD9010.FhirApi.Services;
 
 public enum ScannerStatus

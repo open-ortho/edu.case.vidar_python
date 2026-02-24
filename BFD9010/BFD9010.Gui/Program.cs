@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 
+// Application entry point and startup error reporting.
 namespace BFD9010.Gui
 {
     internal static class Program
