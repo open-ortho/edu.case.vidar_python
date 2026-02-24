@@ -13,6 +13,7 @@ namespace BFD9010.Gui
         private FhirServerHost? _serverHost;
         private Label statusLabel = null!;
         private Label messageLabel = null!;
+        private Label configLabel = null!;
         private LinkLabel urlLinkLabel = null!;
         private Label apiLabel = null!;
 
@@ -27,7 +28,7 @@ namespace BFD9010.Gui
         private void InitializeComponent()
         {
             this.Text = "BFD9010 Scanner Server";
-            this.Size = new Size(400, 350);
+            this.Size = new Size(400, 380);
             this.MinimizeBox = true;
             this.MaximizeBox = false;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -120,17 +121,29 @@ namespace BFD9010.Gui
             {
                 Text = "Starting scanner service...",
                 Location = new Point(10, 195),
-                Size = new Size(370, 60),
+                Size = new Size(370, 45),
                 Font = new Font("Segoe UI", 10F),
                 TextAlign = ContentAlignment.TopCenter
             };
             this.Controls.Add(messageLabel);
 
+            // Config Label (DPI/Bit Depth)
+            configLabel = new Label
+            {
+                Text = "Scan settings: --",
+                Location = new Point(10, 240),
+                Size = new Size(370, 35),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.Gray,
+                TextAlign = ContentAlignment.TopCenter
+            };
+            this.Controls.Add(configLabel);
+
             // URL Link Label
             urlLinkLabel = new LinkLabel
             {
                 Text = "Loading...",
-                Location = new Point(10, 265),
+                Location = new Point(10, 280),
                 Size = new Size(370, 30),
                 Font = new Font("Segoe UI", 11F, FontStyle.Underline),
                 TextAlign = ContentAlignment.MiddleCenter,
@@ -145,7 +158,7 @@ namespace BFD9010.Gui
             apiLabel = new Label
             {
                 Text = "",
-                Location = new Point(10, 305),
+                Location = new Point(10, 315),
                 Size = new Size(370, 40),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.Gray,
@@ -179,7 +192,15 @@ namespace BFD9010.Gui
             try
             {
                 // Load configuration to display the web URL
+                string resolvedConfigPath = _configPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scan_config.ini");
+                bool configExists = File.Exists(resolvedConfigPath);
                 var config = ScanConfig.Load(_configPath);
+
+                string settingsText = $"Scan settings: {config.Offset2_DPI_X} DPI / {config.Offset0_BitDepth}-bit";
+                string configText = configExists
+                    ? $"Config: {resolvedConfigPath}"
+                    : $"Config: defaults (created {resolvedConfigPath})";
+                configLabel.Text = $"{settingsText}\n{configText}";
 
                 // Create and start the server host
                 _serverHost = new FhirServerHost(_configPath);
