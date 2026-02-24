@@ -30,8 +30,9 @@ namespace BFD9010.Gui
             this.Text = "BFD9010 Scanner Server";
             this.Size = new Size(400, 380);
             this.MinimizeBox = true;
-            this.MaximizeBox = false;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = true;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MinimumSize = new Size(360, 320);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
             this.BackColor = Color.White;
@@ -88,7 +89,8 @@ namespace BFD9010.Gui
                 Size = new Size(370, 25),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 102, 204),
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(projectNameLabel);
 
@@ -100,7 +102,8 @@ namespace BFD9010.Gui
                 Size = new Size(370, 20),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.Gray,
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(versionLabel);
 
@@ -112,7 +115,8 @@ namespace BFD9010.Gui
                 Size = new Size(370, 30),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = Color.Orange,
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(statusLabel);
 
@@ -123,7 +127,8 @@ namespace BFD9010.Gui
                 Location = new Point(10, 195),
                 Size = new Size(370, 45),
                 Font = new Font("Segoe UI", 10F),
-                TextAlign = ContentAlignment.TopCenter
+                TextAlign = ContentAlignment.TopCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(messageLabel);
 
@@ -135,7 +140,8 @@ namespace BFD9010.Gui
                 Size = new Size(370, 35),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.Gray,
-                TextAlign = ContentAlignment.TopCenter
+                TextAlign = ContentAlignment.TopCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(configLabel);
 
@@ -149,7 +155,8 @@ namespace BFD9010.Gui
                 TextAlign = ContentAlignment.MiddleCenter,
                 LinkColor = Color.Blue,
                 VisitedLinkColor = Color.Purple,
-                ActiveLinkColor = Color.Red
+                ActiveLinkColor = Color.Red,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             urlLinkLabel.LinkClicked += UrlLinkLabel_LinkClicked;
             this.Controls.Add(urlLinkLabel);
@@ -162,7 +169,8 @@ namespace BFD9010.Gui
                 Size = new Size(370, 40),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.Gray,
-                TextAlign = ContentAlignment.TopCenter
+                TextAlign = ContentAlignment.TopCenter,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             this.Controls.Add(apiLabel);
         }

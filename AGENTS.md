@@ -18,7 +18,7 @@ Build (dotnet, cross-platform):
 dotnet build BFD9010/BFD9010.sln --configuration Release
 ```
 
-Build GUI publish (needed for `bfd9010_fhir32.exe`):
+Build GUI publish (needed for `bfd9010.exe`):
 
 ```bash
 dotnet publish BFD9010/BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
