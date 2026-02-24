@@ -12,7 +12,7 @@ This software reverse-engineers the USB protocol to enable direct control of the
 ### For End Users (Windows)
 
 1. **Download** the latest release from the releases page
-2. **Run** `bfd9010_fhir32.exe` (GUI application)
+2. **Run** `bfd9010.exe` (GUI application)
    - The scanner will initialize automatically
    - A small window will appear showing status
    - The FHIR API server starts on `http://localhost:5000`
@@ -36,7 +36,7 @@ cd BFD9010.Cli/bin/Release/net8.0
 ./bfd9010.exe
 ```
 
-### 2. bfd9010_fhir32 (GUI + API Server)
+### 2. bfd9010 (GUI + API Server)
 Windows Forms application that:
 - Shows scanner status in always-on-top window
 - Hosts FHIR REST API on port 5000
@@ -99,4 +99,3 @@ For more details on the reverse engineering process, see [RE_Writeup.md](BFD9010
 ## Format
 
 It seems like the Vidar Scanner operates over USB, but the protocol used is SCSI. Since these scanners have been around for a while, it is very likely they were once SCSI, and then they moved to the USB at a hardware level, and kept the SCSI software, which makes sense.
-

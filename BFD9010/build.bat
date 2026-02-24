@@ -41,8 +41,8 @@ echo Build Successful!
 echo ================================================
 echo.
 echo Output locations:
-echo   CLI:       BFD9010.Cli\bin\Release\net8.0\bfd9010.exe
-echo   GUI:       BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe
+echo   CLI:       BFD9010.Cli\bin\Release\net8.0\bfd9010_cli.exe
+echo   GUI:       BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe
 echo   Libraries: BFD9010.Scanner\bin\Release\net8.0\*.dll
 echo              BFD9010.FhirApi\bin\Release\net8.0\*.dll
 echo.
@@ -54,8 +54,8 @@ echo To create distribution package:
 echo   - package.bat
 echo.
 echo To use custom config:
+echo   - bfd9010_cli.exe --config path\to\config.ini
 echo   - bfd9010.exe --config path\to\config.ini
-echo   - bfd9010_fhir32.exe --config path\to\config.ini
 echo.
 pause
 exit /b 0

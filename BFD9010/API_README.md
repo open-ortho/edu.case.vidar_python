@@ -42,8 +42,8 @@ dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 ```
 
 ### Output Locations
-- CLI: `BFD9010.Cli/bin/Release/net8.0/bfd9010.exe`
-- GUI: `BFD9010.Gui/bin/Release/net8.0-windows/publish/bfd9010_fhir32.exe`
+- CLI: `BFD9010.Cli/bin/Release/net8.0/bfd9010_cli.exe`
+- GUI: `BFD9010.Gui/bin/Release/net8.0-windows/publish/bfd9010.exe`
 - FHIR API Library: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.dll`
 
 **Note:** The GUI project requires `dotnet publish` to generate the executable. The FHIR API is now a library (DLL) only.
@@ -60,7 +60,7 @@ This bundles `Vscsi32.dll` into the EXE; native libraries are extracted to a use
 ### CLI Application
 ```bash
 cd BFD9010.Cli/bin/Release/net8.0
-./bfd9010.exe [--config path/to/config.ini]
+./bfd9010_cli.exe [--config path/to/config.ini]
 ```
 
 The CLI provides these commands:
@@ -77,7 +77,7 @@ The CLI provides these commands:
 ### GUI Application (Windows only)
 ```bash
 cd BFD9010.Gui/bin/Release/net8.0-windows/publish
-./bfd9010_fhir32.exe [--config path/to/config.ini]
+./bfd9010.exe [--config path/to/config.ini]
 ```
 
 The GUI will:
@@ -97,8 +97,8 @@ For single-file releases, the default base directory is a user temp folder, so u
 
 You can specify a custom configuration file using the `--config` command-line argument:
 ```bash
-./bfd9010.exe --config /path/to/custom_config.ini
-./bfd9010_fhir32.exe --config C:\Configs\scanner_config.ini
+./bfd9010_cli.exe --config /path/to/custom_config.ini
+./bfd9010.exe --config C:\Configs\scanner_config.ini
 ```
 
 ### Configuration File Structure

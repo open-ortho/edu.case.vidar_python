@@ -41,7 +41,7 @@ This guide covers how to deploy and test the BFD9010 scanner software on a Windo
 
 ### Option 1: GUI Application (for Workstation and Production use)
 
-**File:** `bfd9010_fhir32.exe`
+**File:** `bfd9010.exe`
 
 **Features:**
 
@@ -60,12 +60,12 @@ start-gui.bat
 Or directly:
 
 ```batch
-BFD9010.Gui\bin\Release\net8.0-windows\bfd9010_fhir32.exe
+BFD9010.Gui\bin\Release\net8.0-windows\bfd9010.exe
 ```
 
 ### Option 2: CLI Application
 
-**File:** `bfd9010.exe`
+**File:** `bfd9010_cli.exe`
 
 **Features:**
 
@@ -83,7 +83,7 @@ start-cli.bat
 Or directly:
 
 ```batch
-BFD9010.Cli\bin\Release\net8.0\bfd9010.exe
+BFD9010.Cli\bin\Release\net8.0\bfd9010_cli.exe
 ```
 
 ## Testing the API
@@ -244,7 +244,7 @@ The API server logs to the console. To enable detailed logging, edit `appsetting
 The CLI application outputs directly to the console. Redirect to a file if needed:
 
 ```batch
-bfd9010.exe > scanner.log 2>&1
+bfd9010_cli.exe > scanner.log 2>&1
 ```
 
 ## Deployment Checklist

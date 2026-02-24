@@ -24,8 +24,8 @@ The BFD9010 scanner software is built on .NET 8.0 and provides:
 This will build all projects in Release configuration and prepare executables for both CLI and GUI.
 
 **Output locations:**
-- CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010.exe`
-- GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe`
+- CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010_cli.exe`
+- GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe`
 - Libraries: `BFD9010.Scanner\bin\Release\net8.0\*.dll` and `BFD9010.FhirApi\bin\Release\net8.0\*.dll`
 
 ### Running the Application
@@ -56,8 +56,8 @@ start-cli.bat
 
 **Command-line options (both CLI and GUI):**
 ```
+bfd9010_cli.exe --config path\to\config.ini
 bfd9010.exe --config path\to\config.ini
-bfd9010_fhir32.exe --config path\to\config.ini
 ```
 
 ### Creating Distribution Packages
@@ -263,8 +263,8 @@ For single-file releases, the default base directory is a user temp folder, so u
 
 You can specify a custom configuration file using the `--config` command-line argument:
 ```bash
-bfd9010.exe --config /path/to/custom_config.ini
-bfd9010_fhir32.exe --config C:\Configs\scanner_config.ini
+bfd9010_cli.exe --config /path/to/custom_config.ini
+bfd9010.exe --config C:\Configs\scanner_config.ini
 ```
 
 ### Configuration File Structure
