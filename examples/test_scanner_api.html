@@ -413,12 +413,12 @@
         function downloadInstaller() {
             showStatus('Downloading BFD9010...', 'info');
             // Download the ZIP file directly
-            const downloadUrl = 'https://wingate.case.edu/static/bfd9010/bfd9010_gui_latest.zip';
+            const downloadUrl = 'https://github.com/open-ortho/edu.case.BFD9010/releases/latest/download/bfd9010.zip';
             
             // Create a temporary link element to trigger download
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.download = 'bfd9010_gui_latest.zip';
+            link.download = 'bfd9010.zip';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

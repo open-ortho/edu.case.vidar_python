@@ -73,19 +73,23 @@ REM Remove PDB files (debug symbols) from publish directories
 if exist "%CLI_PUBDIR%\*.pdb" del /f "%CLI_PUBDIR%\*.pdb"
 if exist "%GUI_PUBDIR%\*.pdb" del /f "%GUI_PUBDIR%\*.pdb"
 
-REM Create ZIP packages
-set "CLI_ZIP=%ARTIFACTS%\bfd9010_cli_v!VER_TRIMMED!.zip"
-set "GUI_ZIP=%ARTIFACTS%\bfd9010_gui_v!VER_TRIMMED!.zip"
+REM Create combined ZIP package
+set "BUNDLE_DIR=%ARTIFACTS%\bundle"
+set "BUNDLE_ZIP=%ARTIFACTS%\bfd9010.zip"
 
-if exist "%CLI_ZIP%" del /f "%CLI_ZIP%"
-if exist "%GUI_ZIP%" del /f "%GUI_ZIP%"
+if exist "%BUNDLE_DIR%" rmdir /s /q "%BUNDLE_DIR%"
+mkdir "%BUNDLE_DIR%"
 
-echo Creating CLI package...
-powershell -Command "Compress-Archive -Path '%CLI_PUBDIR%\*' -DestinationPath '%CLI_ZIP%' -Force"
+copy /y "%CLI_PUBDIR%\bfd9010_cli.exe" "%BUNDLE_DIR%\bfd9010_cli.exe"
 if %ERRORLEVEL% NEQ 0 goto :error
 
-echo Creating GUI package...
-powershell -Command "Compress-Archive -Path '%GUI_PUBDIR%\*' -DestinationPath '%GUI_ZIP%' -Force"
+copy /y "%GUI_PUBDIR%\bfd9010.exe" "%BUNDLE_DIR%\bfd9010.exe"
+if %ERRORLEVEL% NEQ 0 goto :error
+
+if exist "%BUNDLE_ZIP%" del /f "%BUNDLE_ZIP%"
+
+echo Creating combined package...
+powershell -Command "Compress-Archive -Path '%BUNDLE_DIR%\*' -DestinationPath '%BUNDLE_ZIP%' -Force"
 if %ERRORLEVEL% NEQ 0 goto :error
 
 echo.
@@ -93,15 +97,15 @@ echo ================================================
 echo Build and Package Successful!
 echo ================================================
 echo.
-echo Distribution packages created:
-echo   CLI: %ARTIFACTS%\bfd9010_cli_v!VER_TRIMMED!.zip
-echo   GUI: %ARTIFACTS%\bfd9010_gui_v!VER_TRIMMED!.zip
+echo Distribution package created:
+echo   %ARTIFACTS%\bfd9010.zip
 echo.
-echo Each package includes:
-echo   - Executable (single-file, self-contained)
-echo   - All dependencies (native libs extract to user temp at runtime)
-echo   - Vscsi32.dll (scanner interop library)
-echo   - BFD9000_logo_white.ico (application icon)
+echo Package includes:
+echo   - bfd9010.exe (GUI)
+echo   - bfd9010_cli.exe (CLI)
+echo   - Executables are single-file and self-contained
+echo   - Native libraries extract to user temp at runtime
+echo   - Vscsi32.dll is bundled in the EXE
 echo.
 echo NOTE: scan_config.ini is NOT included in packages.
 echo       On first run, a default config will be created with:

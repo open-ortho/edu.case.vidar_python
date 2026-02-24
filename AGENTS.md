@@ -53,7 +53,7 @@ BFD9010\package.bat
 Notes:
 
 - `package.bat` creates single-file, self-contained EXEs and bundles `Vscsi32.dll` (native libs extract to user temp at runtime).
-- Output ZIPs go to `BFD9010\artifacts\`.
+- Output ZIP goes to `BFD9010\artifacts\bfd9010.zip`.
 
 ## Tests
 

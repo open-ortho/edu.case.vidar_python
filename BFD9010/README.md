@@ -70,9 +70,8 @@ package.bat
 This will:
 - Build both CLI and GUI as single-file, self-contained executables (no .NET runtime required on target machine)
 - Bundle all dependencies, including `Vscsi32.dll` (extracted to a user temp folder at runtime)
-- Create ZIP files in the `artifacts\` directory:
-  - `bfd9010_cli_v<version>.zip` - CLI package
-  - `bfd9010_gui_v<version>.zip` - GUI package
+- Create a combined ZIP in the `artifacts\` directory:
+  - `bfd9010.zip` - contains `bfd9010.exe` (GUI) and `bfd9010_cli.exe` (CLI)
 
 **Note:** Add `artifacts/` to your `.gitignore` to exclude generated packages from version control.
 **Driver requirement:** The Vidar driver stack must be installed on the machine for the scanner to be detected.
@@ -147,7 +146,7 @@ Understanding the difference between development and production builds is essent
     - Builds single-file, self-contained executables
     - Includes .NET runtime (no installation needed)
     - Bundles all dependencies including `Vscsi32.dll` (extracted to temp at runtime)
-   - Creates versioned ZIP files in `artifacts\` directory
+    - Creates `bfd9010.zip` in the `artifacts\` directory
    - Ready for distribution to end users
 
 **How to run production builds:**
@@ -162,7 +161,7 @@ start-gui.bat
 ```
 
 After packaging with `package.bat`:
-- Extract the ZIP file from `artifacts\` directory
+- Extract `bfd9010.zip` from `artifacts\` directory
 - Run the executable directly (no installation needed)
 
 **Production mode features:**
@@ -214,8 +213,8 @@ package.bat
 
 # 4. Test the production package
 cd artifacts
-# Extract bfd9010_cli_v1.0.0.zip or bfd9010_gui_v1.0.0.zip
-# Run the extracted executable
+# Extract bfd9010.zip
+# Run bfd9010.exe (GUI) or bfd9010_cli.exe (CLI)
 
 # 5. Distribute ZIP file to end users
 ```
