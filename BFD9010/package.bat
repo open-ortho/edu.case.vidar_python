@@ -69,6 +69,10 @@ REM This ensures packages use default settings (16-bit, 300 DPI)
 if exist "%CLI_PUBDIR%\scan_config.ini" del /f "%CLI_PUBDIR%\scan_config.ini"
 if exist "%GUI_PUBDIR%\scan_config.ini" del /f "%GUI_PUBDIR%\scan_config.ini"
 
+REM Remove PDB files (debug symbols) from publish directories
+if exist "%CLI_PUBDIR%\*.pdb" del /f "%CLI_PUBDIR%\*.pdb"
+if exist "%GUI_PUBDIR%\*.pdb" del /f "%GUI_PUBDIR%\*.pdb"
+
 REM Create ZIP packages
 set "CLI_ZIP=%ARTIFACTS%\bfd9010_cli_v!VER_TRIMMED!.zip"
 set "GUI_ZIP=%ARTIFACTS%\bfd9010_gui_v!VER_TRIMMED!.zip"
