@@ -8,6 +8,7 @@ namespace BFD9010.Gui
     public partial class MainForm : Form
     {
         private const string LogoResourceName = "BFD9010.Gui.Resources.BFD9000_logo_white.png";
+        private const string IconResourceName = "BFD9010.Gui.Resources.BFD9000_logo_white.ico";
         
         private readonly string? _configPath;
         private FhirServerHost? _serverHost;
@@ -40,10 +41,21 @@ namespace BFD9010.Gui
             // Set the form icon
             try
             {
-                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BFD9000_logo_white.ico");
-                if (File.Exists(iconPath))
+                var assembly = Assembly.GetExecutingAssembly();
+                using (var stream = assembly.GetManifestResourceStream(IconResourceName))
                 {
-                    this.Icon = new Icon(iconPath);
+                    if (stream != null)
+                    {
+                        this.Icon = new Icon(stream);
+                    }
+                    else
+                    {
+                        string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BFD9000_logo_white.ico");
+                        if (File.Exists(iconPath))
+                        {
+                            this.Icon = new Icon(iconPath);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

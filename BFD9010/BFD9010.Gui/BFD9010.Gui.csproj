@@ -13,10 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\..\documentation\images\BFD9000_logo_white.ico">
-      <Link>BFD9000_logo_white.ico</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.ico">
+      <Link>Resources\BFD9000_logo_white.ico</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
