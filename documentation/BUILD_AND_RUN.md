@@ -5,6 +5,7 @@ This repository contains the C# implementation of the BFD9010 scanner control so
 ## Project Overview
 
 The BFD9010 scanner software is built on .NET 8.0 and provides:
+
 - **Command-Line Interface (CLI)** - Interactive menu-driven scanner control with optional FHIR API server
 - **Graphical User Interface (GUI)** - Windows Forms application with automatic FHIR API server startup
 - **FHIR REST API** - Shared library providing FHIR-compliant REST API for web-based scanner control
@@ -13,61 +14,38 @@ The BFD9010 scanner software is built on .NET 8.0 and provides:
 ## Quick Start
 
 ### Building the Project
-   - The Vidar driver stack is required for hardware access (installed via the vendor driver package).
+
+- The Vidar driver stack is required for hardware access (installed via the vendor driver package).
 
 1. Ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed
 2. Open a Command Prompt in the project directory (where `BFD9010.sln` is located)
 3. Run:
-   ```
+
+   ``` powershell
    build.bat
    ```
+
 This will build all projects in Release configuration and prepare executables for both CLI and GUI.
 
 **Output locations:**
+
 - CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010_cli.exe`
 - GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe`
 - Libraries: `BFD9010.Scanner\bin\Release\net8.0\*.dll` and `BFD9010.FhirApi\bin\Release\net8.0\*.dll`
 
 ### Running the Application
 
-**Option 1: GUI Application (Recommended for Web Integration)**
-```
-start-gui.bat
-```
-- Launches the Windows Forms GUI
-- Automatically starts FHIR API server on http://localhost:5000
-- Displays scanner status in a small always-on-top window
-- Shows a clickable link to the web application (configured via `WebAppUrl` in INI file)
-- Best for production use with web-based scanner control
-
-**Option 2: CLI Application**
-```
-start-cli.bat
-```
-- Launches the interactive command-line interface
-- Provides manual control options via keyboard menu:
-  - `[C]` Calibrate - Calibrate the digitizer
-  - `[E]` Eject - Eject the film from the digitizer
-  - `[S]` Scan - Initiate a scan using parameters from scan_config.ini
-  - `[F]` FHIR API - Start FHIR REST API server on http://localhost:5000
-  - `[R]` Restart - Re-detect scanner and reload configuration
-  - `[Q]` Quit - Exit the application
-- Best for testing and manual scanner control
-
-**Command-line options (both CLI and GUI):**
-```
-bfd9010_cli.exe --config path\to\config.ini
-bfd9010.exe --config path\to\config.ini
-```
 
 ### Creating Distribution Packages
 
 To create self-contained ZIP packages for distribution:
-```
+
+``` powershell
 package.bat
 ```
 
 This will:
+
 - Build both CLI and GUI as single-file, self-contained executables (no .NET runtime required on target machine)
 - Bundle all dependencies, including `Vscsi32.dll` (extracted to a user temp folder at runtime)
 - Create a combined ZIP in the `artifacts\` directory:
@@ -83,6 +61,7 @@ Understanding the difference between development and production builds is essent
 ### Development Mode (For Developers)
 
 **Use development mode when:**
+
 - Writing and testing code
 - Debugging issues
 - Testing API changes with local HTML files
@@ -91,12 +70,15 @@ Understanding the difference between development and production builds is essent
 **How to run in development mode:**
 
 1. **Using dotnet run** (recommended):
-   ```bash
+
+   ```powershell
    cd BFD9010.Cli
    dotnet run
    ```
+
    or
-   ```bash
+
+   ```powershell
    cd BFD9010.Gui
    dotnet run
    ```
@@ -107,7 +89,8 @@ Understanding the difference between development and production builds is essent
    - Press **F5** to run with debugging, or **Ctrl+F5** to run without debugging
 
 **Development mode features:**
-- Environment is set to `Development` (via `launchSettings.json`)
+
+- Environment is set to `Development` (via `launchSettings.json` files in each project: `BFD9010.Cli/Properties/launchSettings.json` and `BFD9010.Gui/Properties/launchSettings.json`)
 - CORS allows **any origin** (including `file://` protocol for local HTML testing)
 - Swagger UI is enabled at `http://localhost:5000/swagger`
 - Detailed error messages and logging
@@ -115,6 +98,7 @@ Understanding the difference between development and production builds is essent
 - No need for self-contained publishing
 
 **Benefits:**
+
 - ? Fast iteration - changes compile quickly
 - ? Easy debugging with breakpoints
 - ? Test HTML files directly from disk (`file://`)
@@ -124,6 +108,7 @@ Understanding the difference between development and production builds is essent
 ### Production Mode (For Deployment)
 
 **Use production mode when:**
+
 - Creating packages for end users
 - Deploying to production environments
 - Building final releases
@@ -132,17 +117,21 @@ Understanding the difference between development and production builds is essent
 **How to build for production:**
 
 1. **Build only** (faster, requires .NET runtime on target):
+
    ```bash
    build.bat
    ```
+
    - Builds in Release configuration
    - Outputs to `bin\Release\net8.0\` folders
    - Requires .NET 8.0 Runtime on target machine
 
 2. **Package for distribution** (recommended):
+
    ```bash
    package.bat
    ```
+
     - Builds single-file, self-contained executables
     - Includes .NET runtime (no installation needed)
     - Bundles all dependencies including `Vscsi32.dll` (extracted to temp at runtime)
@@ -152,19 +141,24 @@ Understanding the difference between development and production builds is essent
 **How to run production builds:**
 
 After building with `build.bat`:
+
 ```bash
 start-cli.bat
 ```
+
 or
+
 ```bash
 start-gui.bat
 ```
 
 After packaging with `package.bat`:
+
 - Extract `bfd9010.zip` from `artifacts\` directory
 - Run the executable directly (no installation needed)
 
 **Production mode features:**
+
 - Environment is set to `Production`
 - CORS restricted to configured origins only (see `scan_config.ini`)
 - Swagger UI disabled for security
@@ -172,6 +166,7 @@ After packaging with `package.bat`:
 - Self-contained deployment (when using `package.bat`)
 
 **Benefits:**
+
 - ? Enhanced security (CORS restrictions, no Swagger)
 - ? Optimized performance
 - ? Self-contained packages (no .NET installation required)
@@ -194,6 +189,7 @@ After packaging with `package.bat`:
 ### Workflow Examples
 
 **Typical Development Workflow:**
+
 ```bash
 # 1. Make code changes in your editor/IDE
 # 2. Run in development mode
@@ -205,6 +201,7 @@ dotnet run
 ```
 
 **Typical Production Workflow:**
+
 ```bash
 # 1. Finalize and test all code changes
 # 2. Update version in Directory.Build.props
@@ -222,6 +219,7 @@ cd artifacts
 ### Testing Web Integration
 
 **In Development:**
+
 ```bash
 # 1. Start the API server in development mode
 cd BFD9010.Cli
@@ -232,6 +230,7 @@ dotnet run
 ```
 
 **In Production:**
+
 ```bash
 # 1. Package the application
 package.bat
@@ -261,59 +260,24 @@ Scanner settings are loaded from `scan_config.ini` in the working directory. If 
 For single-file releases, the default base directory is a user temp folder, so use `--config` to keep settings in a stable location.
 
 You can specify a custom configuration file using the `--config` command-line argument:
+
 ```bash
 bfd9010_cli.exe --config /path/to/custom_config.ini
 bfd9010.exe --config C:\Configs\scanner_config.ini
 ```
 
-### Configuration File Structure
-
-Example `scan_config.ini`:
-```ini
-[ScanParameters]
-
-# Bit depth (8 or 16)
-BitDepth = 16
-
-# DPI resolution (tested DPIs: 75, 150, 300)
-DPI = 300
-
-# Output options
-# OutputPath: directory where image files will be written
-OutputPath = ~\Desktop\VidarScans
-
-# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}
-OutputPrefix = ${DPI}DPI_${BIT}BIT
-
-# Web API settings
-# WebAppUrl: URL of the web application users should navigate to for scanning
-WebAppUrl = https://wingate.case.edu/bfd9000/
-
-# CorsOrigin: CORS origin(s) to allow API access from (comma-separated for multiple)
-CorsOrigin = https://wingate.case.edu
-```
-
-### Configuration Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `BitDepth` | integer | 16 | Scan bit depth (8 or 16) |
-| `DPI` | integer | 300 | Scan resolution in dots per inch (tested: 75, 150, 300) |
-| `OutputPath` | string | `~\Desktop\VidarScans` | Directory for saving scanned images (supports ~ for home directory) |
-| `OutputPrefix` | string | `${DPI}DPI_${BIT}BIT` | Filename prefix template (tokens: ${DPI}, ${BIT}) |
-| `WebAppUrl` | string | `https://wingate.case.edu/bfd9000/` | URL displayed in GUI for users to access web interface |
-| `CorsOrigin` | string | `https://wingate.case.edu` | Allowed CORS origin(s), comma-separated for multiple origins |
-
 ### CORS Configuration
 
-The `CorsOrigin` setting controls which web origins can make API requests to the scanner. 
+The `CorsOrigin` setting controls which web origins can make API requests to the scanner.
 
 **Single origin:**
+
 ```ini
 CorsOrigin = https://wingate.case.edu
 ```
 
 **Multiple origins:**
+
 ```ini
 CorsOrigin = https://wingate.case.edu, https://localhost:3000, https://test.example.com
 ```
