@@ -15,6 +15,7 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
     private Task? _serverTask;
     private readonly string? _configPath;
     private bool _disposed;
+    private Services.ScannerService? _scannerService;
 
     public FhirServerHost(string? configPath = null)
     {
@@ -43,6 +44,8 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
 
         // Build the app
         var app = builder.Build();
+
+        _scannerService = app.Services.GetRequiredService<Services.ScannerService>();
 
         // Configure FHIR endpoints using shared configuration
         FhirServerConfiguration.ConfigureEndpoints(app);
@@ -74,6 +77,8 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
 
         return initialized;
     }
+
+    public Services.ScannerService? ScannerService => _scannerService;
 
     /// <summary>
     /// Stop the FHIR API server

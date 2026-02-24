@@ -1,4 +1,5 @@
 using BFD9010.FhirApi;
+using BFD9010.FhirApi.Services;
 using BFD9010.Scanner;
 using System.Diagnostics;
 using System.Reflection;
@@ -17,6 +18,8 @@ namespace BFD9010.Gui
         private Label configLabel = null!;
         private LinkLabel urlLinkLabel = null!;
         private Label apiLabel = null!;
+        private ScannerService? _scannerService;
+        private bool _statusSubscribed;
 
         public MainForm(string? configPath = null)
         {
@@ -227,6 +230,7 @@ namespace BFD9010.Gui
                 // Create and start the server host
                 _serverHost = new FhirServerHost(_configPath);
                 bool initialized = await _serverHost.StartAsync();
+                HookStatusUpdates();
 
                 if (initialized)
                 {
@@ -258,6 +262,68 @@ namespace BFD9010.Gui
                 urlLinkLabel.Text = "Service failed to start";
                 urlLinkLabel.Enabled = false;
                 ShowStartupError(ex.Message);
+            }
+        }
+
+        private void HookStatusUpdates()
+        {
+            if (_statusSubscribed || _serverHost == null)
+            {
+                return;
+            }
+
+            _scannerService = _serverHost.ScannerService;
+            if (_scannerService == null)
+            {
+                return;
+            }
+
+            _scannerService.StatusChanged += OnStatusChanged;
+            _statusSubscribed = true;
+            ApplyStatus(_scannerService.CurrentStatus, null);
+        }
+
+        private void OnStatusChanged(ScannerStatus status, string? details)
+        {
+            ApplyStatus(status, details);
+        }
+
+        private void ApplyStatus(ScannerStatus status, string? details)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ApplyStatus(status, details)));
+                return;
+            }
+
+            switch (status)
+            {
+                case ScannerStatus.Ready:
+                    UpdateStatus("Ready", Color.Green);
+                    if (!string.IsNullOrWhiteSpace(details))
+                    {
+                        messageLabel.Text = details;
+                    }
+                    break;
+                case ScannerStatus.Scanning:
+                    UpdateStatus("Scanning", Color.Orange);
+                    break;
+                case ScannerStatus.Calibrating:
+                    UpdateStatus("Calibrating", Color.Orange);
+                    break;
+                case ScannerStatus.Ejecting:
+                    UpdateStatus("Ejecting", Color.Orange);
+                    break;
+                case ScannerStatus.Error:
+                    UpdateStatus("Error", Color.Red);
+                    if (!string.IsNullOrWhiteSpace(details))
+                    {
+                        messageLabel.Text = details;
+                    }
+                    break;
+                case ScannerStatus.Initializing:
+                    UpdateStatus("Initializing", Color.Orange);
+                    break;
             }
         }
 
@@ -327,6 +393,11 @@ namespace BFD9010.Gui
             
             // Note: We call Stop() instead of Dispose() to avoid blocking the UI thread.
             // The actual disposal will happen when the form is disposed.
+            if (_statusSubscribed && _scannerService != null)
+            {
+                _scannerService.StatusChanged -= OnStatusChanged;
+                _statusSubscribed = false;
+            }
         }
 
         protected override void Dispose(bool disposing)

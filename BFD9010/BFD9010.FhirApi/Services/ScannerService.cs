@@ -5,6 +5,16 @@ using static BFD9010.Scanner.VscsiTypes;
 
 namespace BFD9010.FhirApi.Services;
 
+public enum ScannerStatus
+{
+    Initializing,
+    Ready,
+    Scanning,
+    Calibrating,
+    Ejecting,
+    Error
+}
+
 /// <summary>
 /// Scanner service that wraps the BFD9010.Scanner library
 /// </summary>
@@ -15,6 +25,10 @@ public class ScannerService
     private readonly ScanConfig _scanConfig;
     private readonly ILogger<ScannerService> _logger;
     private bool _isInitialized = false;
+    private readonly object _statusLock = new();
+    private CancellationTokenSource? _recoveryTokenSource;
+    private Task? _recoveryTask;
+    private ScannerStatus _currentStatus = ScannerStatus.Initializing;
 
     public ScannerService(ILogger<ScannerService> logger)
     {
@@ -28,11 +42,16 @@ public class ScannerService
 
     public ScanConfig ScanConfig => _scanConfig;
 
+    public ScannerStatus CurrentStatus => _currentStatus;
+
+    public event Action<ScannerStatus, string?>? StatusChanged;
+
     /// <summary>
     /// Initialize the scanner
     /// </summary>
     public async Task<int> InitializeAsync()
     {
+        UpdateStatus(ScannerStatus.Initializing, "Initializing scanner...");
         return await Task.Run(() =>
         {
             try
@@ -50,10 +69,13 @@ public class ScannerService
                     _scannerData = scannerData;
                     _isInitialized = true;
                     _logger.LogInformation("Scanner initialized successfully: {Model}", scannerData.modelName);
+                    UpdateStatus(ScannerStatus.Ready, "Scanner initialized successfully");
                 }
                 else
                 {
                     _logger.LogError("Scanner initialization failed with code: {Status}", status);
+                    UpdateStatus(ScannerStatus.Error, $"Scanner initialization failed with code: {status}");
+                    StartRecoveryLoop();
                 }
 
                 return status;
@@ -61,6 +83,8 @@ public class ScannerService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during scanner initialization");
+                UpdateStatus(ScannerStatus.Error, "Exception during scanner initialization");
+                StartRecoveryLoop();
                 return -1;
             }
         });
@@ -74,6 +98,8 @@ public class ScannerService
         if (!_isInitialized || _digitizerInfo == null || _scannerData == null)
         {
             _logger.LogError("Scanner not initialized");
+            UpdateStatus(ScannerStatus.Error, "Scanner not initialized");
+            StartRecoveryLoop();
             return (-1, null, "Scanner not initialized");
         }
 
@@ -82,6 +108,7 @@ public class ScannerService
             try
             {
                 _logger.LogInformation("Starting scan...");
+                UpdateStatus(ScannerStatus.Scanning, "Scanning...");
                 
                 var digitizerInfo = _digitizerInfo.Value;
                 var scannerData = _scannerData.Value;
@@ -127,6 +154,7 @@ public class ScannerService
                     {
                         byte[] imageBytes = File.ReadAllBytes(filePath);
                         _logger.LogInformation("Scan completed successfully, image size: {Size} bytes", imageBytes.Length);
+                        UpdateStatus(ScannerStatus.Ready, "Scan completed successfully");
                         
                         // Clean up temp file
                         try { File.Delete(filePath); } catch { }
@@ -136,6 +164,8 @@ public class ScannerService
                     else
                     {
                         _logger.LogError("Scan completed but image file not found: {Path}", filePath);
+                        UpdateStatus(ScannerStatus.Error, "Scan completed but image file not found");
+                        StartRecoveryLoop();
                         return (-1, null, "Scan completed but image file not found");
                     }
                 }
@@ -144,12 +174,16 @@ public class ScannerService
                     // Get detailed error information from the scanner
                     string errorMessage = GetVidarErrorMessage(status);
                     _logger.LogError("Scan failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    UpdateStatus(ScannerStatus.Error, errorMessage);
+                    StartRecoveryLoop();
                     return (status, null, errorMessage);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during scan");
+                UpdateStatus(ScannerStatus.Error, $"Exception during scan: {ex.Message}");
+                StartRecoveryLoop();
                 return (-1, null, $"Exception during scan: {ex.Message}");
             }
         });
@@ -183,6 +217,8 @@ public class ScannerService
         if (!_isInitialized)
         {
             _logger.LogError("Scanner not initialized");
+            UpdateStatus(ScannerStatus.Error, "Scanner not initialized");
+            StartRecoveryLoop();
             return (-1, "Scanner not initialized");
         }
 
@@ -191,23 +227,29 @@ public class ScannerService
             try
             {
                 _logger.LogInformation("Starting calibration...");
+                UpdateStatus(ScannerStatus.Calibrating, "Calibrating...");
                 int status = Calibrate.calibrate();
                 
                 if (status == 0)
                 {
                     _logger.LogInformation("Calibration completed successfully");
+                    UpdateStatus(ScannerStatus.Ready, "Calibration completed successfully");
                     return (0, null);
                 }
                 else
                 {
                     string errorMessage = GetVidarErrorMessage(status);
                     _logger.LogError("Calibration failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    UpdateStatus(ScannerStatus.Error, errorMessage);
+                    StartRecoveryLoop();
                     return (status, errorMessage);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during calibration");
+                UpdateStatus(ScannerStatus.Error, $"Exception during calibration: {ex.Message}");
+                StartRecoveryLoop();
                 return (-1, $"Exception during calibration: {ex.Message}");
             }
         });
@@ -221,6 +263,8 @@ public class ScannerService
         if (!_isInitialized || _digitizerInfo == null)
         {
             _logger.LogError("Scanner not initialized");
+            UpdateStatus(ScannerStatus.Error, "Scanner not initialized");
+            StartRecoveryLoop();
             return (-1, "Scanner not initialized");
         }
 
@@ -229,26 +273,102 @@ public class ScannerService
             try
             {
                 _logger.LogInformation("Ejecting film...");
+                UpdateStatus(ScannerStatus.Ejecting, "Ejecting film...");
                 var digitizerInfo = _digitizerInfo.Value;
                 int status = Eject.eject(digitizerInfo);
                 
                 if (status == 0)
                 {
                     _logger.LogInformation("Film ejected successfully");
+                    UpdateStatus(ScannerStatus.Ready, "Film ejected successfully");
                     return (0, null);
                 }
                 else
                 {
                     string errorMessage = GetVidarErrorMessage(status);
                     _logger.LogError("Film eject failed with status: {Status} - {ErrorMessage}", status, errorMessage);
+                    UpdateStatus(ScannerStatus.Error, errorMessage);
+                    StartRecoveryLoop();
                     return (status, errorMessage);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception during eject");
+                UpdateStatus(ScannerStatus.Error, $"Exception during eject: {ex.Message}");
+                StartRecoveryLoop();
                 return (-1, $"Exception during eject: {ex.Message}");
             }
         });
+    }
+
+    private void UpdateStatus(ScannerStatus status, string? details)
+    {
+        lock (_statusLock)
+        {
+            _currentStatus = status;
+        }
+
+        if (status != ScannerStatus.Error && status != ScannerStatus.Initializing)
+        {
+            StopRecoveryLoop();
+        }
+
+        StatusChanged?.Invoke(status, details);
+    }
+
+    private void StartRecoveryLoop()
+    {
+        if (_recoveryTask != null && !_recoveryTask.IsCompleted)
+        {
+            return;
+        }
+
+        _recoveryTokenSource?.Cancel();
+        _recoveryTokenSource = new CancellationTokenSource();
+        var token = _recoveryTokenSource.Token;
+
+        _recoveryTask = Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    var digitizerInfo = new _DIGITIZERINFO();
+                    var scannerData = new ScannerData();
+                    int status = Startup.InitializeDigitizer(ref digitizerInfo, ref scannerData);
+
+                    if (status == 0)
+                    {
+                        _digitizerInfo = digitizerInfo;
+                        _scannerData = scannerData;
+                        _isInitialized = true;
+                        _logger.LogInformation("Scanner recovery succeeded");
+                        UpdateStatus(ScannerStatus.Ready, "Scanner recovered");
+                        return;
+                    }
+
+                    _logger.LogWarning("Scanner recovery attempt failed with code: {Status}", status);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Scanner recovery attempt failed with exception");
+                }
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), token);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+            }
+        }, token);
+    }
+
+    private void StopRecoveryLoop()
+    {
+        _recoveryTokenSource?.Cancel();
     }
 }
