@@ -24,6 +24,7 @@ This ensures consistent FHIR API behavior across all entry points without code d
 ### Prerequisites
 - .NET 8.0 SDK
 - Windows OS (for GUI and scanner hardware access)
+- Vidar driver stack installed for scanner detection
 
 ### Build Commands
 
@@ -46,6 +47,13 @@ dotnet publish BFD9010.Gui/BFD9010.Gui.csproj --configuration Release
 - FHIR API Library: `BFD9010.FhirApi/bin/Release/net8.0/BFD9010.FhirApi.dll`
 
 **Note:** The GUI project requires `dotnet publish` to generate the executable. The FHIR API is now a library (DLL) only.
+
+### Packaging (Windows)
+Use `package.bat` to create single-file, self-contained executables:
+```bat
+package.bat
+```
+This bundles `Vscsi32.dll` into the EXE; native libraries are extracted to a user temp folder at runtime. The Vidar driver stack is still required for hardware access.
 
 ## Running
 

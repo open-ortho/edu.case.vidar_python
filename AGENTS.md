@@ -52,7 +52,7 @@ BFD9010\package.bat
 
 Notes:
 
-- `package.bat` expects `Vscsi32.dll` (either in repo root or in `C:\Program Files (x86)\VIDAR\Driver`).
+- `package.bat` creates single-file, self-contained EXEs and bundles `Vscsi32.dll` (native libs extract to user temp at runtime).
 - Output ZIPs go to `BFD9010\artifacts\`.
 
 ## Tests
@@ -152,6 +152,11 @@ Configuration:
 - Always load scanner config via `ScanConfig.Load(...)`.
 - `scan_config.ini` is user-specific and ignored by git; do not commit it.
 - When writing to config, keep the existing INI structure and comments.
+
+Driver requirement:
+
+- The Vidar driver stack must be installed on the machine for hardware detection.
+- `Vscsi32.dll` is tracked at `BFD9010/BFD9010.Scanner/Vscsi32.dll`.
 
 Interop and unsafe code:
 

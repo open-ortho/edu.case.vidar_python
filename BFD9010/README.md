@@ -13,7 +13,7 @@ The BFD9010 scanner software is built on .NET 8.0 and provides:
 ## Quick Start
 
 ### Building the Project
-   - The required DLL (`Vscsi32.dll`) is typically installed with the Vidar TWAIN or SCSI driver package.
+   - The Vidar driver stack is required for hardware access (installed via the vendor driver package).
 
 1. Ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed
 2. Open a Command Prompt in the project directory (where `BFD9010.sln` is located)
@@ -22,7 +22,6 @@ The BFD9010 scanner software is built on .NET 8.0 and provides:
    build.bat
    ```
 This will build all projects in Release configuration and prepare executables for both CLI and GUI.
-   - Copy `Vscsi32.dll` to this directory.
 
 **Output locations:**
 - CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010.exe`
@@ -69,13 +68,14 @@ package.bat
 ```
 
 This will:
-- Build both CLI and GUI as self-contained executables (no .NET runtime required on target machine)
-- Include all dependencies including Vscsi32.dll scanner driver
+- Build both CLI and GUI as single-file, self-contained executables (no .NET runtime required on target machine)
+- Bundle all dependencies, including `Vscsi32.dll` (extracted to a user temp folder at runtime)
 - Create ZIP files in the `artifacts\` directory:
   - `bfd9010_cli_v<version>.zip` - CLI package
   - `bfd9010_gui_v<version>.zip` - GUI package
 
 **Note:** Add `artifacts/` to your `.gitignore` to exclude generated packages from version control.
+**Driver requirement:** The Vidar driver stack must be installed on the machine for the scanner to be detected.
 
 ## Development vs Production Workflows
 
@@ -144,9 +144,9 @@ Understanding the difference between development and production builds is essent
    ```bash
    package.bat
    ```
-   - Builds self-contained executables
-   - Includes .NET runtime (no installation needed)
-   - Bundles all dependencies including `Vscsi32.dll`
+    - Builds single-file, self-contained executables
+    - Includes .NET runtime (no installation needed)
+    - Bundles all dependencies including `Vscsi32.dll` (extracted to temp at runtime)
    - Creates versioned ZIP files in `artifacts\` directory
    - Ready for distribution to end users
 
