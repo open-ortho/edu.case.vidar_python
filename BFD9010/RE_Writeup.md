@@ -1,24 +1,20 @@
 # Reverse Engineering Writeup for VIDAR Radiographic Film Scanner
 
 ## Contents
-
-- [Reverse Engineering Writeup for VIDAR Radiographic Film Scanner](#reverse-engineering-writeup-for-vidar-radiographic-film-scanner)
-  - [Contents](#contents)
-  - [Goal](#goal)
-  - [Current Software](#current-software)
-  - [Information Gathering](#information-gathering)
-  - [Reverse Engineering Calibration Packet Traffic](#reverse-engineering-calibration-packet-traffic)
-  - [Static Analysis](#static-analysis)
-  - [What do we Really Need?](#what-do-we-really-need)
+- [Goal](#goal)
+- [Current Software](#current-software)
+- [Information Gathering](#information-gathering)
+- [Reverse Engineering Calibration Packet Traffic](#reverse-engineering-calibration-packet-traffic)
+- [Static Analysis](#static-analysis)
+- [What do we Really Need?](#what-do-we-really-need)
   
-## Goal
 
+## Goal
 Recreate the drivers for the VIDAR Radiographic Film Scanner to be later refined to the Case Western Reserve University Bolton Center's needs. Future improvements
 include a more intuitive interface, the ability to operate over a network connection, and operating a cluster of scanners at once. At this point, we are looking for a CLI to operate the scanner, which can later be
 operated over SSH or as a library.
 
 ## Current Software
-
 The current software VIDARscanNDTPRO is an antiquated .NET interface that is distributed by Vidar Systems Corporation (pictured below). From a UI/UX standpoint, it looks
 pretty rough. The current interface is confusing and only allows for the operation of one scanner at a  time. There are a few essential functions that the new drivers will
 have to implement: initialization, film ejection, calibration, and scanning.
@@ -26,7 +22,6 @@ have to implement: initialization, film ejection, calibration, and scanning.
 ![image](https://github.com/user-attachments/assets/40bd7533-97d1-4f7d-955e-4d8dfea862a4)
 
 ## Information Gathering
-
 I started with the lowest-level interface possible and decided to move up from there. This means our starting point is Wireshark for USB packet capture.
 After downloading the current software, I used Zadig to see that the USB driver used for the scanner was WinDriver6 (pictured below).
 
@@ -36,14 +31,14 @@ Here is an example of the USB packet capture when I initialize the calibration s
 
 ![image](https://github.com/user-attachments/assets/a29f4929-f474-41b4-abac-0dff0d9ab905)
 
-There are three groups of commands: three SCSI commands are sent to the scanner to start the calibration process. Note that for the calibration process of the scanner, there is
+There are three groups of commands: three SCSI commands are sent to the scanner to start the calibration process. Note that for the calibration process of the scanner, there is 
 no digital output; I can hear mechanical movement within the machine. Calibration was the shortest sequence of packets, so I figured it would be best to start reverse engineering.
 
 ## Reverse Engineering Calibration Packet Traffic
 
 I used pyUSB to send packets, which meant I needed to use Zadig to change the USB interface drivers to libusbK. This led to an annoying back-and-forth of having to
 uninstall and reinstall USB drivers whenever I wanted to use the old software. However, after reconstructing the SCSI command sequence (WRITE(10), SEND DIAGNOSTIC, RECIEVE DIAGNOSTIC)
-I was able to achieve the calibration behavior using a Python script.
+I was able to achieve the calibration behavior using a Python script. 
 
 Although this was progress, I soon came to realize a looming problem. The calibration sequence was minuscule compared to the other scanner operations. For reference, here are the Wireshark
 statistics for the scanner initialization process:
@@ -141,27 +136,27 @@ The .NET application makes calls to the DLL (`Vscsi32.dll`) for low-level calls.
 Here is a simple example from the `DigitizerEngine` that calls the DLL's `Calibrate()` function.
 
 ```C#
- public void Normalize()
- {
-  DigitizeEngine digitizeEngine = null;
-  DigitizeEngine digitizeEngine2 = new DigitizeEngine();
-  try
-  {
-   digitizeEngine = digitizeEngine2;
-   ErrorCode = global::<Module>.Calibrate();
-   if (ErrorCode != 0)
-   {
-    CheckError();
-   }
-  }
-  catch
-  {
-   //try-fault
-   ((IDisposable)digitizeEngine).Dispose();
-   throw;
-  }
-  ((IDisposable)digitizeEngine).Dispose();
- }
+	public void Normalize()
+	{
+		DigitizeEngine digitizeEngine = null;
+		DigitizeEngine digitizeEngine2 = new DigitizeEngine();
+		try
+		{
+			digitizeEngine = digitizeEngine2;
+			ErrorCode = global::<Module>.Calibrate();
+			if (ErrorCode != 0)
+			{
+				CheckError();
+			}
+		}
+		catch
+		{
+			//try-fault
+			((IDisposable)digitizeEngine).Dispose();
+			throw;
+		}
+		((IDisposable)digitizeEngine).Dispose();
+	}
 ```
 
 In this case, calling the `Calibrate()` function is fairly straightforward as it takes no parameters and clearly returns an error code; however, this is not always the case.
@@ -179,7 +174,7 @@ System.Runtime.CompilerServices.Unsafe.As<_SCANPARAMETERS, int>(ref System.Runti
 global::<Module>.GetTickCount();
 uint tickCount = global::<Module>.GetTickCount();
 void* ptr3 = (void*)(int)global::<Module>._beginthreadex(null, 0u, (delegate* unmanaged[Stdcall, Stdcall]<void*, uint>)global::<Module>.__unep@?ScanFilm@?A0x8f06ef6e@@$$FYGIPAX@Z, &sCANFILM, 0u, null);
-```
+``` 
 
 The call is on that last line, called with parameters, the most notable of which is `sCANFILM`, which is populated above with some other values that need to be determined. `sCANFILM` seems to be a structure that contains some fields, one of which is a pointer to a `_SCANPARAMETERS` structure, which itself is a collection of fields. Here is where we gain another level of complexity as we do not get the decompilation of these structs; we can just see their total size in memory.
 
@@ -197,7 +192,7 @@ internal struct _SCANFILM
 
 We know that a `_SCANFILM` instance is 20 bytes in total, but we need to infer anything else based upon how it is used. Here is the population of an instance of `_SCANFILM`:
 
-```  C#
+```		C#
 *(int*)(&sCANFILM) = (int)(&num2);
 System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 16)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref gETDIGINFO, 4));
 System.Runtime.CompilerServices.Unsafe.As<_SCANFILM, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref sCANFILM, 12)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::<Module>.?A0x8f06ef6e.sp);
@@ -243,3 +238,6 @@ Setting some breakpoints and poking around with the software led to this list of
 Looking at the timing and hits counter in the dynamic debugger, we can infer what these functions are doing. `EjectFilm`, `Calibrate`, and `Scan` are exactly what you expect; they do the respective actions. `findDigitizer` is called once during startup; it searches the computer's USB interfaces for the scanner hardware device. The `getDigitizerInfo` is called on startup, and before each of the three actions, it queries the connected scanner's available settings and other information.
 
 Now, we have a list of five functions we want our new drivers to be able to call. Next is the actual implementation.
+
+
+

@@ -1,8 +1,10 @@
 using BFD9010.Scanner;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+// Hosts the FHIR API web server and exposes the shared ScannerService instance.
 namespace BFD9010.FhirApi;
 
 /// <summary>
@@ -15,6 +17,7 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
     private Task? _serverTask;
     private readonly string? _configPath;
     private bool _disposed;
+    private Services.ScannerService? _scannerService;
 
     public FhirServerHost(string? configPath = null)
     {
@@ -43,6 +46,8 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
 
         // Build the app
         var app = builder.Build();
+
+        _scannerService = app.Services.GetRequiredService<Services.ScannerService>();
 
         // Configure FHIR endpoints using shared configuration
         FhirServerConfiguration.ConfigureEndpoints(app);
@@ -74,6 +79,8 @@ public class FhirServerHost : IDisposable, IAsyncDisposable
 
         return initialized;
     }
+
+    public Services.ScannerService? ScannerService => _scannerService;
 
     /// <summary>
     /// Stop the FHIR API server

@@ -20,7 +20,7 @@ REM Change to the directory containing this script
 cd /d "%~dp0"
 
 REM Check if GUI executable exists
-if not exist "BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe" (
+if not exist "BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe" (
     echo ERROR: GUI executable not found!
     echo.
     echo Please run build.bat first to build the application.
@@ -30,7 +30,7 @@ if not exist "BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe"
 )
 
 REM Start the GUI application
-BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010_fhir32.exe %*
+BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe %*
 
 echo.
 echo Application closed.

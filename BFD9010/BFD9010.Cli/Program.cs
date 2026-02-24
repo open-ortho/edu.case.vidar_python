@@ -1,4 +1,4 @@
-﻿using BFD9010.FhirApi;
+using BFD9010.FhirApi;
 using BFD9010.Scanner;
 using System.Diagnostics;
 using System.Reflection;
@@ -183,17 +183,21 @@ static string? GetAssemblyVersion()
     }
 
     // Next prefer product/file version
+    // Assembly.Location returns empty string in single-file apps, so skip FileVersionInfo if location is empty
     try
     {
-        var fileVer = FileVersionInfo.GetVersionInfo(entry.Location).ProductVersion;
-        if (!string.IsNullOrWhiteSpace(fileVer))
+        if (!string.IsNullOrEmpty(entry.Location))
         {
-            // Remove build metadata from file version too
-            var plusIndex = fileVer.IndexOf('+');
-            if (plusIndex >= 0)
-                fileVer = fileVer.Substring(0, plusIndex);
-            
-            return fileVer;
+            var fileVer = FileVersionInfo.GetVersionInfo(entry.Location).ProductVersion;
+            if (!string.IsNullOrWhiteSpace(fileVer))
+            {
+                // Remove build metadata from file version too
+                var plusIndex = fileVer.IndexOf('+');
+                if (plusIndex >= 0)
+                    fileVer = fileVer.Substring(0, plusIndex);
+                
+                return fileVer;
+            }
         }
     }
     catch { }

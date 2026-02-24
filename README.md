@@ -2,101 +2,243 @@
 
 # BFD9010: An HL7 FHIR API for Scanners
 
-This tools was originally created to control the Vidar Dosimetry Pro scanner for the BFD-9000 project. However, it has been repurposed so that it can be easily re-used with any scanner by just writing scanner drivers for it.
+- [BFD9010: An HL7 FHIR API for Scanners](#bfd9010-an-hl7-fhir-api-for-scanners)
+  - [Quick Start](#quick-start)
+    - [Option 1: GUI Application (Recommended for Web Integration)](#option-1-gui-application-recommended-for-web-integration)
+    - [Option 2: CLI Application](#option-2-cli-application)
+  - [CLI Usage](#cli-usage)
+  - [Documentation](#documentation)
+    - [Configuration File Structure](#configuration-file-structure)
+    - [Configuration Options](#configuration-options)
 
+This software controls the Vidar professional scanners leveraging the proprietary 32-bit Windows DLL and exposes a local FHIR API for web-based scanning.
 
-This software reverse-engineers the USB protocol to enable direct control of the scanner.
+**Development and deployment require Windows** due to the 32-bit DLL dependency for scanner hardware access. Non-Windows platforms can build and run unit tests only.
 
 ## Quick Start
 
-### For End Users (Windows)
+Requires windows. Refer to the [Deployment Checklist](documentation/DEPLOYMENT.md) for installing on a fresh workstation.
 
-1. **Download** the latest release from the releases page
-2. **Run** `bfd9010_fhir32.exe` (GUI application)
-   - The scanner will initialize automatically
-   - A small window will appear showing status
-   - The FHIR API server starts on `http://localhost:5000`
-3. **Navigate** to `https://wingate.case.edu/bfd9000/` to scan
-4. The web application will communicate with your local scanner via the API
+1. Download the latest release from GitHub.
+2. Run `bfd9010.exe` (GUI application).
+   - The scanner will initialize automatically.
+   - A small window will appear showing status.
+   - The FHIR API server starts on `http://localhost:5000`.
+3. Navigate to `https://wingate.case.edu/bfd9000/` to scan.
 
-### For Developers
+### Option 1: GUI Application (Recommended for Web Integration)
 
-See the [API README](BFD9010/API_README.md) for detailed documentation on:
-- Building from source
-- FHIR API endpoints
-- Integration details
-- Architecture overview
-
-## Components
-
-### 1. bfd9010 (CLI)
-Command-line interface for direct scanner control.
-```bash
-cd BFD9010.Cli/bin/Release/net8.0
-./bfd9010.exe
+``` powershell
+C:\Users\afm\Downloads\bfd9010>bfd9000.exe
 ```
 
-### 2. bfd9010_fhir32 (GUI + API Server)
-Windows Forms application that:
-- Shows scanner status in always-on-top window
-- Hosts FHIR REST API on port 5000
-- Initializes scanner automatically
+- Launches the Windows Forms GUI
+- Automatically starts FHIR API server on <http://localhost:5000>
+- Displays scanner status in a small always-on-top window
+- Shows a clickable link to the web application (configured via `WebAppUrl` in INI file)
+- Best for production use with web-based scanner control
 
-### 3. BFD9010.Scanner (Library)
-Shared library containing all scanner operations:
-- Scanner initialization and discovery
-- Scan operations
-- Calibration
-- Film ejection
-- Configuration management
+![Screenshot of BFD9010](documentation/images/bfd9010_gui.PNG "BFD9010 when working")
 
-### 4. BFD9010.FhirApi (API Server)
-Standalone FHIR REST API server (can run without GUI).
 
-## FHIR API Endpoints
+### Option 2: CLI Application
 
-- `GET /Device/{id}` - Get scanner information
-- `POST /Device/{id}/$scan` - Perform scan, returns PNG image as base64 in FHIR Bundle
-- `POST /Device/{id}/$calibrate` - Calibrate scanner
-- `POST /Device/{id}/$eject` - Eject film
+``` powershell
+C:\Users\afm\Downloads\bfd9010>bfd9000_cli.exe
+```
 
-See [FHIR Device Resource](https://hl7.org/fhir/device.html) for detailed documentation of the FHIR standard for the Device.
+- Launches the interactive command-line interface
+- Provides manual control options via keyboard menu:
+- Best for testing and manual scanner control
 
-See [API README](BFD9010/API_README.md) for detailed documentation.
+``` text
+Looking for Scanner...
+Loading scan configuration from: C:\Users\afm\Downloads\bfd9010\scan_config.ini
+Output configuration: Format=PNG, Path=C:\Users\afm\Desktop\VidarScans, Prefix=${DPI}DPI_${BIT}BIT
+Reading Digitizer Capabilities...
+Digitizer Info Retrieved
 
-## Project History
 
-This is an attempt to reverse engineer the USB protocol used to control the Vidar Dosimetry Pro scanner, in order to be able to control it directly from the BFD-9000 tool to acquire images.
+-------------------------------------------------------------
+Digitizer model: DosimetryPRO Advantage
+Serial Number: 341870
+Firmware version number: 49.7
+Hardware version number: 112
+Current resolution = 44
+Optical resolution = 570
+Maximum width in inches = 14
+Current Bit Depth = 16
+Maximum number of films = 25
+Dark Enhance not available
+Line Filter not available
+Film backup available
+Single unloadMedium() command to eject film
+Unlimited scans device
+Line time range start = 4
+Line time range end = 10
+Line time current = 8
 
-## Technical Background
+Feeder type is C (14 inches wide).
+Lamp type is a red LED full width roller cartridge.
+Translation table selection available.
+Translation table location 0 set to Linear, location 1 set to LOG.
+-------------------------------------------------------------
 
-### USB Protocol Format
 
-It seems like the Vidar Scanner operates over USB, but the protocol used is SCSI. Since these scanners have been around for a while, it is very likely they were once SCSI, and then they moved to the USB at a hardware level, and kept the SCSI software, which makes sense.
 
-### Collecting data to analyze
+Welcome to BFD9010 Scanner Console!  (version: 1.0.1.5)
+-------------------------------------------------------------
+Available commands (press the key):
+  [C]alibrate  - Calibrate the digitizer
+  [E]ject      - Eject the film from the digitizer
+  [S]can       - Initiate a scan using parameters from scan_config.ini
+  [F]HIR API   - Start FHIR REST API server on http://localhost:5000
+  [R]estart    - Re-detect scanner and reload configuration
+  [Q]uit       - Exit the application
+-------------------------------------------------------------
+Enter a command: _
+```
 
-This is how packet capture was performed for the Vidar Info operation:
 
-1. Download [drivers from Vidar](http://www.vidar.com/film/device-drivers-for-windows-8-32-and-64-bit.htm)
-2. Install on Windows 10 or earlier, or in compatibility mode.
-3. Install Wireshark and USBpcap. 
-4. Wireshark might require you to copy the USBpcapCMD file into its extcap directory. Follow instructions, they are pretty simple.
-5. Connect Scanner, turn on, and start the Vidar Info app.
-6. Start Wireshark, and select the USB interface. Then tool around with Wireshark, until you find how to disable capturing from all devices and selecting the Vidar Scanner only.
-7. Start capturing packets.
-8. Start the Vidar Info app.
-9. Wait until it returns data from the scanner.
+**FHIR Server:**
 
-For more details on the reverse engineering process, see [RE_Writeup.md](BFD9010/RE_Writeup.md).
+```text
+Enter a command: f
 
-## Legacy Code
+=================================================================
+Starting FHIR API Server...
+=================================================================
+Loading scan configuration from: C:\Users\afm\Downloads\bfd9010\scan_config.ini
+Output configuration: Format=PNG, Path=C:\Users\afm\Desktop\VidarScans, Prefix=${DPI}DPI_${BIT}BIT
 
-### .NET Code
+Initializing scanner for FHIR API...
+Loading scan configuration from: C:\Users\afm\Downloads\bfd9010\scan_config.ini
+Output configuration: Format=PNG, Path=C:\Users\afm\Desktop\VidarScans, Prefix=${DPI}DPI_${BIT}BIT
+Loading scan configuration from: C:\Users\afm\Downloads\bfd9010\scan_config.ini
+Output configuration: Format=PNG, Path=C:\Users\afm\Desktop\VidarScans, Prefix=${DPI}DPI_${BIT}BIT
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5000
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\afm\Downloads\bfd9010
+info: BFD9010.FhirApi.Services.ScannerService[0]
+      Initializing scanner...
+Reading Digitizer Capabilities...
+Digitizer Info Retrieved
 
-.NET code in `BFD9010.Cli`. This is a console app that uses the `Vscsi32.dll` library to control the scanner. This is the most functional code so far.
 
-## Format
+-------------------------------------------------------------
+Digitizer model: DosimetryPRO Advantage
+Serial Number: 341870
+Firmware version number: 49.7
+Hardware version number: 112
+Current resolution = 44
+Optical resolution = 570
+Maximum width in inches = 14
+Current Bit Depth = 16
+Maximum number of films = 25
+Dark Enhance not available
+Line Filter not available
+Film backup available
+Single unloadMedium() command to eject film
+Unlimited scans device
+Line time range start = 4
+Line time range end = 10
+Line time current = 8
 
-It seems like the Vidar Scanner operates over USB, but the protocol used is SCSI. Since these scanners have been around for a while, it is very likely they were once SCSI, and then they moved to the USB at a hardware level, and kept the SCSI software, which makes sense.
+Feeder type is C (14 inches wide).
+Lamp type is a red LED full width roller cartridge.
+Translation table selection available.
+Translation table location 0 set to Linear, location 1 set to LOG.
+-------------------------------------------------------------
 
+
+info: BFD9010.FhirApi.Services.ScannerService[0]
+      Scanner initialized successfully: DosimetryPRO Advantage
+
+√ Scanner initialized successfully!
+
+CORS configured for: https://wingate.case.edu
+
+=================================================================
+FHIR API Server is running on http://localhost:5000
+=================================================================
+
+Available endpoints:
+  GET  /Device/{id}         - Get scanner information
+  POST /Device/{id}/$scan   - Perform scan
+  POST /Device/{id}/$calibrate - Calibrate scanner
+  POST /Device/{id}/$eject  - Eject film
+
+Web application: https://wingate.case.edu/bfd9000/
+
+Press Ctrl+C to stop the server and return to menu...
+=================================================================
+```
+
+**When to use CLI:**
+
+- Debugging scanner connectivity or status
+- Manual calibration/eject operations
+- Verifying scan output without the web UI
+
+**Command-line options (both CLI and GUI):**
+
+``` powershell
+bfd9010_cli.exe --config path\to\config.ini
+bfd9010.exe --config path\to\config.ini
+```
+
+## CLI Usage
+
+Run `bfd9010_cli.exe` for the interactive command-line interface.
+
+## Documentation
+
+- Build, run, packaging, configuration: `documentation/BUILD_AND_RUN.md`
+- FHIR API endpoints: `documentation/API.md`
+- Deployment checklist: `documentation/DEPLOYMENT.md`
+- Multi-scanner architecture: `documentation/MULTI_SCANNER_ARCHITECTURE.md`
+- Reverse engineering notes: `documentation/vidar/RE_Writeup.md`
+
+### Configuration File Structure
+
+Example `scan_config.ini`:
+
+```ini
+[ScanParameters]
+
+# Bit depth (8 or 16)
+BitDepth = 16
+
+# DPI resolution (tested DPIs: 75, 150, 300)
+DPI = 300
+
+# Output options
+# OutputPath: directory where image files will be written
+OutputPath = ~\Desktop\VidarScans
+
+# OutputPrefix: filename prefix template. Tokens: ${DPI}, ${BIT}
+OutputPrefix = ${DPI}DPI_${BIT}BIT
+
+# Web API settings
+# WebAppUrl: URL of the web application users should navigate to for scanning
+WebAppUrl = https://wingate.case.edu/bfd9000/
+
+# CorsOrigin: CORS origin(s) to allow API access from (comma-separated for multiple)
+CorsOrigin = https://wingate.case.edu
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `BitDepth` | integer | 16 | Scan bit depth (8 or 16) |
+| `DPI` | integer | 300 | Scan resolution in dots per inch (tested: 75, 150, 300) |
+| `OutputPath` | string | `~\Desktop\VidarScans` | Directory for saving scanned images (supports ~ for home directory) |
+| `OutputPrefix` | string | `${DPI}DPI_${BIT}BIT` | Filename prefix template (tokens: ${DPI}, ${BIT}) |
+| `WebAppUrl` | string | `https://wingate.case.edu/bfd9000/` | URL displayed in GUI for users to access web interface |
+| `CorsOrigin` | string | `https://wingate.case.edu` | Allowed CORS origin(s), comma-separated for multiple origins |

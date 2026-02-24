@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>$(version)</AssemblyVersion>
-    <AssemblyVersion>$(version)</AssemblyVersion>
-    <FileVersion>$(version)</FileVersion>
+    <!-- Use 4-part numeric versions: dev builds bump the 4th digit, releases use .0 -->
+    <Version>1.1.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
     <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,287 @@
+# BFD9010 Scanner Software
+
+This repository contains the C# implementation of the BFD9010 scanner control software, providing both CLI and GUI interfaces with integrated FHIR API support.
+
+## Project Overview
+
+The BFD9010 scanner software is built on .NET 8.0 and provides:
+
+- **Command-Line Interface (CLI)** - Interactive menu-driven scanner control with optional FHIR API server
+- **Graphical User Interface (GUI)** - Windows Forms application with automatic FHIR API server startup
+- **FHIR REST API** - Shared library providing FHIR-compliant REST API for web-based scanner control
+- **Scanner Library** - Core scanner communication and control functionality
+
+## Quick Start
+
+### Building the Project
+
+- The Vidar driver stack is required for hardware access (installed via the vendor driver package).
+
+1. Ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed
+2. Open a Command Prompt in the project directory (where `BFD9010.sln` is located)
+3. Run:
+
+   ``` powershell
+   build.bat
+   ```
+
+This will build all projects in Release configuration and prepare executables for both CLI and GUI.
+
+**Output locations:**
+
+- CLI: `BFD9010.Cli\bin\Release\net8.0\bfd9010_cli.exe`
+- GUI: `BFD9010.Gui\bin\Release\net8.0-windows\publish\bfd9010.exe`
+- Libraries: `BFD9010.Scanner\bin\Release\net8.0\*.dll` and `BFD9010.FhirApi\bin\Release\net8.0\*.dll`
+
+### Running the Application
+
+
+### Creating Distribution Packages
+
+To create self-contained ZIP packages for distribution:
+
+``` powershell
+package.bat
+```
+
+This will:
+
+- Build both CLI and GUI as single-file, self-contained executables (no .NET runtime required on target machine)
+- Bundle all dependencies, including `Vscsi32.dll` (extracted to a user temp folder at runtime)
+- Create a combined ZIP in the `artifacts\` directory:
+  - `bfd9010.zip` - contains `bfd9010.exe` (GUI) and `bfd9010_cli.exe` (CLI)
+
+**Note:** Add `artifacts/` to your `.gitignore` to exclude generated packages from version control.
+**Driver requirement:** The Vidar driver stack must be installed on the machine for the scanner to be detected.
+
+## Development vs Production Workflows
+
+Understanding the difference between development and production builds is essential for effective development and deployment.
+
+### Development Mode (For Developers)
+
+**Use development mode when:**
+
+- Writing and testing code
+- Debugging issues
+- Testing API changes with local HTML files
+- Iterating quickly without full builds
+
+**How to run in development mode:**
+
+1. **Using dotnet run** (recommended):
+
+   ```powershell
+   cd BFD9010.Cli
+   dotnet run
+   ```
+
+   or
+
+   ```powershell
+   cd BFD9010.Gui
+   dotnet run
+   ```
+
+2. **Using Visual Studio**:
+   - Open `BFD9010.sln`
+   - Set `BFD9010.Cli` or `BFD9010.Gui` as the startup project
+   - Press **F5** to run with debugging, or **Ctrl+F5** to run without debugging
+
+**Development mode features:**
+
+- Environment is set to `Development` (via `launchSettings.json` files in each project: `BFD9010.Cli/Properties/launchSettings.json` and `BFD9010.Gui/Properties/launchSettings.json`)
+- CORS allows **any origin** (including `file://` protocol for local HTML testing)
+- Swagger UI is enabled at `http://localhost:5000/swagger`
+- Detailed error messages and logging
+- Hot reload capabilities (when using dotnet watch)
+- No need for self-contained publishing
+
+**Benefits:**
+
+- ? Fast iteration - changes compile quickly
+- ? Easy debugging with breakpoints
+- ? Test HTML files directly from disk (`file://`)
+- ? Detailed logs and error information
+- ? Swagger documentation available
+
+### Production Mode (For Deployment)
+
+**Use production mode when:**
+
+- Creating packages for end users
+- Deploying to production environments
+- Building final releases
+- Testing deployment scenarios
+
+**How to build for production:**
+
+1. **Build only** (faster, requires .NET runtime on target):
+
+   ```bash
+   build.bat
+   ```
+
+   - Builds in Release configuration
+   - Outputs to `bin\Release\net8.0\` folders
+   - Requires .NET 8.0 Runtime on target machine
+
+2. **Package for distribution** (recommended):
+
+   ```bash
+   package.bat
+   ```
+
+    - Builds single-file, self-contained executables
+    - Includes .NET runtime (no installation needed)
+    - Bundles all dependencies including `Vscsi32.dll` (extracted to temp at runtime)
+    - Creates `bfd9010.zip` in the `artifacts\` directory
+   - Ready for distribution to end users
+
+**How to run production builds:**
+
+After building with `build.bat`:
+
+```bash
+start-cli.bat
+```
+
+or
+
+```bash
+start-gui.bat
+```
+
+After packaging with `package.bat`:
+
+- Extract `bfd9010.zip` from `artifacts\` directory
+- Run the executable directly (no installation needed)
+
+**Production mode features:**
+
+- Environment is set to `Production`
+- CORS restricted to configured origins only (see `scan_config.ini`)
+- Swagger UI disabled for security
+- Optimized binaries with better performance
+- Self-contained deployment (when using `package.bat`)
+
+**Benefits:**
+
+- ? Enhanced security (CORS restrictions, no Swagger)
+- ? Optimized performance
+- ? Self-contained packages (no .NET installation required)
+- ? Versioned releases
+- ? Ready for end-user deployment
+
+### Key Differences Summary
+
+| Aspect | Development | Production |
+|--------|-------------|------------|
+| **Environment** | `Development` | `Production` |
+| **CORS Policy** | Allow any origin (incl. `file://`) | Restricted to configured origins |
+| **Swagger UI** | ? Enabled | ? Disabled |
+| **Error Details** | Verbose | Minimal |
+| **Build Command** | `dotnet run` | `build.bat` or `package.bat` |
+| **Run Command** | `dotnet run` or F5 | `start-cli.bat` / `start-gui.bat` |
+| **.NET Runtime** | Uses installed SDK | Included (with `package.bat`) |
+| **CORS Testing** | Can use local HTML files | Requires proper web server |
+
+### Workflow Examples
+
+**Typical Development Workflow:**
+
+```bash
+# 1. Make code changes in your editor/IDE
+# 2. Run in development mode
+cd BFD9010.Cli
+dotnet run
+
+# 3. Test with browser (file:// or http://localhost)
+# 4. Iterate - make changes and re-run
+```
+
+**Typical Production Workflow:**
+
+```bash
+# 1. Finalize and test all code changes
+# 2. Update version in Directory.Build.props
+# 3. Build and package
+package.bat
+
+# 4. Test the production package
+cd artifacts
+# Extract bfd9010.zip
+# Run bfd9010.exe (GUI) or bfd9010_cli.exe (CLI)
+
+# 5. Distribute ZIP file to end users
+```
+
+### Testing Web Integration
+
+**In Development:**
+
+```bash
+# 1. Start the API server in development mode
+cd BFD9010.Cli
+dotnet run
+
+# 2. Open test_scanner_api.html directly in browser
+# File can be opened via file:// protocol - CORS will allow it
+```
+
+**In Production:**
+
+```bash
+# 1. Package the application
+package.bat
+
+# 2. Configure CORS in scan_config.ini
+CorsOrigin = https://yourdomain.com
+
+# 3. Start the production build
+start-gui.bat
+
+# 4. Access from configured web origin only
+# file:// protocol will NOT work in production
+```
+
+## Batch File Reference
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| `build.bat` | Builds all projects in Release configuration | After code changes, before running or packaging |
+| `start-cli.bat` | Launches CLI application | For manual scanner control and testing |
+| `start-gui.bat` | Launches GUI application with auto-started API | For production use with web-based scanner control |
+| `package.bat` | Creates distribution ZIP packages | When preparing software for deployment |
+
+## Scanner Configuration
+
+Scanner settings are loaded from `scan_config.ini` in the working directory. If the file doesn't exist, default values will be used and a new file will be created.
+For single-file releases, the default base directory is a user temp folder, so use `--config` to keep settings in a stable location.
+
+You can specify a custom configuration file using the `--config` command-line argument:
+
+```bash
+bfd9010_cli.exe --config /path/to/custom_config.ini
+bfd9010.exe --config C:\Configs\scanner_config.ini
+```
+
+### CORS Configuration
+
+The `CorsOrigin` setting controls which web origins can make API requests to the scanner.
+
+**Single origin:**
+
+```ini
+CorsOrigin = https://wingate.case.edu
+```
+
+**Multiple origins:**
+
+```ini
+CorsOrigin = https://wingate.case.edu, https://localhost:3000, https://test.example.com
+```
+
+**Note:** In Development mode, CORS restrictions are relaxed to allow any origin for easier testing. In Production mode, only configured origins are allowed.
+
+This is essential for web-based scanner control. The web application at the specified origin(s) can make API calls to `http://localhost:5000`.

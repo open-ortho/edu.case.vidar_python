@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BFD9010 Scanner Control</title>
+    <title>BFD9000 Scanner Control</title>
     <style>
         * {
             margin: 0;
@@ -13,9 +13,9 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           
             min-height: 100vh;
-            padding: 20px;
+            padding: 20;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -44,6 +44,7 @@
 
         .config-section {
             background: #f8f9fa;
+            padding: 20px;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -57,7 +58,67 @@
             font-size: 13px;
         }
 
-        .config-section input {
+        .label-with-help {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #495057;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: help;
+            position: relative;
+        }
+
+        .help-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            white-space: pre-line;
+            font-size: 12px;
+            line-height: 1.4;
+            min-width: 220px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .help-icon::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .help-icon:hover::after,
+        .help-icon:hover::before {
+            opacity: 1;
+        }
+
+        .config-section input,
+        .config-section select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -69,12 +130,12 @@
         .button-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
+            gap: 15px;
             margin-bottom: 25px;
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             border: none;
             padding: 14px 24px;
@@ -83,12 +144,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
         }
 
         button:active {
@@ -103,12 +164,16 @@
         }
 
         .download-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         }
 
         .download-btn:hover {
-            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
         }
 
         .status {
@@ -218,23 +283,50 @@
 </head>
 <body>
     <div class="container">
-        <h1>?? BFD9010 Scanner Control</h1>
+        <h1>BFD9000 Scanner Control</h1>
         <p class="subtitle">FHIR API Interface for Vidar Film Scanner</p>
 
         <!-- Configuration Section -->
         <div class="config-section">
-            <label for="apiUrl">API Server URL:</label>
-            <input type="text" id="apiUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+            <div class="label-with-help">
+                <label for="subjectId">Subject ID:</label>
+                <span class="help-icon" id="subjectIdHelp" data-tooltip="">?</span>
+            </div>
+            <input type="text" id="subjectId" placeholder="B0001 / R001 / L12345678" oninput="updateFilenamePreview()">
             
-            <label for="deviceId">Device ID:</label>
-            <input type="text" id="deviceId" value="scanner-001" placeholder="scanner-001">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="ageYears">Age (Years):</label>
+                    <input type="number" id="ageYears" min="0" max="150" placeholder="25" oninput="updateFilenamePreview()">
+                </div>
+                <div style="flex: 1;">
+                    <label for="ageMonths">Age (Months):</label>
+                    <input type="number" id="ageMonths" min="0" max="11" placeholder="6" oninput="updateFilenamePreview()">
+                </div>
+            </div>
+            
+            <label for="imageType">Image Type:</label>
+            <select id="imageType" onchange="updateFilenamePreview()">
+                <option value="L">Lateral</option>
+                <option value="F">Frontal</option>
+                <option value="CS">Chest & Shoulder</option>
+                <option value="E">Elbow</option>
+                <option value="FA">Foot & Ankle</option>
+                <option value="H">Hand & Wrist</option>
+                <option value="K">Knee</option>
+                <option value="P">Pelvis</option>
+            </select>
+            
+            <label for="sex">Sex:</label>
+            <select id="sex" onchange="updateFilenamePreview()">
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+            </select>
         </div>
 
-        <!-- Download Link -->
-        <div class="button-group">
-            <button class="download-btn" onclick="downloadInstaller()">
-                ?? Download Scanner Software
-            </button>
+        <!-- Filename Preview -->
+        <div id="filenamePreview" style="margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #dc3545;">
+            Please enter a Subject ID
         </div>
 
         <!-- Status Messages -->
@@ -242,17 +334,20 @@
 
         <!-- Control Buttons -->
         <div class="button-group">
+            <button onclick="downloadInstaller()" class="download-btn full-width">
+                Download BFD9010
+            </button>
             <button onclick="getDeviceInfo()">
-                ?? Device Info
+                Device Info
             </button>
             <button onclick="performScan()">
-                ?? Scan
+                Scan
             </button>
             <button onclick="calibrate()">
-                ?? Calibrate
+                Calibrate
             </button>
             <button onclick="eject()">
-                ?? Eject Film
+                Eject Film
             </button>
         </div>
 
@@ -264,8 +359,31 @@
     </div>
 
     <script>
-        const API_BASE = () => document.getElementById('apiUrl').value;
-        const DEVICE_ID = () => document.getElementById('deviceId').value;
+        // Hardcoded values
+        const API_BASE = "http://localhost:5000";
+        const DEVICE_ID = "scanner-001";
+
+        const ALLOWED_SUBJECT_ID_TYPES = [
+            {
+                label: 'B####',
+                regex: /^B\d{4}$/,
+                min: 1,
+                max: 5887,
+                description: 'Bolton Collection (B0001-B5887)'
+            },
+            {
+                label: 'R###',
+                regex: /^R\d{3}$/,
+                min: 1,
+                max: 99,
+                description: 'Richardson Collection (R001-R099)'
+            },
+            {
+                label: 'L########',
+                regex: /^L\d{8}$/,
+                description: 'Lancaster Collection (L followed by 8 digits)'
+            }
+        ];
 
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('status');
@@ -293,11 +411,54 @@
         }
 
         function downloadInstaller() {
-            showStatus('Downloading latest scanner software...', 'info');
-            // Replace with your actual download URL or GitHub release URL
-            const downloadUrl = 'https://github.com/open-ortho/edu.case.BFD9010/releases/latest';
-            window.open(downloadUrl, '_blank');
-            showStatus('Opening download page in new tab', 'success');
+            showStatus('Downloading BFD9010...', 'info');
+            // Download the ZIP file directly
+            const downloadUrl = 'https://github.com/open-ortho/edu.case.BFD9010/releases/latest/download/bfd9010.zip';
+            
+            // Create a temporary link element to trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'bfd9010.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showStatus('Download started', 'success');
+        }
+
+        function getSubjectIdHelpText() {
+            const lines = ['Allowed Subject IDs:'];
+            ALLOWED_SUBJECT_ID_TYPES.forEach(type => {
+                lines.push(`- ${type.label}: ${type.description}`);
+            });
+            return lines.join('\n');
+        }
+
+        function getSubjectIdValidation(subjectId) {
+            if (!subjectId) {
+                return { isValid: false, message: 'Please enter a Subject ID' };
+            }
+
+            for (const type of ALLOWED_SUBJECT_ID_TYPES) {
+                if (type.regex.test(subjectId)) {
+                    if (typeof type.min === 'number' && typeof type.max === 'number') {
+                        const subjectNumber = parseInt(subjectId.substring(1), 10);
+                        if (subjectNumber < type.min || subjectNumber > type.max) {
+                            return {
+                                isValid: false,
+                                message: `${type.description} only`
+                            };
+                        }
+                    }
+
+                    return { isValid: true, message: '' };
+                }
+            }
+
+            return {
+                isValid: false,
+                message: 'Subject ID must match an allowed format'
+            };
         }
 
         async function getDeviceInfo() {
@@ -307,7 +468,7 @@
             document.getElementById('deviceInfo').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/fhir+json'
@@ -337,6 +498,7 @@
             html += `<tr><td>Model:</td><td>${device.modelNumber || 'N/A'}</td></tr>`;
             html += `<tr><td>Serial Number:</td><td>${device.serialNumber || 'N/A'}</td></tr>`;
             
+            // Display version
             // Display version information
             if (device.version && device.version.length > 0) {
                 device.version.forEach(v => {
@@ -374,7 +536,7 @@
             document.getElementById('scanResult').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$scan`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$scan`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -418,21 +580,99 @@
             
             let html = '<h3>Scan Result</h3>';
             html += `<img src="${imageData}" alt="Scanned Image">`;
-            html += `<p style="margin-top: 10px; color: #666; font-size: 13px;">Content Type: ${binary.contentType}</p>`;
-            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;">?? Download Image</button>`;
+            html += `<p style="margin-top: 10px; color: #666; font-size: 14px;">Image captured successfully</p>`;
+            html += `<button onclick="downloadImage('${imageData}')" style="margin-top: 15px;">Download Image</button>`;
             
             resultDiv.innerHTML = html;
             resultDiv.style.display = 'block';
         }
 
+        function generateFilename() {
+            const subjectId = document.getElementById('subjectId').value;
+            const imageType = document.getElementById('imageType').value;
+            const sex = document.getElementById('sex').value;
+            const years = parseInt(document.getElementById('ageYears').value) || 0;
+            const months = parseInt(document.getElementById('ageMonths').value) || 0;
+            
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
+                return null;
+            }
+            
+            // Format filename according to pattern: <SubjectID><ImageType><Sex><Years>y<Months>m.png
+            const yearsStr = years.toString().padStart(2, '0');
+            const monthsStr = months.toString().padStart(2, '0');
+            return `${subjectId}${imageType}${sex}${yearsStr}y${monthsStr}m.png`;
+        }
+
+        function updateFilenamePreview() {
+            const subjectId = document.getElementById('subjectId').value;
+            const filename = generateFilename();
+            const previewElement = document.getElementById('filenamePreview');
+            
+            if (!subjectId) {
+                previewElement.textContent = 'Please enter a Subject ID';
+                previewElement.style.color = '#dc3545';
+                return;
+            }
+
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
+                previewElement.textContent = validation.message || 'Subject ID is invalid';
+                previewElement.style.color = '#dc3545';
+                return;
+            }
+            
+            if (filename) {
+                const isValid = validateFilename(filename);
+                previewElement.textContent = `Filename: ${filename} ${isValid ? '✓' : '✗'}`;
+                previewElement.style.color = isValid ? '#28a745' : '#dc3545';
+            } else {
+                previewElement.textContent = 'Please complete all required fields';
+                previewElement.style.color = '#dc3545';
+            }
+        }
+
+        function validateFilename(filename) {
+            // Remove .png extension for validation
+            const baseFilename = filename.replace('.png', '');
+            // Regex pattern: ^(?P<patient_id>(B\d{4}|R\d{3}|L\d{8}))(?P<image_type>[A-Z0-9]+)(?P<sex>[MFOU])(?P<years>\d{2,3})y(?P<months>\d{2})m$
+            const regex = /^(B\d{4}|R\d{3}|L\d{8})([A-Z0-9]+)([MFOU])(\d{2,3})y(\d{2})m$/;
+            return regex.test(baseFilename);
+        }
+
         function downloadImage(dataUrl) {
+            const subjectId = document.getElementById('subjectId').value;
+            const filename = generateFilename();
+            
+            if (!subjectId) {
+                showStatus('Please enter a Subject ID', 'error');
+                return;
+            }
+
+            const validation = getSubjectIdValidation(subjectId);
+            if (!validation.isValid) {
+                showStatus(validation.message || 'Subject ID is invalid', 'error');
+                return;
+            }
+            
+            if (!filename) {
+                showStatus('Please complete all required fields', 'error');
+                return;
+            }
+            
+            if (!validateFilename(filename)) {
+                showStatus('Generated filename does not match required pattern', 'error');
+                return;
+            }
+            
             const link = document.createElement('a');
             link.href = dataUrl;
-            link.download = `scan_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showStatus('Image downloaded successfully', 'success');
+            showStatus(`Image downloaded as ${filename}`, 'success');
         }
 
         async function calibrate() {
@@ -441,7 +681,7 @@
             showStatus('Starting calibration... Please wait.', 'info');
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$calibrate`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$calibrate`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -469,7 +709,7 @@
             showStatus('Ejecting film... Please wait.', 'info');
 
             try {
-                const response = await fetch(`${API_BASE()}/Device/${DEVICE_ID()}/$eject`, {
+                const response = await fetch(`${API_BASE}/Device/${DEVICE_ID}/$eject`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/fhir+json',
@@ -491,9 +731,12 @@
             }
         }
 
-        // Test connection on page load
         window.addEventListener('load', () => {
-            showStatus('Ready to connect. Click "Device Info" to test connection.', 'info');
+            const subjectIdHelp = document.getElementById('subjectIdHelp');
+            if (subjectIdHelp) {
+                subjectIdHelp.dataset.tooltip = getSubjectIdHelpText();
+            }
+            updateFilenamePreview();
         });
     </script>
 </body>

@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 
+// Application entry point and startup error reporting.
 namespace BFD9010.Gui
 {
     internal static class Program
@@ -22,9 +23,24 @@ namespace BFD9010.Gui
                 }
             }
 
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.Run(new MainForm(configPath));
+            try
+            {
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
+                Application.EnableVisualStyles();
+                Application.Run(new MainForm(configPath));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(BuildStartupErrorMessage(ex.Message), "BFD9010 Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static string BuildStartupErrorMessage(string details)
+        {
+            return "Startup failed:\n" + details +
+                   "\n\nPlease ensure:\n" +
+                   "1. Vidar drivers have been installed\n" +
+                   "2. No other Vidar software is running (another instance of this app or Vidar scanning software)";
         }
     }
 }

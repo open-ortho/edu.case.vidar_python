@@ -7,6 +7,7 @@ test.py
 bin/
 obj/
 *.dll
+!BFD9010/BFD9010.Scanner/Vscsi32.dll
 *.exe
 *.app
 *.log
@@ -58,4 +59,3 @@ _ReSharper*/
 artifacts/
 # Scanner configuration file (user-specific)
 scan_config.ini
-Vscsi32.dll
