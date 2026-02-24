@@ -259,6 +259,7 @@ start-gui.bat
 ## Scanner Configuration
 
 Scanner settings are loaded from `scan_config.ini` in the working directory. If the file doesn't exist, default values will be used and a new file will be created.
+For single-file releases, the default base directory is a user temp folder, so use `--config` to keep settings in a stable location.
 
 You can specify a custom configuration file using the `--config` command-line argument:
 ```bash

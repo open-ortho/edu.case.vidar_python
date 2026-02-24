@@ -152,6 +152,7 @@ Configuration:
 - Always load scanner config via `ScanConfig.Load(...)`.
 - `scan_config.ini` is user-specific and ignored by git; do not commit it.
 - When writing to config, keep the existing INI structure and comments.
+- For single-file releases, the default base directory is a user temp folder; use `--config` to keep settings in a stable location.
 
 Driver requirement:
 
