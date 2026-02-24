@@ -245,6 +245,7 @@ namespace BFD9010.Gui
                     messageLabel.Text = "Scanner initialization failed\n\nPlease check the scanner connection.";
                     urlLinkLabel.Text = "Scanner not ready";
                     urlLinkLabel.Enabled = false;
+                    ShowStartupError("Scanner initialization failed.");
                 }
             }
             catch (Exception ex)
@@ -253,7 +254,24 @@ namespace BFD9010.Gui
                 messageLabel.Text = $"Failed to start:\n{ex.Message}";
                 urlLinkLabel.Text = "Service failed to start";
                 urlLinkLabel.Enabled = false;
+                ShowStartupError(ex.Message);
             }
+        }
+
+        private void ShowStartupError(string details)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((Action)(() => ShowStartupError(details)));
+                return;
+            }
+
+            string message = "Startup failed:\n" + details +
+                             "\n\nPlease ensure:\n" +
+                             "1. Vidar drivers have been installed\n" +
+                             "2. No other Vidar software is running (another instance of this app or Vidar scanning software)";
+            MessageBox.Show(this, message, "BFD9010 Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
         }
 
         private static string GetVersionString()
