@@ -8,7 +8,7 @@ namespace BFD9010.Scanner
     /// </summary>
     public class ScanConfig
     {
-        private const string CONFIG_FILENAME = "scan_config.ini";
+        private const string CONFIG_FILENAME = "~\\Desktop\\VidarScans\\scan_config.ini";
 
         // Scan parameters with their default values (from original code before PR)
         public short Offset0_BitDepth { get; set; } = 16;
@@ -296,9 +296,16 @@ namespace BFD9010.Scanner
 
         private static string GetConfigPath()
         {
-            // Place config file in the same directory as the executable
-            string exeDir = AppDomain.CurrentDomain.BaseDirectory;
-            return Path.Combine(exeDir, CONFIG_FILENAME);
+            string outDir = Environment.ExpandEnvironmentVariables(CONFIG_FILENAME);
+            if (outDir.StartsWith('~'))
+            {
+                var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string rest = outDir.Length == 1 ? string.Empty : outDir.Substring(1).TrimStart('\\', '/');
+                outDir = Path.Combine(home, rest);
+            }
+            outDir = Path.GetFullPath(outDir);
+            Directory.CreateDirectory(Path.GetDirectoryName(outDir));
+            return outDir;
         }
 
         private static string ExpandPath(string path)

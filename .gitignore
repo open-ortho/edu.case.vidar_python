@@ -60,3 +60,7 @@ _ReSharper*/
 artifacts/
 # Scanner configuration file (user-specific)
 scan_config.ini
+
+result
+out
+.direnv
