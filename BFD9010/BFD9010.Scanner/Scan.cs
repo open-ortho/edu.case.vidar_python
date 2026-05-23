@@ -12,6 +12,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Metadata;
 using System.Runtime.InteropServices;
 using static BFD9010.Scanner.Scanner;
 using static BFD9010.Scanner.VscsiMethods;
@@ -40,7 +41,7 @@ namespace BFD9010.Scanner
                 scan_parameters.setInt(OFFSET_Height, scan_parameters.getShort(OFFSET_DPI_Y) * 51); //?Max_Inches?) //3825
 
                 // To be honest not sure what this one does, but once again matches with the hardcoded defaults.
-                scan_parameters.setInt(OFFSET_BytesPerPixel, (short)Math.Ceiling((double)scan_parameters.getShort(OFFSET_BitDepth)*0.125)); //1
+                scan_parameters.setInt(OFFSET_BytesPerPixel, (short)Math.Ceiling((double)scan_parameters.getShort(OFFSET_BitDepth) * 0.125)); //1
 
                 // Not sure what this one does either, i think it turns into scanByteCount though.
                 //scan_parameters.Field52 = 0;
@@ -105,7 +106,9 @@ namespace BFD9010.Scanner
                 Directory.CreateDirectory(outDir);
 
                 string prefix = config.OutputPrefix ?? "${DPI}DPI_${BIT}BIT";
-                prefix = prefix.Replace("${DPI}", scan_parameters.getShort(OFFSET_DPI_X).ToString());
+                short DPI_X = scan_parameters.getShort(OFFSET_DPI_X);
+                short DPI_Y = scan_parameters.getShort(OFFSET_DPI_Y);
+                prefix = prefix.Replace("${DPI}", DPI_X.ToString());
                 prefix = prefix.Replace("${BIT}", scan_parameters.getShort(OFFSET_BitDepth).ToString());
 
                 string fileName = prefix + ".png";
@@ -118,7 +121,7 @@ namespace BFD9010.Scanner
                 short bitDepth = scan_parameters.getShort(OFFSET_BitDepth);
 
                 // Save as PNG
-                writeImageToFile(imageBuffer, height, width, filePath, bitDepth);
+                writeImageToFile(imageBuffer, height, width, filePath, bitDepth, DPI_X, DPI_Y);
 
                 return 0;
 
@@ -130,7 +133,7 @@ namespace BFD9010.Scanner
             }
         }
 
-        public unsafe static void writeImageToFile(byte[] imageBuffer, int height, int width, string filePath, int bitDepth)
+        public unsafe static void writeImageToFile(byte[] imageBuffer, int height, int width, string filePath, int bitDepth, short x_dpi, short y_dpi)
         {
             // Ensure width/height positive
             if (width <= 0 || height <= 0)
@@ -154,6 +157,10 @@ namespace BFD9010.Scanner
 
                     using (Image<L16> image = Image.LoadPixelData<L16>(pixelSpan, width, height))
                     {
+                        image.Metadata.HorizontalResolution = x_dpi;
+                        image.Metadata.VerticalResolution = y_dpi;
+                        image.Metadata.ResolutionUnits = PixelResolutionUnit.PixelsPerInch;
+
                         var encoder = new PngEncoder
                         {
                             ColorType = PngColorType.Grayscale,
@@ -175,6 +182,10 @@ namespace BFD9010.Scanner
 
                     using (Image<L8> image = Image.LoadPixelData<L8>(pixelSpan, width, height))
                     {
+                        image.Metadata.HorizontalResolution = x_dpi;
+                        image.Metadata.VerticalResolution = y_dpi;
+                        image.Metadata.ResolutionUnits = PixelResolutionUnit.PixelsPerInch;
+
                         var encoder = new PngEncoder
                         {
                             ColorType = PngColorType.Grayscale,
