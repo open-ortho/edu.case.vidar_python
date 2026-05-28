@@ -32,6 +32,9 @@ obj/
 *.opensdf
 *.sln.docstates
 
+# Zed files
+.zed/
+
 # NuGet packages
 *.nupkg
 packages/
@@ -60,3 +63,7 @@ _ReSharper*/
 artifacts/
 # Scanner configuration file (user-specific)
 scan_config.ini
+
+result
+out
+.direnv

@@ -5,5 +5,8 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)../.nuget/packages</RestorePackagesPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <DetermineReferencesFromSourceCache>true</DetermineReferencesFromSourceCache>
   </PropertyGroup>
 </Project>

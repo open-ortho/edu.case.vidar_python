@@ -296,9 +296,16 @@ namespace BFD9010.Scanner
 
         private static string GetConfigPath()
         {
-            // Place config file in the same directory as the executable
-            string exeDir = AppDomain.CurrentDomain.BaseDirectory;
-            return Path.Combine(exeDir, CONFIG_FILENAME);
+            string outDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "VidarScans"
+            );
+            Directory.CreateDirectory(outDir);
+            string configPath = Path.Combine(
+                outDir,
+                CONFIG_FILENAME
+            );
+            return configPath;
         }
 
         private static string ExpandPath(string path)
