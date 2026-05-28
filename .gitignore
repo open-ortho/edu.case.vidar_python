@@ -32,6 +32,9 @@ obj/
 *.opensdf
 *.sln.docstates
 
+# Zed files
+.zed/
+
 # NuGet packages
 *.nupkg
 packages/
