@@ -12,6 +12,13 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
+        dn = (
+          with pkgs.dotnetCorePackages;
+          combinePackages [
+            sdk_8_0
+            sdk_10_0
+          ]
+        );
       in
       {
         packages = rec {
@@ -32,15 +39,9 @@
             # Explicitly set runtimeId to null to block the host-side targeting pack additions
             runtimeId = null;
 
-            # Explicitly feed our win-x64 target down into the underlying NuGet fetcher mapping
-            # meta.platforms = [ "x86_64-windows" ];
-
             configurePhase = ''
               export HOME=$TMPDIR
               export DOTNET_CLI_HOME=$TMPDIR
-
-              # The addNuGetDeps hook outputs its organized cache folder to $nugetDeps
-              # We map the standard .NET environment variable straight to it
               export NUGET_PACKAGES=$nugetDeps
             '';
 
@@ -81,18 +82,17 @@
           app = pkgs.stdenv.mkDerivation (nugetDeps base);
         };
 
-        # Spin up a quick development shell with 'nix develop'
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            dotnetCorePackages.runtime_8_0
-            dotnetCorePackages.sdk_8_0
+            dn
             nuget-to-json
             nil
             nixd
+            csharp-ls
           ];
 
           shellHook = ''
-            export DOTNET_ROOT="${pkgs.dotnetCorePackages.sdk_10_0}/share/dotnet"
+            export DOTNET_ROOT="${dn}/share/dotnet"
           '';
         };
       }

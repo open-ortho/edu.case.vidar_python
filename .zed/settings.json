@@ -1,0 +1,17 @@
+{
+  "lsp": {
+    "roslyn": {
+      "binary": {
+        "path": "csharp-ls",
+        "arguments": ["-s", "BFD9010/BFD9010.sln"],
+        "env": {
+          "RuntimeIdentifier": "win-x86",
+          "PlatformTarget": "x86",
+          "TargetPlatformIdentifier": "Windows",
+          "TargetPlatformMinVersion": "7.0",
+          "EnableKnownPlatformsReference": "true",
+        },
+      },
+    },
+  },
+}

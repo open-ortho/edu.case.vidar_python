@@ -7,20 +7,24 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>bfd9010</AssemblyName>
-    <Platforms>AnyCPU;x86</Platforms>
     <PlatformTarget>x86</PlatformTarget>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <ApplicationIcon>..\..\documentation\images\BFD9000_logo_white.ico</ApplicationIcon>
+    <ApplicationIcon
+        >..\..\documentation\images\BFD9000_logo_white.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.ico">
+    <EmbeddedResource
+            Include="..\..\documentation\images\BFD9000_logo_white.ico"
+        >
       <Link>Resources\BFD9000_logo_white.ico</Link>
     </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\documentation\images\BFD9000_logo_white.png">
+    <EmbeddedResource
+            Include="..\..\documentation\images\BFD9000_logo_white.png"
+        >
       <Link>Resources\BFD9000_logo_white.png</Link>
     </EmbeddedResource>
   </ItemGroup>
